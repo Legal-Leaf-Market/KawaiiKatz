@@ -1,0 +1,153 @@
+'use client'
+import { useMemo } from 'react'
+import { useStore } from '@/lib/store'
+import { catEmoji, money, type Product, type AdaPick } from '@/lib/data'
+import { openPin } from '@/lib/pinterest'
+import { useCarousel } from '@/hooks/useCarousel'
+import { CarouselArrow } from './FeaturedCollection'
+import ProductImage from './ProductImage'
+
+export type { AdaPick }
+
+type Props = {
+  products: Product[]
+  excludedIds?: Set<string>
+}
+
+export default function AdaPicksRail({ products, excludedIds }: Props) {
+  const { state, dispatch } = useStore()
+  const { adaMode, adaPicks } = state
+  const { ref, canPrev, canNext, prev, next } = useCarousel<HTMLDivElement>()
+
+  // Resolve each pick against the live catalog so images/prices stay fresh.
+  // For shoppers, drop any pick that has been excluded from the store so a
+  // hidden product can't resurface via the pick's fallback metadata.
+  const resolved = useMemo(() => {
+    return [...adaPicks]
+      .filter((pk) => adaMode || !excludedIds?.has(pk.id))
+      .sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0))
+      .map((pk) => {
+        const live = products.find((x) => x.id === pk.id)
+        return {
+          pick: pk,
+          live,
+          image: live?.image || pk.image || '',
+          price: live?.price ?? pk.price,
+          name: live?.name || pk.name,
+        }
+      })
+  }, [adaPicks, products, adaMode, excludedIds])
+
+  function addToCart(id: string) {
+    dispatch({ type: 'ADD_TO_CART', productId: id, variantIndex: 0 })
+  }
+  function removePick(pk: AdaPick) {
+    dispatch({ type: 'TOGGLE_ADA_PICK', pick: pk })
+  }
+
+  const isEmpty = resolved.length === 0
+
+  return (
+    <section className="py-4 pb-0.5" aria-label="Ada's Picks">
+      <div className="max-w-[1180px] mx-auto px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#e6dcff] to-[#ffb199] flex items-center justify-center text-3xl shadow-[0_3px_6px_rgba(183,156,255,.38)]" aria-hidden="true">
+              🌙
+            </div>
+            <div>
+              <h2 className="font-display font-extrabold text-[25px] text-[#4f4550] leading-none">Ada&apos;s Picks</h2>
+              <small className="font-bold text-[#9a8fa3] text-[12.5px]">Curated by our kawaii editor</small>
+            </div>
+          </div>
+          {/* Admin-only exit control. Nothing renders for shoppers — Ada Mode is
+              entered exclusively by typing the secret code, which opens the login. */}
+          {adaMode && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => dispatch({ type: 'SET_ADA_MODE', on: false })}
+                className="border-[2.5px] border-[#b79cff] bg-[#b79cff] text-white font-display font-extrabold px-3.5 py-2 rounded-full cursor-pointer text-[13px]"
+                title="Exit Ada Mode"
+              >
+                🌙 Ada Mode ON
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Empty state (only reachable in Ada mode after removing all picks) */}
+        {isEmpty ? (
+          <p className="text-[#9a8fa3] font-bold py-3.5 px-1">
+            ✨ You&apos;re in <strong>Ada Mode</strong>! Tap ☆ on any product below to add your first pick.
+          </p>
+        ) : (
+          <div className="relative">
+            <CarouselArrow direction="prev" show={canPrev} onClick={prev} />
+            <div
+              ref={ref}
+              className="flex gap-4 overflow-x-auto pb-3.5 pt-1.5 ap-rail scroll-smooth"
+              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+            >
+              {resolved.map(({ pick, live, image, price, name }) => {
+                return (
+                  <div
+                    key={pick.id}
+                    className="flex-[0_0_205px] bg-white border-[3px] border-[#b79cff] rounded-[20px] overflow-hidden shadow-[0_4px_12px_rgba(255,138,101,.18)] flex flex-col relative"
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    <span className="absolute top-2 left-2 bg-[#b79cff] text-white border-2 border-white rounded-full font-display font-extrabold text-[10px] px-2 py-[3px] z-20">
+                      🎀 pick
+                    </span>
+                    {adaMode && (
+                      <button
+                        onClick={() => removePick(pick)}
+                        className="absolute top-2 right-2 border-2 border-[#b79cff] bg-white text-[#b79cff] rounded-full w-[30px] h-[30px] cursor-pointer text-[15px] z-20 flex items-center justify-center hover:bg-[#b79cff] hover:text-white transition-colors"
+                        aria-label="Remove from Ada's Picks"
+                        title="Remove from picks"
+                      >
+                        ★
+                      </button>
+                    )}
+                    <div className="aspect-square bg-gradient-to-br from-[#e6dcff] to-[#bfe3ea] flex items-center justify-center overflow-hidden relative">
+                      <ProductImage
+                        src={image}
+                        alt={name}
+                        fallback={catEmoji(pick.cat)}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-2.5 px-3 flex flex-col gap-1.5 flex-1">
+                      <div className="font-display font-extrabold text-[14px] leading-tight line-clamp-2">{name}</div>
+                      <div className="font-display text-[#ff8a65] text-[16px]">{money(price)}</div>
+                      <div className="flex gap-1.5 mt-auto">
+                        <button
+                          type="button"
+                          disabled={!live}
+                          onClick={() => live && addToCart(live.id)}
+                          className="flex-1 border-2 border-[#ff8a65] bg-[#ffb199] text-[#4f4550] font-display font-extrabold rounded-xl py-2 cursor-pointer text-[12.5px] text-center hover:bg-[#ff8a65] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#ffb199] disabled:hover:text-[#4f4550]"
+                          aria-label={live ? `Add ${name} to cart` : `${name} unavailable`}
+                        >
+                          {live ? 'Add 🎀' : 'Unavailable'}
+                        </button>
+                        <button
+                          onClick={() => openPin({ id: pick.id, name, vendor: pick.vendor, cat: pick.cat, price, image, url: live?.url || pick.url, domain: live?.domain })}
+                          className="flex-none border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl w-9 cursor-pointer text-[14px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
+                          aria-label={`Pin ${name} to Pinterest`}
+                          title="Share this to Pinterest"
+                        >
+                          📌
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <CarouselArrow direction="next" show={canNext} onClick={next} />
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}

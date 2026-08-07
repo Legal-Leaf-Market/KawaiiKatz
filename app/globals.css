@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --font-sans: 'Quicksand', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Baloo 2', cursive;
+
+  --color-coral:   #ffb199;
+  --color-coral2:  #ff8a65;
+  --color-sky:     #bfe3ea;
+  --color-sky2:    #7fc4d4;
+  --color-mint:    #c9ecd2;
+  --color-mint2:   #6bc98a;
+  --color-sun:     #ffd873;
+  --color-sun2:    #f5b942;
+  --color-lav:     #e6dcff;
+  --color-lav2:    #b79cff;
+  --color-cream:   #fffaf0;
+  --color-ink:     #4f4550;
+  --color-muted:   #9a8fa3;
+  --color-line:    #ffe6d9;
+  --color-pin:     #e60023;
+  --color-sale:    #e0227a;
+}
+
+* { box-sizing: border-box; }
+
+html { background-color: #fffaf0; }
+
+body {
+  margin: 0;
+  color: #4f4550;
+  background: #fffaf0;
+  font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 600;
+  background-image:
+    radial-gradient(#ffb199 1.5px, transparent 1.5px),
+    radial-gradient(#bfe3ea 1.5px, transparent 1.5px);
+  background-size: 46px 46px;
+  background-position: 0 0, 23px 23px;
+  background-attachment: fixed;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 250, 240, 0.75);
+  z-index: -1;
+}
+
+a { color: inherit; text-decoration: none; }
+
+@keyframes pickGlow {
+  0%, 100% { box-shadow: 0 0 0 2px #ffe58a, 0 0 14px 2px rgba(255,193,7,.45), 0 8px 24px rgba(255,170,0,.24); }
+  50%       { box-shadow: 0 0 0 2px #ffe58a, 0 0 26px 6px rgba(255,193,7,.75), 0 8px 28px rgba(255,170,0,.36); }
+}
+
+@keyframes wcspin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes uppulse {
+  0%, 100% { opacity: .3; transform: scale(.8); }
+  50%       { opacity: 1;  transform: scale(1.1); }
+}
+
+@keyframes pinFresh {
+  0%   { box-shadow: 0 0 0 3px #ffe58a; transform: scale(.97); }
+  100% { box-shadow: none; transform: scale(1); }
+}
+
+/* Scrollbar styling */
+.ap-rail::-webkit-scrollbar,
+.featured-rail::-webkit-scrollbar { height: 8px; }
+.ap-rail::-webkit-scrollbar-thumb { background: #b79cff; border-radius: 999px; }
+.featured-rail::-webkit-scrollbar-thumb { background: #7fc4d4; border-radius: 999px; }
+
+/* Cart drawer scrollbar */
+.cart-body::-webkit-scrollbar { width: 6px; }
+.cart-body::-webkit-scrollbar-thumb { background: #ffb199; border-radius: 999px; }
