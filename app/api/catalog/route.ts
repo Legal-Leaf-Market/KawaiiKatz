@@ -39,6 +39,21 @@ async function fetchVendorCatalog(vendor: typeof VENDORS[number]): Promise<Produ
 export async function GET() {
   const results = await Promise.allSettled(VENDORS.map((v) => fetchVendorCatalog(v)))
 
+  // Per-vendor counts, captured before de-dupe and filtering so a vendor that
+  // returned nothing is distinguishable from one whose items were all filtered
+  // out. Both sister sites expose this as ?debug and it is the only practical
+  // way to answer "why did this store disappear from the site" — a silent
+  // catch in fetchVendorCatalog otherwise makes a dead vendor look like an
+  // empty one.
+  const perVendor = VENDORS.map((v, i) => {
+    const r = results[i]
+    return {
+      vendor: v.vendor,
+      ok: r.status === 'fulfilled',
+      fetched: r.status === 'fulfilled' ? r.value.length : 0,
+    }
+  })
+
   const products: Product[] = []
   for (const r of results) {
     if (r.status === 'fulfilled') products.push(...r.value)
@@ -72,8 +87,25 @@ export async function GET() {
     // scan unavailable — keep the text-filtered catalog
   }
 
+  // `updated` is what lets the UI say how fresh the catalog is instead of
+  // implying it is live. Nicotia surfaces the same field as a "Checked N min
+  // ago" stamp; a comparison page that quietly goes stale is worse than one
+  // that admits its age.
+  // The per-vendor breakdown ships on every response rather than behind a
+  // ?debug flag. Reading searchParams would opt this route out of static
+  // generation entirely — it would go from a prerendered 6h ISR page to a
+  // function invocation per request, on the single most expensive endpoint
+  // here. Eight small objects on a payload of thousands of products is a much
+  // cheaper price than losing the prerender, and nothing in it is secret:
+  // vendor names are already on every product card.
   return NextResponse.json(
-    { products: list, count: list.length },
+    {
+      products: list,
+      count: list.length,
+      updated: new Date().toISOString(),
+      vendors: perVendor,
+      dropped: perVendor.reduce((n, v) => n + v.fetched, 0) - list.length,
+    },
     {
       headers: {
         'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600',
