@@ -3,9 +3,9 @@ import useSWR from 'swr'
 import { useCallback, useMemo } from 'react'
 import type { Product } from '@/lib/data'
 
-// Matches the curator PIN checked by AdaLoginModal and the server route. The PIN
-// is already a client-visible constant; the server enforces it on every write.
-const ADA_PIN = 'ada2026'
+// No PIN here by design. Writes are authorized by the httpOnly cookie that
+// /api/ada-login sets, which the browser attaches to these same-origin requests
+// automatically. A constant here would ship the secret to every visitor.
 
 export type ExcludedItem = {
   productId: string
@@ -61,7 +61,6 @@ export function useExclusions() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              pin: ADA_PIN,
               product: { id: p.id, name: p.name, image: p.image, price: p.price, vendor: p.vendor, url: p.url || p.domain },
             }),
           })
@@ -84,7 +83,7 @@ export function useExclusions() {
           await fetch('/api/exclusions', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin: ADA_PIN, id }),
+            body: JSON.stringify({ id }),
           })
           return fetcher('/api/exclusions')
         },

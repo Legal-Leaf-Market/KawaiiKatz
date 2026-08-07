@@ -2,8 +2,6 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
 
-const ADA_PIN = 'ada2026'
-
 type Props = {
   open: boolean
   onClose: () => void
@@ -12,21 +10,40 @@ type Props = {
 export default function AdaLoginModal({ open, onClose }: Props) {
   const [pin, setPin] = useState('')
   const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
   const { dispatch } = useStore()
 
-  function handleLogin() {
-    if (pin === ADA_PIN) {
-      dispatch({ type: 'SET_ADA_AUTHORIZED', on: true })
-      dispatch({ type: 'SET_ADA_MODE', on: true })
-      try {
-        localStorage.setItem('wc_ada_authorized', '1')
-        localStorage.setItem('wc_ada_mode_off', '0')
-      } catch { /* ignore */ }
-      setMsg('')
-      setPin('')
-      onClose()
-    } else {
-      setMsg('Wrong PIN. Try again.')
+  // The PIN is verified server-side. A correct one returns an httpOnly cookie
+  // that authorizes later writes; the secret itself never enters this bundle.
+  async function handleLogin() {
+    if (busy) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/ada-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      })
+
+      if (res.ok) {
+        dispatch({ type: 'SET_ADA_AUTHORIZED', on: true })
+        dispatch({ type: 'SET_ADA_MODE', on: true })
+        try {
+          localStorage.setItem('wc_ada_authorized', '1')
+          localStorage.setItem('wc_ada_mode_off', '0')
+        } catch { /* ignore */ }
+        setMsg('')
+        setPin('')
+        onClose()
+      } else if (res.status === 503) {
+        setMsg('Ada mode is not configured on the server.')
+      } else {
+        setMsg('Wrong PIN. Try again.')
+      }
+    } catch {
+      setMsg('Could not reach the server. Try again.')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -58,9 +75,10 @@ export default function AdaLoginModal({ open, onClose }: Props) {
         />
         <button
           onClick={handleLogin}
-          className="w-full border-none bg-gradient-to-r from-[#b79cff] to-[#ff8a65] text-white font-display font-extrabold text-[16px] py-3 rounded-[14px] cursor-pointer hover:opacity-90 transition-opacity active:translate-y-0.5"
+          disabled={busy}
+          className="w-full border-none bg-gradient-to-r from-[#b79cff] to-[#ff8a65] text-white font-display font-extrabold text-[16px] py-3 rounded-[14px] cursor-pointer hover:opacity-90 transition-opacity active:translate-y-0.5 disabled:opacity-60"
         >
-          Enter Ada Mode 🌙
+          {busy ? 'Checking…' : 'Enter Ada Mode 🌙'}
         </button>
         {msg && <p className="text-[#ff8a65] font-bold text-[13px] text-center mt-2.5">{msg}</p>}
       </div>

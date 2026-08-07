@@ -2,12 +2,17 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { storeExclusions } from '@/lib/db/schema'
 import { desc, eq } from 'drizzle-orm'
+import { ADA_COOKIE, verifyToken } from '@/lib/ada-auth'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// The admin gate reuses the existing Ada curator PIN. It can be overridden with
-// an env var; otherwise it falls back to the same value the client login uses.
-const ADA_PIN = process.env.ADA_PIN || 'ada2026'
+// Writes are authorized by the httpOnly session cookie issued by /api/ada-login,
+// never by a value the client sends. A PIN in the request body would be a PIN in
+// the client bundle, readable by every visitor.
+function authorized(req: NextRequest): boolean {
+  return verifyToken(req.cookies.get(ADA_COOKIE)?.value)
+}
 
 function noStore(json: unknown, status = 200) {
   return NextResponse.json(json, {
@@ -30,14 +35,14 @@ export async function GET() {
 
 // POST — admin only. Adds a product to the store exclusion list.
 export async function POST(req: NextRequest) {
+  if (!authorized(req)) return noStore({ error: 'Unauthorized' }, 401)
+
   let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
     return noStore({ error: 'Invalid body' }, 400)
   }
-
-  if (body.pin !== ADA_PIN) return noStore({ error: 'Unauthorized' }, 401)
 
   const product = (body.product ?? {}) as Record<string, unknown>
   const productId = String(product.id ?? '').trim()
@@ -74,14 +79,14 @@ export async function POST(req: NextRequest) {
 
 // DELETE — admin only. Restores a product back to the store.
 export async function DELETE(req: NextRequest) {
+  if (!authorized(req)) return noStore({ error: 'Unauthorized' }, 401)
+
   let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
     return noStore({ error: 'Invalid body' }, 400)
   }
-
-  if (body.pin !== ADA_PIN) return noStore({ error: 'Unauthorized' }, 401)
 
   const productId = String(body.id ?? '').trim()
   if (!productId) return noStore({ error: 'Missing product id' }, 400)
