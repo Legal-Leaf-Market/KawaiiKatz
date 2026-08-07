@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from '@/lib/site'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from '@/lib/site'
 
 /**
  * Both sister sites ship a full web manifest and treat the home-screen app as a
@@ -15,7 +15,9 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from '@/lib/site'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    name: SITE_TITLE,
+    // short_name stays plain: it sits under the home-screen icon in a very
+    // narrow label, where the emoji would push the actual words out.
     short_name: SITE_NAME,
     description: SITE_DESCRIPTION,
     id: '/',

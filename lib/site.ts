@@ -7,9 +7,18 @@
 
 export const SITE_URL = 'https://www.kawaiikatz.com'
 
+/** Bare brand name. Used where a machine reads it as an identifier — the PWA
+ *  short_name under a home-screen icon, and the schema.org Organization. */
 export const SITE_NAME = 'Kawaii Katz'
 
 export const SITE_TAGLINE = 'Kawaii, Clever & Kind'
+
+/**
+ * The display title, emoji and all. This is the brand as it should appear to a
+ * person: browser tab, social cards, installed app name. Keep the emoji — it is
+ * the identity, not decoration.
+ */
+export const SITE_TITLE = `🐈‍⬛ ${SITE_NAME} 🐼 — ${SITE_TAGLINE}`
 
 export const SITE_DESCRIPTION =
   'Curated kawaii finds — plushies, stationery, kitchen, puzzles & more. ' +

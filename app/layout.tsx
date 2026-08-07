@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Baloo_2, Quicksand } from 'next/font/google'
 import './globals.css'
 import { StoreProvider } from '@/lib/store'
-import { SISTER_SITES, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/site'
+import { SISTER_SITES, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_TITLE, SITE_URL } from '@/lib/site'
 
 const _baloo = Baloo_2({
   subsets: ['latin'],
@@ -21,14 +21,14 @@ export const metadata: Metadata = {
   // og:image ships as a bare path, which every social scraper rejects — the
   // card silently renders with no image and nothing warns you.
   metadataBase: new URL(SITE_URL),
-  title: '🐈‍⬛ Kawaii Katz 🐼 — Kawaii, Clever & Kind',
+  title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   keywords: 'kawaii, plushies, cute gifts, kawaii shop, kawaii collectibles, stationery, kids toys',
   // The apex 308-redirects to www, so www is the canonical host. Declaring it
   // stops the two hostnames competing as duplicates.
   alternates: { canonical: '/' },
   openGraph: {
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: SITE_TITLE,
     description: 'Curated kawaii finds for every budget.',
     url: SITE_URL,
     siteName: SITE_NAME,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: SITE_TITLE,
     description: 'Curated kawaii finds for every budget.',
     images: ['/icon.png'],
   },
@@ -75,7 +75,7 @@ const STRUCTURED_DATA = {
       '@type': 'CollectionPage',
       '@id': `${SITE_URL}/#page`,
       url: `${SITE_URL}/`,
-      name: `${SITE_NAME} — ${SITE_TAGLINE}`,
+      name: SITE_TITLE,
       isPartOf: { '@id': `${SITE_URL}/#website` },
       about: 'Curated kawaii plushies, stationery, kitchen, puzzles and collectibles compared across the shops we carry.',
     },

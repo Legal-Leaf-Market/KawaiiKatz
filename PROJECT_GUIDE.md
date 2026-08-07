@@ -86,8 +86,13 @@ so `"5824"` is stored as `﻿5824` and every correct value is rejected. Use bash
 
 There is no test suite, so verify by hand:
 
-1. `pnpm run check` — typecheck + lint. **Do not rely on `pnpm build`**: `next.config.mjs`
-   sets `typescript.ignoreBuildErrors: true`, so a build succeeds with type errors intact.
+1. `pnpm run check` — typecheck. **Do not rely on `pnpm build`**: `next.config.mjs` sets
+   `typescript.ignoreBuildErrors: true`, so a build succeeds with type errors intact.
+
+   `pnpm run lint` is **broken as shipped by v0** — the script calls `eslint .` but eslint
+   was never added as a dependency, so it fails with "not recognized". Either install and
+   configure eslint or delete the script; right now it is a trap that reports a tooling
+   failure as if it were a lint failure.
 2. `pnpm dev`, then load `/` — confirm real products render, not an empty grid.
 3. `GET /api/catalog?debug` — every vendor `ok: true` with a sane count.
 4. Anything touching auth: check no-cookie, valid-cookie, forged-cookie and post-logout.
