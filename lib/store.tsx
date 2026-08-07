@@ -88,6 +88,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     } catch { /* ignore */ }
   }, [])
 
+  // Reconcile Ada authorization against the server. localStorage is only a UI
+  // hint; the httpOnly session cookie is the truth and expires independently of
+  // it. Without this a stale flag leaves the curator UI switched on while every
+  // write silently 401s, which reads as "the app is broken".
+  //
+  // Only runs when the client already believes it is authorized, so ordinary
+  // visitors never pay for the request.
+  useEffect(() => {
+    let cancelled = false
+    try {
+      if (localStorage.getItem('wc_ada_authorized') !== '1') return
+    } catch { return }
+
+    fetch('/api/ada-login', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { authorized?: boolean } | null) => {
+        if (cancelled || !data) return
+        if (data.authorized) return // session still good; nothing to correct
+        dispatch({ type: 'SET_ADA_AUTHORIZED', on: false })
+        dispatch({ type: 'SET_ADA_MODE', on: false })
+        try { localStorage.removeItem('wc_ada_authorized') } catch { /* ignore */ }
+      })
+      .catch(() => { /* offline: leave the optimistic state alone */ })
+
+    return () => { cancelled = true }
+  }, [])
+
   // Persist cart + wish + ada picks + ada mode preference
   useEffect(() => {
     try { localStorage.setItem('wc_cart', JSON.stringify(state.cart)) } catch { /* ignore */ }
