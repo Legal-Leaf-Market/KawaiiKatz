@@ -1,0 +1,21 @@
+# pnpm 10+ no longer reads settings from the "pnpm" field in package.json.
+#
+# core-js and msw are transitive dev-only dependencies whose postinstall scripts
+# pnpm blocks by default. Neither is needed to build or run this app (core-js's
+# script only prints a funding notice; msw's copies a service worker used for
+# request mocking). Left unacknowledged, pnpm exits 1 on every `pnpm install`,
+# which also breaks `pnpm dev` — it runs a dependency check before starting.
+allowBuilds:
+  core-js: false
+  msw: false
+
+# `pnpm dev` otherwise runs a dependency check that rewrites pnpm-lock.yaml with
+# this pnpm version's metadata conventions, dirtying the tree on every start.
+# The resolved package versions are identical either way, so the check buys
+# nothing here and the churn only obscures real diffs.
+verifyDepsBeforeRun: false
+
+# Mirrors the "pnpm.overrides" field still present in package.json, which this
+# version of pnpm ignores. Kept in sync so a regenerated lockfile keeps the pin.
+overrides:
+  hono: 4.12.25
