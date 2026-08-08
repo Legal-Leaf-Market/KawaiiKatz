@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { CATEGORIES, PRICE_BUCKETS, catName, type Product } from '@/lib/data'
+import { CATEGORIES, PRICE_BUCKETS, catName, newItemCutoff, type Product } from '@/lib/data'
 
 export type Filters = {
   store: string
@@ -52,8 +52,9 @@ export default function FilterToolbar({ filters, products, onChange }: Props) {
   const newCount = gridProds.filter((p) => {
     if (filters.store && p.vendor !== filters.store) return false
     if (filters.cat && p.cat !== filters.cat) return false
-    const cutoff = Date.now() - 14 * 86400000
-    return p.added && new Date(p.added).getTime() >= cutoff
+    // Shared, day-snapped cutoff — this count is rendered, so it has to match
+    // between the prerender and the client. See newItemCutoff().
+    return p.added && new Date(p.added).getTime() >= newItemCutoff()
   }).length
 
   const activeDeals = (filters.priceBucket ? 1 : 0) + (filters.onSaleOnly ? 1 : 0) + (filters.newOnly ? 1 : 0)

@@ -190,9 +190,25 @@ export function shopUrl(product: Product): string {
 export function money(n: number): string {
   return '$' + Number(n).toFixed(2)
 }
+/**
+ * Cutoff for the "NEW" badge, snapped to UTC midnight.
+ *
+ * Rounding matters for correctness, not tidiness: pages are prerendered and can
+ * be served hours later, so a raw `Date.now()` let a product sitting near the
+ * 14-day boundary count as new on the server and not on the client. That is a
+ * hydration mismatch, and React answers a mismatch by discarding the server
+ * HTML and re-rendering everything. Snapping to the day means both sides agree
+ * for the whole UTC day.
+ */
+export function newItemCutoff(): number {
+  const now = new Date()
+  const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  return utcMidnight - 14 * 86400000
+}
+
 export function isNewItem(p: Product): boolean {
   if (!p.added) return false
-  return new Date(p.added).getTime() >= Date.now() - 14 * 86400000
+  return new Date(p.added).getTime() >= newItemCutoff()
 }
 
 export const PRICE_BUCKETS = [

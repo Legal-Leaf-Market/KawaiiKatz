@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
 import { pinProduct } from '@/lib/pinterest'
 import { useStore } from '@/lib/store'
@@ -10,7 +10,19 @@ type Props = { products: Product[]; excludedIds?: Set<string> }
 
 export default function FeaturedCollection({ products, excludedIds }: Props) {
   const [selectedCat, setSelectedCat] = useState('plush')
-  const [seed, setSeed] = useState(() => Math.random())
+  /**
+   * Starts at a fixed value, NOT Math.random().
+   *
+   * The seed drives the shuffle order, so a random initial value made the
+   * server and the client render this carousel in different orders — a
+   * guaranteed hydration mismatch (React error #418). React's response to that
+   * is to throw away the server-rendered HTML and re-render the whole tree on
+   * the client, which quietly undid the point of server-rendering products at
+   * all. A stable seed means the first paint matches; the reshuffle happens
+   * just after mount, where it costs nothing.
+   */
+  const [seed, setSeed] = useState(0)
+  useEffect(() => { setSeed(Math.random()) }, [])
   const { dispatch } = useStore()
   const { ref, canPrev, canNext, prev, next, update } = useCarousel<HTMLDivElement>()
 
