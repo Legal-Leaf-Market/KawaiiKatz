@@ -196,7 +196,11 @@ export default function BrkoxClient({ initialProducts }: { initialProducts: Prod
           </div>
         )}
 
-        {loading && (
+        {/* Only a genuinely empty page says it is loading. The server now
+            inlines the whole vendor, so SWR is still "loading" on first render
+            while a full grid of frames is already on screen — announcing a
+            fetch over the top of it would invent a wait that isn't happening. */}
+        {loading && !shown.length && (
           <p className="font-display text-[#9a8fa3] text-center py-16 text-[17px]">
             Fetching the display cabinet… 🧱
           </p>
@@ -204,7 +208,9 @@ export default function BrkoxClient({ initialProducts }: { initialProducts: Prod
 
         {!loading && !shown.length && (
           <p className="font-display text-[#9a8fa3] text-center py-16 text-[17px]">
-            Nothing here right now. 🌸
+            {query.trim() || theme !== 'all'
+              ? 'Nothing matches that. 🌸'
+              : 'Nothing here right now. 🌸'}
           </p>
         )}
 
