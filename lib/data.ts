@@ -60,11 +60,11 @@ export type VendorConfig = {
  * every link they generate). Not a secret — it appears in the URL of every
  * outbound click — so it belongs in config rather than an env var.
  *
- * While this is empty, AWIN vendors fall back to a plain link to the shop:
+ * If this is ever emptied, AWIN vendors fall back to a plain link to the shop:
  * the page works and the shopper gets there, but the click is UNTRACKED and
- * earns no commission. Fill it in before promoting an AWIN partner.
+ * earns no commission. Never ship an AWIN partner without it.
  */
-export const AWIN_PUBLISHER_ID = ''
+export const AWIN_PUBLISHER_ID = '3022399'
 
 export const CATEGORIES: Category[] = [
   { key: 'plush', name: 'Plushies', emoji: '🧸' },
@@ -98,7 +98,9 @@ export const VENDORS: VendorConfig[] = [
     domain: 'https://brkox.com',
     prefix: 'brkox',
     affiliateParam: '',
-    awinMerchantId: '',
+    // BRKOX's AWIN advertiser id (the `awinmid` in any link AWIN generates for
+    // this programme). Supplied by the user 2026-08-08.
+    awinMerchantId: '129093',
     commissionPct: 0,
     couponCode: '',
     couponPct: 0,
