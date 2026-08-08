@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Three routes prerender the catalogue (/, /brkox, /api/catalog) and on a
+  // cold build they run in parallel workers, so all three pay for a full
+  // nine-vendor scrape plus the coco-ssd image scan before any cache exists.
+  // That does not fit the 60s default. At runtime the per-vendor cache in
+  // lib/catalog-source makes revalidation cheap; this only covers the cold
+  // case. Still validated by Next's config schema, though it has fallen out
+  // of the published docs.
+  staticPageGenerationTimeout: 240,
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -49,13 +49,20 @@ type CatalogResult = {
   live: boolean
 }
 
-export function useLiveCatalog(): CatalogResult {
+/**
+ * @param initialProducts A slice of the live catalogue rendered into the HTML
+ *   by the server. Used until the full list arrives. Falls back to the baked-in
+ *   SEED_PRODUCTS only when a caller has nothing better — which now means the
+ *   seeds are a last resort rather than what every visitor sees first.
+ */
+export function useLiveCatalog(initialProducts?: Product[]): CatalogResult {
   const { data, isLoading } = useSWR<CatalogResponse>('/api/catalog', fetcher, SWR_OPTS)
 
   const allProducts = useMemo(() => {
     const live = data?.products ?? []
-    return live.length ? clean(live) : SEED_PRODUCTS
-  }, [data])
+    if (live.length) return clean(live)
+    return initialProducts?.length ? initialProducts : SEED_PRODUCTS
+  }, [data, initialProducts])
 
   const products = useMemo(
     () => allProducts.filter((p) => !SHOWCASE_VENDOR_NAMES.has(p.vendor)),
@@ -69,10 +76,13 @@ export function useLiveCatalog(): CatalogResult {
  * One showcase vendor's products, from the same cached request as the main grid
  * — SWR dedupes on the key, so the showcase page costs no extra fetch.
  */
-export function useVendorCatalog(vendor: string): CatalogResult {
+export function useVendorCatalog(vendor: string, initialProducts?: Product[]): CatalogResult {
   const { data, isLoading } = useSWR<CatalogResponse>('/api/catalog', fetcher, SWR_OPTS)
 
-  const allProducts = useMemo(() => clean(data?.products ?? []), [data])
+  const allProducts = useMemo(() => {
+    const live = data?.products ?? []
+    return live.length ? clean(live) : (initialProducts ?? [])
+  }, [data, initialProducts])
   const products = useMemo(
     () => allProducts.filter((p) => p.vendor === vendor),
     [allProducts, vendor]

@@ -64,6 +64,41 @@ budgeted so a cold build cannot hang. Unscanned items stay; the text filter is t
 
 ---
 
+## 4b. Caching — how a visitor gets products instantly
+
+`lib/catalog-source.ts` is the single producer. `/api/catalog`, `/` and `/brkox` all call
+`getCatalog()`, so a visitor's first paint and their background refresh come from one build.
+
+Three layers, deliberately:
+
+1. **`cache()`** — dedupes within a single render pass.
+2. **`unstable_cache` per vendor** — a cross-request entry holding that vendor's *mapped*
+   products, shared by every route and visitor for 6h.
+3. **Route-segment `revalidate`** on all three callers — the rendered output is prerendered
+   and served identically to everyone until it expires.
+
+**Why the mapped result and not the raw fetches.** Next's data cache rejects entries over
+2MB. Kore Kawaii returns 3–5MB *per page* of `products.json`, so `next: { revalidate }` on
+those fetches was silently caching **nothing** — every build re-scraped ~20MB from nine
+storefronts. Mapping first drops that vendor to 1.41MB; every other vendor is under 300KB.
+The vendor fetches are now explicitly `cache: 'no-store'` because they can never fit.
+
+**If a vendor grows past ~2MB mapped**, its entry silently stops caching and builds get slow
+again with no error. The tell is `Failed to set Next.js data cache` in `pnpm build` output.
+
+`staticPageGenerationTimeout: 240` in `next.config.mjs` exists because on a cold build all
+three routes prerender in parallel workers, each paying a full scrape plus the coco-ssd scan
+before any cache exists. That does not fit the 60s default. It is still validated by Next's
+config schema despite having fallen out of the published docs.
+
+**Pages are a server shell + client component** (`page.tsx` → `HomeClient.tsx` /
+`BrkoxClient.tsx`). The shell inlines a real slice of the catalogue as first-paint data;
+`FIRST_PAINT_COUNT` bounds it, because serialising all ~1,600 products would put 1.9MB in
+the document and trade a fast background fetch for a slow first byte. `SEED_PRODUCTS` is now
+a last-resort fallback, not what visitors see.
+
+---
+
 ## 5. Environment variables
 
 | Name | Required | Purpose |
