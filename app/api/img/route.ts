@@ -27,6 +27,22 @@ export async function GET(req: NextRequest) {
     return new Response('host not allowed', { status: 403 })
   }
 
+  // Optional `w` — the rendered width the caller actually needs. Shopify's CDN
+  // resizes on the fly, and the saving is not marginal: a card photo is 70KB at
+  // full size and 16KB at width=400. Without this every 240px card downloaded a
+  // 1000px+ original.
+  //
+  // Clamped and snapped to a short ladder so a handful of URLs serve the whole
+  // site; an unbounded `w` would shatter the edge cache into one entry per
+  // pixel width and make every image a cold fetch, which is worse than not
+  // resizing at all.
+  const WIDTH_LADDER = [200, 400, 600, 900]
+  const requested = Number(req.nextUrl.searchParams.get('w'))
+  if (Number.isFinite(requested) && requested > 0) {
+    const w = WIDTH_LADDER.find((step) => step >= requested) ?? WIDTH_LADDER[WIDTH_LADDER.length - 1]
+    url.searchParams.set('width', String(w))
+  }
+
   const headers = {
     'User-Agent':
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',

@@ -109,6 +109,7 @@ export default function FeaturedCollection({ products, excludedIds }: Props) {
                       alt={p.name}
                       fallback={catEmoji(p.cat)}
                       className="w-full h-full object-cover"
+                      width={400}
                     />
                   </div>
                   <div className="p-2.5 px-3 flex flex-col gap-1.5 flex-1">

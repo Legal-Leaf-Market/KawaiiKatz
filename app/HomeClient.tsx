@@ -18,6 +18,14 @@ import AdaLoginModal from '@/components/AdaLoginModal'
 const PAGE_SIZE = 18
 const ADA_SECRET_CODE = 'adamode'
 
+/**
+ * Grid cards that load their photo eagerly at high priority. Sized to roughly
+ * the first two rows on a wide screen — enough to fill what a visitor sees
+ * before scrolling, without competing with the picks rail above it for the
+ * browser's connection budget.
+ */
+const EAGER_CARDS = 8
+
 // Simple search — supports synonyms and fuzzy token matching from original
 function searchMatch(p: Product, q: string): boolean {
   if (!q) return true
@@ -298,6 +306,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
                     isAdaMode={state.adaMode}
                     onTogglePick={state.adaMode ? toggleAdaPick : undefined}
                     onToggleExclude={state.adaMode ? toggleExclude : undefined}
+                    priority={i < EAGER_CARDS}
                   />
                 ) : (
                   <ProductCard
@@ -308,6 +317,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
                     isAdaMode={state.adaMode}
                     onTogglePick={state.adaMode ? toggleAdaPick : undefined}
                     onToggleExclude={state.adaMode ? toggleExclude : undefined}
+                    priority={i < EAGER_CARDS}
                   />
                 )
               )}

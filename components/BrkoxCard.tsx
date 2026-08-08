@@ -19,7 +19,16 @@ import ProductImage from './ProductImage'
  * The image is `object-contain`, not `cover`: cropping a display frame cuts off
  * the frame, which is the product.
  */
-export default function BrkoxCard({ product: p, isAdaMode }: { product: Product; isAdaMode?: boolean }) {
+export default function BrkoxCard({
+  product: p,
+  isAdaMode,
+  priority = false,
+}: {
+  product: Product
+  isAdaMode?: boolean
+  /** Set on the first rows — visible without scrolling. */
+  priority?: boolean
+}) {
   const { state, dispatch } = useStore()
   const [flipped, setFlipped] = useState(false)
   const [variantIndex, setVariantIndex] = useState(0)
@@ -89,6 +98,10 @@ export default function BrkoxCard({ product: p, isAdaMode }: { product: Product;
               fallback={catEmoji(p.cat)}
               className="w-full h-full object-contain p-3"
               fallbackClassName="absolute inset-0 flex items-center justify-center text-[80px]"
+              // Taller card, and object-contain shows the whole frame, so this
+              // one earns a larger step than the square grid cards.
+              width={600}
+              priority={priority}
             />
 
             {p.onSale && p.discountPct > 0 && !flipped && (

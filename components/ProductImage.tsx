@@ -9,6 +9,19 @@ type Props = {
   fallback: string
   className?: string
   fallbackClassName?: string
+  /**
+   * Roughly how wide this image renders, in CSS pixels. Forwarded to /api/img,
+   * which asks Shopify's CDN to resize. Snapped to a ladder there, so passing
+   * an approximate number is fine and expected.
+   */
+  width?: number
+  /**
+   * Set on anything visible without scrolling — the picks rail and the first
+   * row or two of the grid. Those load eagerly at high priority; everything
+   * else stays lazy. Marking every image priority would be the same as marking
+   * none, since the browser would have nothing left to defer.
+   */
+  priority?: boolean
 }
 
 /**
@@ -25,7 +38,15 @@ type Props = {
  * On repeated failure we retry a few times with backoff before dropping to the
  * category emoji fallback.
  */
-export default function ProductImage({ src, alt, fallback, className, fallbackClassName }: Props) {
+export default function ProductImage({
+  src,
+  alt,
+  fallback,
+  className,
+  fallbackClassName,
+  width,
+  priority = false,
+}: Props) {
   const [attempt, setAttempt] = useState(0)
   const [failed, setFailed] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -52,8 +73,14 @@ export default function ProductImage({ src, alt, fallback, className, fallbackCl
     )
   }
 
-  // Cache-bust each retry so the browser actually re-requests.
-  const url = attempt === 0 ? src : `${src}${src.includes('?') ? '&' : '?'}_r=${attempt}`
+  // Ask the proxy for the size we actually render. Only for our own /api/img
+  // URLs — a vendor URL passed through directly must not be rewritten.
+  const sized = width && src.startsWith('/api/img') ? `${src}&w=${width}` : src
+
+  // Cache-bust each retry so the browser actually re-requests. Note this also
+  // misses the edge cache by design: a retry exists precisely because the
+  // cached answer was a failure.
+  const url = attempt === 0 ? sized : `${sized}${sized.includes('?') ? '&' : '?'}_r=${attempt}`
 
   return (
     <>
@@ -73,7 +100,8 @@ export default function ProductImage({ src, alt, fallback, className, fallbackCl
         aria-hidden="true"
         className={className}
         style={{ opacity: loaded ? 1 : 0, transition: 'opacity 240ms ease' }}
-        loading="lazy"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : 'auto'}
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => {

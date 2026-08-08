@@ -110,11 +110,15 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
                       </button>
                     )}
                     <div className="aspect-square bg-gradient-to-br from-[#e6dcff] to-[#bfe3ea] flex items-center justify-center overflow-hidden relative">
+                      {/* The rail is the first thing on the page, so these load
+                          eagerly rather than waiting on the lazy heuristic. */}
                       <ProductImage
                         src={image}
                         alt={name}
                         fallback={catEmoji(pick.cat)}
                         className="w-full h-full object-cover"
+                        width={200}
+                        priority
                       />
                     </div>
                     <div className="p-2.5 px-3 flex flex-col gap-1.5 flex-1">

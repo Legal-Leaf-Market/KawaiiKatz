@@ -220,8 +220,8 @@ export default function BrkoxClient({ initialProducts }: { initialProducts: Prod
             height, so letting columns stretch to 550px produced very wide, short
             cards with the photo swimming in empty space. */}
         <div className="grid gap-3.5 sm:gap-4 grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {shown.map((p) => (
-            <BrkoxCard key={p.id} product={p} isAdaMode={state.adaMode} />
+          {shown.map((p, i) => (
+            <BrkoxCard key={p.id} product={p} isAdaMode={state.adaMode} priority={i < 4} />
           ))}
         </div>
 

@@ -17,9 +17,11 @@ type Props = {
   onTogglePick?: (p: Product) => void
   /** Ada-mode only: toggle this product on/off the live store. */
   onToggleExclude?: (p: Product, currentlyExcluded: boolean) => void
+  /** Set on the first rows of the grid — those are visible without scrolling. */
+  priority?: boolean
 }
 
-export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, isPicked, isExcluded, isAdaMode, onTogglePick, onToggleExclude }: Props) {
+export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, isPicked, isExcluded, isAdaMode, onTogglePick, onToggleExclude, priority = false }: Props) {
   const { state, dispatch } = useStore()
   const [selVariant, setSelVariant] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -95,6 +97,8 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
           fallback={catEmoji(p.cat)}
           className="w-full h-full object-cover"
           fallbackClassName="absolute inset-0 flex items-center justify-center text-[80px]"
+          width={400}
+          priority={priority}
         />
         {stickerEl}
         <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-30">
