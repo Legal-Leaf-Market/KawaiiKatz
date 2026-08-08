@@ -5,7 +5,7 @@ import { useVendorCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
 import { useStore } from '@/lib/store'
 import { vendorCfg, type Product } from '@/lib/data'
-import ProductCard from '@/components/ProductCard'
+import BrkoxCard from '@/components/BrkoxCard'
 import CartDrawer from '@/components/CartDrawer'
 import WishlistDrawer from '@/components/WishlistDrawer'
 
@@ -206,14 +206,14 @@ export default function BrkoxShowcase() {
           </p>
         )}
 
-        <div className="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
+        {/* One column on phones so each frame gets the full screen width — the
+            whole point of the taller card is that you can see the composition.
+            Fixed column counts rather than auto-fill: the card has a fixed
+            height, so letting columns stretch to 550px produced very wide, short
+            cards with the photo swimming in empty space. */}
+        <div className="grid gap-3.5 sm:gap-4 grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {shown.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              isAdaMode={state.adaMode}
-              isPicked={state.adaPicks.some((x) => x.id === p.id)}
-            />
+            <BrkoxCard key={p.id} product={p} isAdaMode={state.adaMode} />
           ))}
         </div>
 
