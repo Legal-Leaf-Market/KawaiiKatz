@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import { PRICE_BUCKETS, isNewItem, type Product } from '@/lib/data'
 import { useStore } from '@/lib/store'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
@@ -27,15 +28,18 @@ function searchMatch(p: Product, q: string): boolean {
 
 export default function HomePage() {
   const { state, dispatch } = useStore()
-  const { products: allProducts } = useLiveCatalog()
+  // `gridProducts` excludes showcase vendors (they have their own page);
+  // `allProducts` keeps everyone, so cart and wishlist can still resolve an
+  // item that was added from a showcase page.
+  const { products: gridProducts, allProducts } = useLiveCatalog()
   const { excludedIds, exclude, restore } = useExclusions()
 
   // Shoppers never see excluded products (filtered client-side against the fresh
   // exclusion list). In Ada mode the curator keeps seeing them, marked, so they
   // can be restored. Cart/Wishlist keep the full catalog so existing items resolve.
   const products = useMemo(
-    () => (state.adaMode ? allProducts : allProducts.filter((p) => !excludedIds.has(p.id))),
-    [allProducts, excludedIds, state.adaMode]
+    () => (state.adaMode ? gridProducts : gridProducts.filter((p) => !excludedIds.has(p.id))),
+    [gridProducts, excludedIds, state.adaMode]
   )
 
   const [search, setSearch] = useState('')
@@ -210,6 +214,21 @@ export default function HomePage() {
               <small className="font-bold text-[12.5px] text-[#4f4550] opacity-80">Your saved kawaii finds</small>
             </span>
           </button>
+          {/* Showcase partners sit here rather than in the product grid — the
+              whole point of a showcase is that the catalogue is not buried. */}
+          <Link
+            href="/brkox"
+            className="flex-1 min-w-[260px] flex items-center gap-3.5 border-[3px] border-white rounded-[20px] p-3.5 px-4 cursor-pointer shadow-[0_8px_24px_rgba(255,138,101,.16)] text-left transition-all hover:-translate-y-0.5 active:translate-y-px bg-gradient-to-r from-[#cdb8ff] to-[#ffc4b0]"
+            aria-label="Browse the BRKOX display frame showcase"
+          >
+            <span className="text-[36px]" aria-hidden="true">🧱</span>
+            <span className="flex flex-col leading-tight">
+              <strong className="font-display text-[20px] text-[#4f4550]">
+                BRKOX <span className="text-[11px] align-middle bg-white/70 rounded-full px-1.5 py-0.5">NEW</span>
+              </strong>
+              <small className="font-bold text-[12.5px] text-[#4f4550] opacity-80">Display frames for LEGO® builds</small>
+            </span>
+          </Link>
         </div>
 
         {/* Ada's Picks rail */}

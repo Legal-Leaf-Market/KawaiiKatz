@@ -107,6 +107,10 @@ function vendorDefaultCat(vendor: string): string {
   if (v === 'mintie lunchboxes') return 'kitchen'
   if (v === 'jigsawdepot') return 'puzzle'
   if (v === 'autoplush') return 'plush'
+  // Display frames and cases exist to show off collections, so they belong with
+  // collectibles rather than in home decor, where the classifier's "wall / frame"
+  // wording would otherwise drop them.
+  if (v === 'brkox') return 'collect'
   return 'other'
 }
 
@@ -165,7 +169,8 @@ export function mapShopifyProducts(
     const onSale = compare > 0 && compare > minP
     const discountPct = onSale ? Math.round((1 - minP / compare) * 100) : 0
 
-    let cat = categorize(hay)
+    // A pinned category wins outright — see VendorConfig.forceCat.
+    let cat = cfg.forceCat ?? categorize(hay)
     if (cat === 'other') cat = vendorDefaultCat(cfg.vendor)
 
     out.push({

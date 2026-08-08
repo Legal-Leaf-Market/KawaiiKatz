@@ -30,7 +30,41 @@ export type VendorConfig = {
   commissionPct: number
   couponCode: string
   couponPct: number
+  /**
+   * AWIN advertisers are paid through a redirect, not a query param. When this
+   * is set, `affiliateUrl` builds an awin1.com deep link and `affiliateParam`
+   * is ignored — appending ?ref= to the destination would track nothing.
+   */
+  awinMerchantId?: string
+  /**
+   * Pin every product from this vendor to one category, overriding the keyword
+   * classifier. For a single-purpose catalogue the classifier does more harm
+   * than good: BRKOX's display frames were landing across five categories on
+   * words like "wall", "case" and "frame", and 14 of them fell into
+   * apparel/accessories — which are exactly the categories the coco-ssd person
+   * scan runs on, so a LEGO frame was eating the image-scan budget meant for
+   * real apparel.
+   */
+  forceCat?: string
+  /** Shown on the vendor's own showcase page. */
+  showcase?: {
+    slug: string
+    tagline: string
+    emoji: string
+    intro: string
+  }
 }
+
+/**
+ * Your AWIN publisher ID, from the AWIN dashboard (it is the `awinaffid` in
+ * every link they generate). Not a secret — it appears in the URL of every
+ * outbound click — so it belongs in config rather than an env var.
+ *
+ * While this is empty, AWIN vendors fall back to a plain link to the shop:
+ * the page works and the shopper gets there, but the click is UNTRACKED and
+ * earns no commission. Fill it in before promoting an AWIN partner.
+ */
+export const AWIN_PUBLISHER_ID = ''
 
 export const CATEGORIES: Category[] = [
   { key: 'plush', name: 'Plushies', emoji: '🧸' },
@@ -55,6 +89,30 @@ export const VENDORS: VendorConfig[] = [
   { vendor: 'Montessori & Me', domain: 'https://montessoriandme.us', prefix: 'mont', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Mintie Lunchboxes', domain: 'https://mintielunchboxes.co.uk', prefix: 'mint', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
   { vendor: 'jigsawdepot', domain: 'https://jigsawdepot.com', prefix: 'jsd', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
+  // First AWIN partner. They approached us. Display frames and cases for LEGO
+  // builds — pricier and more grown-up than the rest of the catalogue, which is
+  // exactly why they get their own showcase instead of being scattered through
+  // a grid of plushies where nobody would find them.
+  {
+    vendor: 'BRKOX',
+    domain: 'https://brkox.com',
+    prefix: 'brkox',
+    affiliateParam: '',
+    awinMerchantId: '',
+    commissionPct: 0,
+    couponCode: '',
+    couponPct: 0,
+    forceCat: 'collect',
+    showcase: {
+      slug: 'brkox',
+      emoji: '🧱',
+      tagline: 'Display frames for the builds you are proudest of',
+      intro:
+        'BRKOX makes wall frames, acrylic cases and LED kits built to fit specific LEGO® sets — ' +
+        'Star Wars, F1, Technic, Harry Potter and more. Finished builds deserve better than a shelf ' +
+        'they slowly gather dust on, so we gave them a room of their own.',
+    },
+  },
 ]
 
 export const SEED_PRODUCTS: Product[] = [
@@ -89,8 +147,33 @@ export function vendorCfg(vendor: string): VendorConfig | undefined {
 }
 export function affiliateUrl(url: string, vendor: string): string {
   const cfg = vendorCfg(vendor)
-  if (!url || !cfg?.affiliateParam) return url
+  if (!url || !cfg) return url
+
+  // AWIN advertisers: the commission is attributed by the redirect through
+  // awin1.com, so the destination goes in `ued` and no query param is appended.
+  if (cfg.awinMerchantId) {
+    if (!AWIN_PUBLISHER_ID) return url // untracked, but never a broken link
+    return (
+      'https://www.awin1.com/cread.php' +
+      `?awinmid=${encodeURIComponent(cfg.awinMerchantId)}` +
+      `&awinaffid=${encodeURIComponent(AWIN_PUBLISHER_ID)}` +
+      `&ued=${encodeURIComponent(url)}`
+    )
+  }
+
+  if (!cfg.affiliateParam) return url
   return url + (url.includes('?') ? '&' : '?') + cfg.affiliateParam
+}
+
+/** True when a vendor is set up to earn but is not yet configured to track. */
+export function isUntrackedAwin(vendor: string): boolean {
+  const cfg = vendorCfg(vendor)
+  return Boolean(cfg?.awinMerchantId !== undefined && (!cfg?.awinMerchantId || !AWIN_PUBLISHER_ID))
+}
+
+/** Vendors with a dedicated showcase page. */
+export function showcaseVendors(): VendorConfig[] {
+  return VENDORS.filter((v) => v.showcase)
 }
 export function couponWrapUrl(url: string, vendor: string): string {
   const cfg = vendorCfg(vendor)
