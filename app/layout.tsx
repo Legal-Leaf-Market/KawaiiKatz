@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Baloo_2, Quicksand } from 'next/font/google'
 import './globals.css'
 import { StoreProvider } from '@/lib/store'
@@ -99,6 +100,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <StoreProvider>{children}</StoreProvider>
+        {/*
+          Analytics. The same public/analytics.js that the three static
+          storefronts serve, so all four report one event taxonomy into one GA4
+          property; see the header of that file for why this is not Vercel
+          custom events.
+
+          afterInteractive rather than beforeInteractive because nothing on the
+          page depends on it and the script self-defers its own first page_view
+          to DOMContentLoaded anyway. It patches pushState/replaceState, which
+          is what makes this the only one of the four sites where client-side
+          route changes get counted at all.
+        */}
+        <Script src="/analytics.js" strategy="afterInteractive" data-site="kawaiikatz" />
       </body>
     </html>
   )
