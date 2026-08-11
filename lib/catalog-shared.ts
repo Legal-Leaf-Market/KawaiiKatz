@@ -72,6 +72,22 @@ export function categorize(hay: string): string {
   if (hasAny(hay, ['bag charm', 'bagcharm', 'bag-charm', 'keychain', 'key chain', 'key ring', 'keyring', 'phone charm', 'purse charm', 'hanging charm', 'dangle charm', 'strap charm', 'airpod charm', 'pendant charm', ' charm', 'charm ', 'charms'])) return 'accessories'
   if (hasAny(hay, ['blind box', 'blindbox', 'popmart', 'pop mart', 'hippers', 'dimoo', 'mighty jaxx', 'sonny angel', 'smiski', 'labubu', 'collectible', 'figurine', 'figure', 'mystery box', 'mystery bag', 'lucky egg', 'series figures'])) return 'collect'
   if (hasAny(hay, ['switch case', 'nintendo switch', 'phone case', 'samsung phone case', 'iphone case', 'ipad case', 'airpods', 'keyboard', 'keycaps', 'mousepad', 'desk pad', 'gaming', 'controller', 'console', 'usb', 'charging', 'charger', 'handheld fan', 'neck fan'])) return 'tech'
+  // An unambiguous garment noun beats an age word or a print theme. Every rule
+  // in this function matches on SUBSTRINGS in listed order, so before this test
+  // existed "Toddler T-Shirt" was filed under 'learning' (on `toddler`) and
+  // "Youth Tee Ramen Bowl" under 'kitchen' (on `bowl`) — a kids' tee and a
+  // ramen-print tee, neither of them on the apparel shelf. That is not
+  // hypothetical: it is what a Japanese-themed apparel vendor's catalogue is
+  // made of.
+  //
+  // This test is regex-anchored while the rest of the function is not, and that
+  // is the point. The loose apparel rule below still carries 'tee', which as a
+  // bare substring also matches "canteen" and "teether" — safe only because it
+  // sits after the kitchen and baby rules that claim those words first. Moving
+  // it earlier would break them, so the early test takes word boundaries and
+  // only the nouns that cannot mean anything else. 'dress', 'hat' and 'shirt'
+  // deliberately stay below ('dress' matches "dressing").
+  if (/\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b/.test(hay)) return 'apparel'
   if (hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])) return 'kitchen'
   if (hasAny(hay, ['ramen', 'ramune', 'sparkling water', 'ocean bomb', 'pez', 'buldak', 'samyang', 'soda', 'lychee flavor', 'lemon lime', 'white peach', 'candy', 'chocolate', 'gummy', 'tea party'])) return 'food'
   if (hasAny(hay, ['plush', 'plushie', 'plushy', 'stuffed', 'teddy', 'rag doll', 'hand puppet', 'finger puppet', 'puppet', 'snugible', 'blankie', 'cuddle', 'cuddly', 'soft toy', 'soft plush', 'pillow pet', 'gund', 'squishmallow', 'jumbo plush', 'plush figure'])) return 'plush'

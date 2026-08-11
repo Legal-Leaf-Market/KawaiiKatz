@@ -89,6 +89,50 @@ export const VENDORS: VendorConfig[] = [
   { vendor: 'Montessori & Me', domain: 'https://montessoriandme.us', prefix: 'mont', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Mintie Lunchboxes', domain: 'https://mintielunchboxes.co.uk', prefix: 'mint', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
   { vendor: 'jigsawdepot', domain: 'https://jigsawdepot.com', prefix: 'jsd', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
+  // ---------------------------------------------------------------------------
+  // Apparel, added 2026-08-11. Found in the Impact.com marketplace export; all
+  // four publish 15%, and all four are APPLIED FOR BUT NOT YET APPROVED, which
+  // is why `affiliateParam` is empty (see BRKOX below for the same state). The
+  // link still works and the shopper still gets there — the click simply earns
+  // nothing until an approval arrives and a real param goes in. Listing before
+  // approval is deliberate: payout is not an input to whether a vendor is worth
+  // showing, and Ada wanted these on the shelf now.
+  //
+  // `apparel` was a category with a name, an emoji and zero products in it
+  // until these landed.
+  //
+  // WHAT IS NOT VERIFIED, and how to check it in one request. Egress to all
+  // four hosts is refused by the proxy in the container these were wired up in,
+  // so nobody has confirmed the platform, the catalogue, or even the spelling
+  // of the domains. This matters because `/api/catalog` reads Shopify
+  // `products.json` and nothing else: a vendor that is on WooCommerce, BigCartel
+  // or a bespoke cart contributes zero rows and is skipped SILENTLY, which is
+  // indistinguishable from a shop that is merely small.
+  //
+  //   GET /api/catalog?debug   -> per-vendor fetch counts
+  //
+  // Non-zero for a vendor means it is Shopify and working. Zero means the feed
+  // is not there, and the fix is a real look at the storefront rather than a
+  // guess here. Do that before assuming the shelf is thin.
+  //
+  // ALSO WORTH WATCHING: the coco-ssd adult-model scan runs on exactly the two
+  // categories these vendors land in (MODEL_SCAN_CATS = apparel, accessories),
+  // on a 35s budget shared across the whole build. Four apparel catalogues is
+  // the first real demand that budget has seen — unscanned items still ship on
+  // the text filter alone, so if these are large, raise the budget rather than
+  // assuming every photo was looked at.
+  { vendor: 'Tokyo Tiger', domain: 'https://www.tokyo-tiger.com', prefix: 'tt', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
+  { vendor: 'Tokyocanvas', domain: 'https://www.tokyocanvas.com', prefix: 'tc', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
+  // Both sock vendors are single-purpose catalogues, which is the BRKOX case
+  // again: the classifier reads a product's own words, and a sock named
+  // "Bamboo Crew" or "Merino Ankle" contains none of the apparel keywords, so
+  // it would fall through to 'other'. Pinning is safe here precisely BECAUSE
+  // the catalogue is one thing. Do NOT pin Tokyo Tiger or Tokyocanvas the same
+  // way — those sell more than one kind of product, and a pin would flatten
+  // real categories into a wrong one.
+  { vendor: 'Sydney Sock Project', domain: 'https://sydneysockproject.com', prefix: 'ssp', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+  { vendor: 'Vix Socks', domain: 'https://www.vixsocks.com', prefix: 'vix', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+
   // First AWIN partner. They approached us. Display frames and cases for LEGO
   // builds — pricier and more grown-up than the rest of the catalogue, which is
   // exactly why they get their own showcase instead of being scattered through
