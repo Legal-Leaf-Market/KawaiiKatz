@@ -66,6 +66,11 @@ function hasAny(hay: string, terms: string[]): boolean {
   return false
 }
 
+// Hoisted so the garment guard and the plush rule read the SAME list. Two copies
+// would drift, and the drift would be silent: a term added to the rule but not the
+// guard turns that product into apparel without anything failing.
+const PLUSH_TERMS = ['plush', 'plushie', 'plushy', 'stuffed', 'teddy', 'rag doll', 'hand puppet', 'finger puppet', 'puppet', 'snugible', 'blankie', 'cuddle', 'cuddly', 'soft toy', 'soft plush', 'pillow pet', 'gund', 'squishmallow', 'jumbo plush', 'plush figure']
+
 export function categorize(hay: string): string {
   hay = (hay || '').toLowerCase()
   if (hasAny(hay, ['infant', 'newborn', 'swaddle', 'onesie', 'pacifier', 'teether', 'teething', 'bassinet', 'baby rattle', 'baby gym', 'tummy time', 'baby mobile', 'baby carrier', 'montessori baby'])) return 'learning'
@@ -87,10 +92,15 @@ export function categorize(hay: string): string {
   // it earlier would break them, so the early test takes word boundaries and
   // only the nouns that cannot mean anything else. 'dress', 'hat' and 'shirt'
   // deliberately stay below ('dress' matches "dressing").
-  if (/\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b/.test(hay)) return 'apparel'
+  // ...but an explicit PLUSH signal still wins. Plushible's "Snugible | Blanket
+  // Hoodie & Pillow" is a wearable, so the garment test claimed all 56 of them
+  // for apparel — and `snugible` being in the plush list at all is somebody
+  // deciding, on purpose, that these belong in Plushies. A soft-goods hybrid is
+  // classified by what it IS, not by the one word in its name that is a garment.
+  if (!hasAny(hay, PLUSH_TERMS) && /\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b/.test(hay)) return 'apparel'
   if (hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])) return 'kitchen'
   if (hasAny(hay, ['ramen', 'ramune', 'sparkling water', 'ocean bomb', 'pez', 'buldak', 'samyang', 'soda', 'lychee flavor', 'lemon lime', 'white peach', 'candy', 'chocolate', 'gummy', 'tea party'])) return 'food'
-  if (hasAny(hay, ['plush', 'plushie', 'plushy', 'stuffed', 'teddy', 'rag doll', 'hand puppet', 'finger puppet', 'puppet', 'snugible', 'blankie', 'cuddle', 'cuddly', 'soft toy', 'soft plush', 'pillow pet', 'gund', 'squishmallow', 'jumbo plush', 'plush figure'])) return 'plush'
+  if (hasAny(hay, PLUSH_TERMS)) return 'plush'
   if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'counting', 'alphabet', 'stacking', 'sorting', 'toddler', 'math', 'hape', 'rattle', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
   if (hasAny(hay, ['puzzle', 'jigsaw', '500pc', '1000pc', 'pieces', 'tilting board', 'puzzle table', 'board game', 'yo-yo', 'kite', 'ring matching game'])) return 'puzzle'
   if (hasAny(hay, ['sticker', 'notebook', 'journal', 'planner', 'pen', 'pencil', 'washi', 'memo', 'stationery', 'eraser', 'marker', 'highlighter', 'stapler', 'desk clock'])) return 'stationery'

@@ -101,19 +101,27 @@ export const VENDORS: VendorConfig[] = [
   // `apparel` was a category with a name, an emoji and zero products in it
   // until these landed.
   //
-  // WHAT IS NOT VERIFIED, and how to check it in one request. Egress to all
-  // four hosts is refused by the proxy in the container these were wired up in,
-  // so nobody has confirmed the platform, the catalogue, or even the spelling
-  // of the domains. This matters because `/api/catalog` reads Shopify
-  // `products.json` and nothing else: a vendor that is on WooCommerce, BigCartel
-  // or a bespoke cart contributes zero rows and is skipped SILENTLY, which is
-  // indistinguishable from a shop that is merely small.
+  // MEASURED on the preview deploy, 2026-08-11, via `GET /api/catalog?debug`.
+  // Egress to all four hosts is refused by the proxy in the container these were
+  // wired up in, so the check had to run where the app runs:
   //
-  //   GET /api/catalog?debug   -> per-vendor fetch counts
+  //   Sydney Sock Project   428 products   Shopify, live
+  //   Vix Socks              38 products   Shopify, live
+  //   Tokyo Tiger             0 products   NOTHING COMES BACK
+  //   Tokyocanvas             0 products   NOTHING COMES BACK
   //
-  // Non-zero for a vendor means it is Shopify and working. Zero means the feed
-  // is not there, and the fix is a real look at the storefront rather than a
-  // guess here. Do that before assuming the shelf is thin.
+  // Both zeroes report `ok: true`, and that is the whole hazard in one line:
+  // `ok` means the fetch did not throw, NOT that a catalogue arrived. Nothing
+  // errors, nothing logs, the shelf is just short. `/api/catalog` reads Shopify
+  // `products.json` and nothing else, so a store on WooCommerce, BigCommerce,
+  // Wix or a bespoke cart lands here — as does a domain that is merely spelled
+  // wrong, which cannot be ruled out from here either.
+  //
+  // The two zeroes are LEFT IN PLACE rather than deleted: if the cause is the
+  // domain, the fix is one string here and they start working. Resolve them by
+  // opening the storefront and checking whether `/products.json` returns JSON.
+  // If it does not, these need a different reader, not a different entry — and
+  // Tokyo Tiger is the one that was actually asked for, so it is worth the look.
   //
   // ALSO WORTH WATCHING: the coco-ssd adult-model scan runs on exactly the two
   // categories these vendors land in (MODEL_SCAN_CATS = apparel, accessories),
