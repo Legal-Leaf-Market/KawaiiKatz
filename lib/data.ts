@@ -88,7 +88,83 @@ export const VENDORS: VendorConfig[] = [
   { vendor: 'Autoplush', domain: 'https://autoplush.com', prefix: 'auto', affiliateParam: 'ref=kawaiikatz', commissionPct: 20, couponCode: '', couponPct: 0 },
   { vendor: 'Montessori & Me', domain: 'https://montessoriandme.us', prefix: 'mont', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Mintie Lunchboxes', domain: 'https://mintielunchboxes.co.uk', prefix: 'mint', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
-  { vendor: 'jigsawdepot', domain: 'https://jigsawdepot.com', prefix: 'jsd', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
+  // forceCat because 21 of jigsawdepot's 41 products were NOT in Puzzles & Games:
+  // 15 in Learning & Wooden Toys and 6 in Kitchen & Lunch. Every one of the 41 is
+  // puzzle equipment — boards, tables, roll-up mats — and they were being read by
+  // their own feature list: `sorting` (as in "6 Colored Sorting Trays") and
+  // `wooden` both belong to the learning rule, which is tested before the puzzle
+  // rule.
+  //
+  // The tempting fix is to move the puzzle rule above learning, and it is wrong.
+  // Montessori & Me sells six products with "Puzzle" in the name — "Montessori 4
+  // in 1 Farm Animal Block Puzzle", "Single Shape Puzzles" — and every one is
+  // correctly in learning today. A toddler's wooden block puzzle IS a learning
+  // toy; a wooden jigsaw puzzle table is puzzle equipment. The word cannot tell
+  // those apart, so no ordering of the shared rules gets both vendors right. The
+  // VENDOR is what disambiguates, which is what forceCat is for.
+  //
+  // It also makes the fix immune to the tags: `categorize()` reads title + tags +
+  // product_type, and the six that landed in kitchen show no kitchen word in their
+  // titles, so something in their tags did it. forceCat skips categorize entirely
+  // rather than guessing at feed data nobody here can see.
+  //
+  // Note vendorDefaultCat() already maps jigsawdepot -> 'puzzle'. The intent was
+  // recorded; it just could not fire, because that fallback only applies when the
+  // classifier returns 'other' and here it was confidently returning the wrong
+  // answer. forceCat supersedes it.
+  { vendor: 'jigsawdepot', domain: 'https://jigsawdepot.com', prefix: 'jsd', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0, forceCat: 'puzzle' },
+  // ---------------------------------------------------------------------------
+  // Apparel, added 2026-08-11. Found in the Impact.com marketplace export; all
+  // four publish 15%, and all four are APPLIED FOR BUT NOT YET APPROVED, which
+  // is why `affiliateParam` is empty (see BRKOX below for the same state). The
+  // link still works and the shopper still gets there — the click simply earns
+  // nothing until an approval arrives and a real param goes in. Listing before
+  // approval is deliberate: payout is not an input to whether a vendor is worth
+  // showing, and Ada wanted these on the shelf now.
+  //
+  // `apparel` was a category with a name, an emoji and zero products in it
+  // until these landed.
+  //
+  // MEASURED on the preview deploy, 2026-08-11, via `GET /api/catalog?debug`.
+  // Egress to all four hosts is refused by the proxy in the container these were
+  // wired up in, so the check had to run where the app runs:
+  //
+  //   Sydney Sock Project   428 products   Shopify, live
+  //   Vix Socks              38 products   Shopify, live
+  //   Tokyo Tiger             0 products   NOTHING COMES BACK
+  //   Tokyocanvas             0 products   NOTHING COMES BACK
+  //
+  // Both zeroes report `ok: true`, and that is the whole hazard in one line:
+  // `ok` means the fetch did not throw, NOT that a catalogue arrived. Nothing
+  // errors, nothing logs, the shelf is just short. `/api/catalog` reads Shopify
+  // `products.json` and nothing else, so a store on WooCommerce, BigCommerce,
+  // Wix or a bespoke cart lands here — as does a domain that is merely spelled
+  // wrong, which cannot be ruled out from here either.
+  //
+  // The two zeroes are LEFT IN PLACE rather than deleted: if the cause is the
+  // domain, the fix is one string here and they start working. Resolve them by
+  // opening the storefront and checking whether `/products.json` returns JSON.
+  // If it does not, these need a different reader, not a different entry — and
+  // Tokyo Tiger is the one that was actually asked for, so it is worth the look.
+  //
+  // ALSO WORTH WATCHING: the coco-ssd adult-model scan runs on exactly the two
+  // categories these vendors land in (MODEL_SCAN_CATS = apparel, accessories),
+  // on a 35s budget shared across the whole build. Four apparel catalogues is
+  // the first real demand that budget has seen — unscanned items still ship on
+  // the text filter alone, so if these are large, raise the budget rather than
+  // assuming every photo was looked at.
+  { vendor: 'Tokyo Tiger', domain: 'https://www.tokyo-tiger.com', prefix: 'tt', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
+  { vendor: 'Tokyocanvas', domain: 'https://www.tokyocanvas.com', prefix: 'tc', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
+  // Both sock vendors are single-purpose catalogues, which is the BRKOX case
+  // again: the classifier reads a product's own words, and a sock named
+  // "Bamboo Crew" or "Merino Ankle" contains none of the apparel keywords, so
+  // it would fall through to 'other'. Pinning is safe here precisely BECAUSE
+  // the catalogue is one thing. Do NOT pin Tokyo Tiger or Tokyocanvas the same
+  // way — those sell more than one kind of product, and a pin would flatten
+  // real categories into a wrong one.
+  { vendor: 'Sydney Sock Project', domain: 'https://sydneysockproject.com', prefix: 'ssp', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+  { vendor: 'Vix Socks', domain: 'https://www.vixsocks.com', prefix: 'vix', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+
   // First AWIN partner. They approached us. Display frames and cases for LEGO
   // builds — pricier and more grown-up than the rest of the catalogue, which is
   // exactly why they get their own showcase instead of being scattered through
