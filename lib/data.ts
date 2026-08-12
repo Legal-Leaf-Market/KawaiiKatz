@@ -132,36 +132,52 @@ export const VENDORS: VendorConfig[] = [
   //   Sydney Sock Project   428 products   Shopify, live
   //   Vix Socks              38 products   Shopify, live
   //   Tokyo Tiger             0 products   NOTHING COMES BACK
-  //   Tokyocanvas             0 products   NOTHING COMES BACK
   //
-  // Both zeroes report `ok: true`, and that is the whole hazard in one line:
-  // `ok` means the fetch did not throw, NOT that a catalogue arrived. Nothing
-  // errors, nothing logs, the shelf is just short. `/api/catalog` reads Shopify
-  // `products.json` and nothing else, so a store on WooCommerce, BigCommerce,
-  // Wix or a bespoke cart lands here — as does a domain that is merely spelled
-  // wrong, which cannot be ruled out from here either.
+  // The zero reports `ok: true`, and that is the whole hazard in one line: `ok`
+  // means the fetch did not throw, NOT that a catalogue arrived. Nothing errors,
+  // nothing logs, the shelf is just short.
   //
-  // The two zeroes are LEFT IN PLACE rather than deleted: if the cause is the
-  // domain, the fix is one string here and they start working. Resolve them by
-  // opening the storefront and checking whether `/products.json` returns JSON.
-  // If it does not, these need a different reader, not a different entry — and
-  // Tokyo Tiger is the one that was actually asked for, so it is worth the look.
+  // Tokyo Tiger is left IN PLACE rather than deleted, because the cause is now
+  // narrowed and it is not the entry below. The store is real and it is Shopify
+  // — its URLs are /collections/<handle>, which is Shopify's own shape — and
+  // `https://www.tokyo-tiger.com` is the right domain. So this is a fetch-level
+  // block, not a config typo.
+  //
+  // BEWARE the obvious test. Opening `/products.json` in a browser will show
+  // JSON and tell you nothing, because a browser sends a browser User-Agent and
+  // fetchVendorCatalog() sends `KawaiiKatzBot/1.0`. Stores behind bot protection
+  // reject the second and serve the first. Compare the two UAs against the same
+  // URL; if only the bot one fails, the fix is the User-Agent, and note the
+  // other nine vendors currently work with it, so change it deliberately rather
+  // than reflexively.
   //
   // ALSO WORTH WATCHING: the coco-ssd adult-model scan runs on exactly the two
   // categories these vendors land in (MODEL_SCAN_CATS = apparel, accessories),
-  // on a 35s budget shared across the whole build. Four apparel catalogues is
+  // on a 35s budget shared across the whole build. These apparel catalogues are
   // the first real demand that budget has seen — unscanned items still ship on
   // the text filter alone, so if these are large, raise the budget rather than
   // assuming every photo was looked at.
+  //
+  // TOKYOCANVAS WAS REMOVED, 2026-08-12, and should not be re-added without
+  // someone re-checking it first. It was applied to on 11 Aug and dropped the
+  // next day on trust grounds, not technical ones: ScamAdviser rates
+  // tokyocanvas.com very low (domain registered Jan 2025, WHOIS hidden, hosting
+  // in Guangdong) and there is a BBB Scam Tracker complaint against it from May
+  // 2025. None of that is proof, and we did not verify it ourselves — but this
+  // site's job is to hand a shopper to a merchant, which is the one thing it
+  // should not do on a maybe. Legal-Leaf delisted THCA King on the same
+  // reasoning: a store that fails the shopper fails the only promise the site
+  // makes. It was contributing 0 products, so removing it cost nothing; the
+  // danger was that fixing the fetch later would have quietly started sending
+  // real people there.
   { vendor: 'Tokyo Tiger', domain: 'https://www.tokyo-tiger.com', prefix: 'tt', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
-  { vendor: 'Tokyocanvas', domain: 'https://www.tokyocanvas.com', prefix: 'tc', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
   // Both sock vendors are single-purpose catalogues, which is the BRKOX case
   // again: the classifier reads a product's own words, and a sock named
   // "Bamboo Crew" or "Merino Ankle" contains none of the apparel keywords, so
   // it would fall through to 'other'. Pinning is safe here precisely BECAUSE
-  // the catalogue is one thing. Do NOT pin Tokyo Tiger or Tokyocanvas the same
-  // way — those sell more than one kind of product, and a pin would flatten
-  // real categories into a wrong one.
+  // the catalogue is one thing. Do NOT pin Tokyo Tiger the same way — it sells
+  // more than one kind of product, and a pin would flatten real categories into
+  // a wrong one.
   { vendor: 'Sydney Sock Project', domain: 'https://sydneysockproject.com', prefix: 'ssp', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
   { vendor: 'Vix Socks', domain: 'https://www.vixsocks.com', prefix: 'vix', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
 
