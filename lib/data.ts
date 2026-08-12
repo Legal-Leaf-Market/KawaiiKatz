@@ -88,7 +88,31 @@ export const VENDORS: VendorConfig[] = [
   { vendor: 'Autoplush', domain: 'https://autoplush.com', prefix: 'auto', affiliateParam: 'ref=kawaiikatz', commissionPct: 20, couponCode: '', couponPct: 0 },
   { vendor: 'Montessori & Me', domain: 'https://montessoriandme.us', prefix: 'mont', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Mintie Lunchboxes', domain: 'https://mintielunchboxes.co.uk', prefix: 'mint', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
-  { vendor: 'jigsawdepot', domain: 'https://jigsawdepot.com', prefix: 'jsd', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
+  // forceCat because 21 of jigsawdepot's 41 products were NOT in Puzzles & Games:
+  // 15 in Learning & Wooden Toys and 6 in Kitchen & Lunch. Every one of the 41 is
+  // puzzle equipment — boards, tables, roll-up mats — and they were being read by
+  // their own feature list: `sorting` (as in "6 Colored Sorting Trays") and
+  // `wooden` both belong to the learning rule, which is tested before the puzzle
+  // rule.
+  //
+  // The tempting fix is to move the puzzle rule above learning, and it is wrong.
+  // Montessori & Me sells six products with "Puzzle" in the name — "Montessori 4
+  // in 1 Farm Animal Block Puzzle", "Single Shape Puzzles" — and every one is
+  // correctly in learning today. A toddler's wooden block puzzle IS a learning
+  // toy; a wooden jigsaw puzzle table is puzzle equipment. The word cannot tell
+  // those apart, so no ordering of the shared rules gets both vendors right. The
+  // VENDOR is what disambiguates, which is what forceCat is for.
+  //
+  // It also makes the fix immune to the tags: `categorize()` reads title + tags +
+  // product_type, and the six that landed in kitchen show no kitchen word in their
+  // titles, so something in their tags did it. forceCat skips categorize entirely
+  // rather than guessing at feed data nobody here can see.
+  //
+  // Note vendorDefaultCat() already maps jigsawdepot -> 'puzzle'. The intent was
+  // recorded; it just could not fire, because that fallback only applies when the
+  // classifier returns 'other' and here it was confidently returning the wrong
+  // answer. forceCat supersedes it.
+  { vendor: 'jigsawdepot', domain: 'https://jigsawdepot.com', prefix: 'jsd', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0, forceCat: 'puzzle' },
   // ---------------------------------------------------------------------------
   // Apparel, added 2026-08-11. Found in the Impact.com marketplace export; all
   // four publish 15%, and all four are APPLIED FOR BUT NOT YET APPROVED, which
