@@ -91,6 +91,28 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${_baloo.variable} ${_quicksand.variable} bg-[#fffaf0]`}>
+      <head>
+        {/*
+          impact.com publisher site verification. Everything else in this file
+          goes through the `metadata` export above, and this deliberately does
+          not: impact.com issues the token in a `value` attribute and Next's
+          metadata API only ever emits `content`, so a `metadata.other` entry
+          would ship a tag their verifier does not read.
+
+          The props are cast for the same reason. `value` is not a standard meta
+          attribute, so React's own types do not declare it and `pnpm run check`
+          rejects it without the cast. react-dom does render it through. Leave
+          the attribute as impact.com issued it rather than "correcting" it to
+          `content`. The token is public by definition, since it ships in the
+          HTML of every page, so it is inline rather than an env var.
+        */}
+        <meta
+          {...({
+            name: 'impact-site-verification',
+            value: '82b29c89-882c-4cd7-8d1e-940268c000d3',
+          } as React.MetaHTMLAttributes<HTMLMetaElement>)}
+        />
+      </head>
       <body className="antialiased">
         <script
           type="application/ld+json"
