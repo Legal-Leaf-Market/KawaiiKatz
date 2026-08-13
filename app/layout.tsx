@@ -3,6 +3,7 @@ import { Baloo_2, Quicksand } from 'next/font/google'
 import './globals.css'
 import { StoreProvider } from '@/lib/store'
 import { SISTER_SITES, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_TITLE, SITE_URL } from '@/lib/site'
+import { Analytics } from '@vercel/analytics/next'
 
 const _baloo = Baloo_2({
   subsets: ['latin'],
@@ -121,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <StoreProvider>{children}</StoreProvider>
+        <Analytics />
       </body>
     </html>
   )
