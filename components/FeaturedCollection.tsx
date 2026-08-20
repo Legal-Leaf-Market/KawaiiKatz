@@ -172,7 +172,7 @@ export function CarouselArrow({ direction, show, onClick }: { direction: 'prev' 
         show ? 'opacity-100' : 'opacity-0 pointer-events-none',
       ].join(' ')}
     >
-      {isPrev ? '���' : '›'}
+      {isPrev ? '‹' : '›'}
     </button>
   )
 }
