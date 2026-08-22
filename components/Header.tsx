@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useStore, cartCount } from '@/lib/store'
+import { CatMark, PandaMark } from '@/components/BrandMark'
 
 type HeaderProps = {
   onSearch: (q: string) => void
@@ -49,7 +50,7 @@ type HeaderProps = {
         aria-hidden={!mobileMenuOpen}
       >
         <div className="flex justify-between items-center mb-5">
-          <span className="font-display font-extrabold text-lg text-[#4f4550]">🐈‍⬛ Kawaii Katz</span>
+          <span className="font-display font-extrabold text-lg text-[#4f4550] inline-flex items-center gap-1.5"><CatMark size={22} /> Kawaii Katz</span>
           <button onClick={() => setMobileMenuOpen(false)} className="text-2xl text-[#9a8fa3]" aria-label="Close menu">×</button>
         </div>
         <a href="#shop" onClick={() => setMobileMenuOpen(false)} className="block py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]">🛍️ Shop</a>
@@ -77,7 +78,7 @@ type HeaderProps = {
             href="/"
             className="font-display font-extrabold text-[22px] text-[#4f4550] whitespace-nowrap bg-gradient-to-r from-[#ffb199] to-[#bfe3ea] px-4 py-1.5 rounded-full shadow-[0_4px_12px_rgba(255,138,101,.18)]"
           >
-            🐈‍⬛ Kawaii Katz 🐼
+            <CatMark size={26} /> Kawaii Katz <PandaMark size={26} />
             <small className="block font-sans text-[9.5px] tracking-[1.1px] font-extrabold uppercase text-[#4f4550] opacity-70 text-center">
               Kawaii, Clever &amp; Kind
             </small>
