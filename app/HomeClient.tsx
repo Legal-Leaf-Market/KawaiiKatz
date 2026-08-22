@@ -5,6 +5,7 @@ import { PRICE_BUCKETS, isNewItem, type Product } from '@/lib/data'
 import { useStore } from '@/lib/store'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
+import { usePicks } from '@/hooks/usePicks'
 import Header from '@/components/Header'
 import FilterToolbar, { type Filters } from '@/components/FilterToolbar'
 import ProductCard from '@/components/ProductCard'
@@ -45,6 +46,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
   // data rather than a hardcoded placeholder list.
   const { products: gridProducts, allProducts } = useLiveCatalog(initialProducts)
   const { excludedIds, exclude, restore } = useExclusions()
+  const { picks: adaPicks, pickedIds, togglePick } = usePicks()
 
   // Shoppers never see excluded products (filtered client-side against the fresh
   // exclusion list). In Ada mode the curator keeps seeing them, marked, so they
@@ -97,7 +99,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
   // Resolve each Ada pick to its full catalog product (for real image/price),
   // falling back to a minimal product built from the pick itself.
   const resolvedPicks = useMemo<Product[]>(() => {
-    return state.adaPicks.map((pk) => {
+    return adaPicks.map((pk) => {
       const full = products.find((p) => p.id === pk.id)
       if (full) return full
       return {
@@ -107,7 +109,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
         badge: '', added: '', variants: [], blurb: '',
       }
     })
-  }, [state.adaPicks, products])
+  }, [adaPicks, products])
 
   // Arrange the feed in blocks of 10: [1 Ada pick] followed by three sets of 3,
   // each set drawn from a different category, rotating categories round-robin.
@@ -174,11 +176,11 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
     setPage(1)
   }
 
+  // Starring a product now writes to the server, so the pick is the same for
+  // every visitor. It used to dispatch into the client store, which persisted
+  // to localStorage and nowhere else.
   function toggleAdaPick(p: Product) {
-    dispatch({
-      type: 'TOGGLE_ADA_PICK',
-      pick: { id: p.id, name: p.name, vendor: p.vendor, cat: p.cat, price: p.price, image: p.image, url: p.url || p.domain, ts: Date.now() },
-    })
+    togglePick(p)
   }
 
   function toggleExclude(p: Product, currentlyExcluded: boolean) {
@@ -186,7 +188,6 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
     else exclude(p)
   }
 
-  const pickedIds = new Set(state.adaPicks.map((x) => x.id))
 
   return (
     <>

@@ -1,6 +1,7 @@
 'use client'
 import { useMemo } from 'react'
 import { useStore } from '@/lib/store'
+import { usePicks } from '@/hooks/usePicks'
 import { catEmoji, money, type Product, type AdaPick } from '@/lib/data'
 import { openPin } from '@/lib/pinterest'
 import { useCarousel } from '@/hooks/useCarousel'
@@ -16,7 +17,11 @@ type Props = {
 
 export default function AdaPicksRail({ products, excludedIds }: Props) {
   const { state, dispatch } = useStore()
-  const { adaMode, adaPicks } = state
+  const { adaMode } = state
+  // The picks come from the server now, not the client store. They used to live
+  // in localStorage, which meant Ada curated the rail for herself and nobody
+  // else — see the note on hooks/usePicks.
+  const { picks: adaPicks, removePick, strandedLocalPicks, publishLocalPicks } = usePicks()
   const { ref, canPrev, canNext, prev, next } = useCarousel<HTMLDivElement>()
 
   // Resolve each pick against the live catalog so images/prices stay fresh.
@@ -41,9 +46,7 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
   function addToCart(id: string) {
     dispatch({ type: 'ADD_TO_CART', productId: id, variantIndex: 0 })
   }
-  function removePick(pk: AdaPick) {
-    dispatch({ type: 'TOGGLE_ADA_PICK', pick: pk })
-  }
+
 
   const isEmpty = resolved.length === 0
 
@@ -65,6 +68,19 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
               entered exclusively by typing the secret code, which opens the login. */}
           {adaMode && (
             <div className="flex items-center gap-2">
+              {/* Picks stranded in this browser by the old localStorage-only
+                  implementation. Offered, never auto-published: this list is
+                  global now, and whatever is in one browser is not necessarily
+                  what should go on the site for everyone. */}
+              {strandedLocalPicks.length > 0 && (
+                <button
+                  onClick={publishLocalPicks}
+                  className="border-[2.5px] border-[#ff8a65] bg-white text-[#ff8a65] font-display font-extrabold px-3.5 py-2 rounded-full cursor-pointer text-[13px] hover:bg-[#ff8a65] hover:text-white transition-colors"
+                  title="These picks were saved only in this browser. Publish them so every visitor sees them."
+                >
+                  ⬆ Publish {strandedLocalPicks.length} saved on this device
+                </button>
+              )}
               <button
                 onClick={() => dispatch({ type: 'SET_ADA_MODE', on: false })}
                 className="border-[2.5px] border-[#b79cff] bg-[#b79cff] text-white font-display font-extrabold px-3.5 py-2 rounded-full cursor-pointer text-[13px]"
@@ -101,7 +117,7 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
                     </span>
                     {adaMode && (
                       <button
-                        onClick={() => removePick(pick)}
+                        onClick={() => removePick(pick.id)}
                         className="absolute top-2 right-2 border-2 border-[#b79cff] bg-white text-[#b79cff] rounded-full w-[30px] h-[30px] cursor-pointer text-[15px] z-20 flex items-center justify-center hover:bg-[#b79cff] hover:text-white transition-colors"
                         aria-label="Remove from Ada's Picks"
                         title="Remove from picks"

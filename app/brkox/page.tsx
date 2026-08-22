@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 
 import { getCatalog } from '@/lib/catalog-source'
 import { SITE_URL } from '@/lib/site'
+import { pageNode } from '@/lib/schema'
+import JsonLd from '@/components/JsonLd'
 import BrkoxClient from './BrkoxClient'
 
 export const revalidate = 21600 // 6 hours — must stay statically analysable
@@ -30,5 +32,20 @@ export default async function Page() {
   const { products } = await getCatalog()
   const initialProducts = products.filter((p) => p.vendor === 'BRKOX')
 
-  return <BrkoxClient initialProducts={initialProducts} />
+  return (
+    <>
+      <JsonLd
+        nodes={[
+          pageNode({
+            path: '/brkox',
+            name: 'BRKOX — Display frames for LEGO® builds',
+            type: 'CollectionPage',
+            description:
+              'Wall frames, acrylic cases and LED kits made to fit specific LEGO® sets.',
+          }),
+        ]}
+      />
+      <BrkoxClient initialProducts={initialProducts} />
+    </>
+  )
 }

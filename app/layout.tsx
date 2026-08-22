@@ -3,6 +3,8 @@ import { Baloo_2, Quicksand } from 'next/font/google'
 import './globals.css'
 import { StoreProvider } from '@/lib/store'
 import { SISTER_SITES, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_TITLE, SITE_URL } from '@/lib/site'
+import { SITE_NODES } from '@/lib/schema'
+import JsonLd from '@/components/JsonLd'
 import { Analytics } from '@vercel/analytics/next'
 
 const _baloo = Baloo_2({
@@ -52,37 +54,6 @@ export const metadata: Metadata = {
  * which tells search engines they share an operator. Kawaii Katz was absent
  * from that graph, so it accrued none of that association.
  */
-const STRUCTURED_DATA = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': `${SITE_URL}/#website`,
-      url: `${SITE_URL}/`,
-      name: SITE_NAME,
-      description: SITE_DESCRIPTION,
-      inLanguage: 'en',
-      publisher: { '@id': `${SITE_URL}/#org` },
-    },
-    {
-      '@type': 'Organization',
-      '@id': `${SITE_URL}/#org`,
-      name: SITE_NAME,
-      url: `${SITE_URL}/`,
-      logo: `${SITE_URL}/icon.png`,
-      sameAs: SISTER_SITES,
-    },
-    {
-      '@type': 'CollectionPage',
-      '@id': `${SITE_URL}/#page`,
-      url: `${SITE_URL}/`,
-      name: SITE_TITLE,
-      isPartOf: { '@id': `${SITE_URL}/#website` },
-      about: 'Curated kawaii plushies, stationery, kitchen, puzzles and collectibles compared across the shops we carry.',
-    },
-  ],
-}
-
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -115,12 +86,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="antialiased">
-        <script
-          type="application/ld+json"
-          // Serialised from a literal we control, so there is no user input to
-          // escape; JSON.stringify is what Next's own docs prescribe here.
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
-        />
+        {/* Site-wide identity only. The page-level node is emitted by each
+            route, because a single one here described every page as the home
+            CollectionPage — see lib/schema.ts. */}
+        <JsonLd nodes={SITE_NODES} />
         <StoreProvider>{children}</StoreProvider>
         <Analytics />
       </body>

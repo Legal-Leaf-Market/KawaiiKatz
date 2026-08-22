@@ -1,7 +1,7 @@
 'use client'
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import type { Product, AdaPick } from './data'
-import { DEFAULT_ADA_PICKS, affiliateUrl, couponWrapUrl } from './data'
+import type { Product } from './data'
+import { affiliateUrl, couponWrapUrl } from './data'
 
 export type CartItem = {
   productId: string
@@ -14,8 +14,19 @@ type State = {
   wish: string[] // product ids
   adaMode: boolean
   adaAuthorized: boolean
-  adaPicks: AdaPick[]
 }
+
+/**
+ * Ada's Picks are NOT in this store, and that is the fix rather than an
+ * omission. They lived here as `adaPicks`, persisted by the effect below to
+ * localStorage, and went nowhere else — so a pick Ada starred was saved to that
+ * one browser and every visitor saw the hardcoded DEFAULT_ADA_PICKS instead.
+ * The curator UI gave no sign of it.
+ *
+ * They are editorial state shared by everyone, not per-visitor state like the
+ * cart and the wishlist, so they belong on the server: hooks/usePicks.ts,
+ * backed by /api/picks and the store_picks table.
+ */
 
 type Action =
   | { type: 'ADD_TO_CART'; productId: string; variantIndex: number }
@@ -25,7 +36,6 @@ type Action =
   | { type: 'TOGGLE_WISH'; productId: string }
   | { type: 'SET_ADA_MODE'; on: boolean }
   | { type: 'SET_ADA_AUTHORIZED'; on: boolean }
-  | { type: 'TOGGLE_ADA_PICK'; pick: AdaPick }
   | { type: 'LOAD'; state: Partial<State> }
 
 function reducer(state: State, action: Action): State {
@@ -54,21 +64,12 @@ function reducer(state: State, action: Action): State {
     }
     case 'SET_ADA_MODE': return { ...state, adaMode: action.on }
     case 'SET_ADA_AUTHORIZED': return { ...state, adaAuthorized: action.on }
-    case 'TOGGLE_ADA_PICK': {
-      const exists = state.adaPicks.some((x) => x.id === action.pick.id)
-      return {
-        ...state,
-        adaPicks: exists
-          ? state.adaPicks.filter((x) => x.id !== action.pick.id)
-          : [...state.adaPicks, action.pick],
-      }
-    }
     case 'LOAD': return { ...state, ...action.state }
     default: return state
   }
 }
 
-const defaultState: State = { cart: [], wish: [], adaMode: false, adaAuthorized: false, adaPicks: DEFAULT_ADA_PICKS }
+const defaultState: State = { cart: [], wish: [], adaMode: false, adaAuthorized: false }
 
 const StoreCtx = createContext<{ state: State; dispatch: React.Dispatch<Action> }>({ state: defaultState, dispatch: () => {} })
 
@@ -82,9 +83,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const wish = JSON.parse(localStorage.getItem('wc_wish') || '[]')
       const adaAuthorized = localStorage.getItem('wc_ada_authorized') === '1'
       const adaModeOff = localStorage.getItem('wc_ada_mode_off') === '1'
-      const storedPicks = localStorage.getItem('wc_ada_picks_v2')
-      const adaPicks: AdaPick[] = storedPicks ? JSON.parse(storedPicks) : DEFAULT_ADA_PICKS
-      dispatch({ type: 'LOAD', state: { cart, wish, adaAuthorized, adaMode: adaAuthorized && !adaModeOff, adaPicks } })
+      // wc_ada_picks_v2 is deliberately NOT read back. It is left in place so
+      // usePicks() can offer to publish anything stranded in it; see the note
+      // there. Reading it here would restore the browser-local list and put the
+      // old bug straight back.
+      dispatch({ type: 'LOAD', state: { cart, wish, adaAuthorized, adaMode: adaAuthorized && !adaModeOff } })
     } catch { /* ignore */ }
   }, [])
 
@@ -115,16 +118,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true }
   }, [])
 
-  // Persist cart + wish + ada picks + ada mode preference
+  // Persist cart + wish + ada mode preference. Picks are server-side now.
   useEffect(() => {
     try { localStorage.setItem('wc_cart', JSON.stringify(state.cart)) } catch { /* ignore */ }
   }, [state.cart])
   useEffect(() => {
     try { localStorage.setItem('wc_wish', JSON.stringify(state.wish)) } catch { /* ignore */ }
   }, [state.wish])
-  useEffect(() => {
-    try { localStorage.setItem('wc_ada_picks_v2', JSON.stringify(state.adaPicks)) } catch { /* ignore */ }
-  }, [state.adaPicks])
   useEffect(() => {
     try {
       if (state.adaAuthorized) {

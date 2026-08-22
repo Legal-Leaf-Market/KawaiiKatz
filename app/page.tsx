@@ -1,5 +1,8 @@
 import { FIRST_PAINT_COUNT, getCatalog } from '@/lib/catalog-source'
 import { DEFAULT_ADA_PICKS, showcaseVendors, type Product } from '@/lib/data'
+import { SITE_TITLE } from '@/lib/site'
+import { pageNode } from '@/lib/schema'
+import JsonLd from '@/components/JsonLd'
 import HomeClient from './HomeClient'
 
 /**
@@ -29,6 +32,16 @@ export default async function Page() {
   const grid = products.filter((p) => !SHOWCASE.has(p.vendor))
 
   /**
+   * The SEED picks go in first, whatever their position in the catalogue.
+   *
+   * Only the seed list needs this. Every entry in DEFAULT_ADA_PICKS carries
+   * `image: ''` and is resolved against the live catalogue by id, so a seed pick
+   * sitting at index 1490 rendered an emoji placeholder until the full
+   * catalogue landed. Picks saved by the curator do NOT have that problem —
+   * store_picks denormalises the image alongside the id, so they paint from
+   * their own row (see the note on the table).
+   */
+  /**
    * Ada's Picks go in first, whatever their position in the catalogue.
    *
    * The rail is the very first thing on the page and its picks carry no image
@@ -43,5 +56,20 @@ export default async function Page() {
 
   const initialProducts = [...picks, ...rest].slice(0, FIRST_PAINT_COUNT)
 
-  return <HomeClient initialProducts={initialProducts} />
+  return (
+    <>
+      <JsonLd
+        nodes={[
+          pageNode({
+            path: '/',
+            name: SITE_TITLE,
+            type: 'CollectionPage',
+            description:
+              'Curated kawaii plushies, stationery, kitchen, puzzles and collectibles compared across the shops we carry.',
+          }),
+        ]}
+      />
+      <HomeClient initialProducts={initialProducts} />
+    </>
+  )
 }

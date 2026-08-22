@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 
 import { awinDeepLink, liveLinkShowcases, linkShowcase } from '@/lib/data'
 import { SITE_URL } from '@/lib/site'
+import { pageNode } from '@/lib/schema'
+import JsonLd from '@/components/JsonLd'
 
 /**
  * Brand pages for merchants we cannot ingest — see the LinkShowcase doc in
@@ -59,6 +61,11 @@ export default async function Page({ params }: { params: Promise<{ brand: string
 
   return (
     <div className="min-h-screen">
+      {/* WebPage, not CollectionPage: this page links out to the merchant's own
+          categories and lists no products of its own. */}
+      <JsonLd
+        nodes={[pageNode({ path: `/${s.slug}`, name: `${s.merchant} — ${s.tagline}`, description: s.intro })]}
+      />
       <header className="border-b-[3px] border-[#e6dcff] bg-white/70">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-5">
           <Link
