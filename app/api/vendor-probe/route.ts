@@ -19,7 +19,17 @@ import { MODEL_SCAN_CATS, adultApparelHit } from '@/lib/adult-apparel'
  * on production — a caller could make it scrape every vendor on demand — which
  * is why it is marked temporary and removed in the follow-up commit.
  */
-export const dynamic = 'force-dynamic'
+/* Prerendered, NOT dynamic, and that is the whole trick.
+ *
+ * Preview deployments on this project sit behind Vercel Authentication
+ * (ssoProtection: all_except_custom_domains), which rejects at the edge before
+ * the function is ever invoked — so the response cannot be read and no runtime
+ * log is produced either. But a statically generated route runs during `next
+ * build`, and build logs need no auth to read. So this route logs its findings
+ * to stdout at build time and the answer is collected from the build output,
+ * exactly the way `[catalog] pending, not scraped: ...` already shows up there.
+ */
+export const dynamic = 'force-static'
 export const maxDuration = 60
 
 const PER_PAGE = 250
@@ -80,8 +90,32 @@ async function probe(cfg: (typeof VENDORS)[number]) {
 }
 
 export async function GET() {
-  const results = await Promise.all(VENDORS.map((v) => probe(v).catch((e) => ({ vendor: v.vendor, error: String(e) }))))
+  const results = await Promise.all(
+    VENDORS.map((v) => probe(v).catch((e) => ({ vendor: v.vendor, error: String(e) }) as never))
+  )
+
+  // One line per fact, so nothing is lost to build-log truncation or wrapping.
+  for (const r of results) {
+    const tag = `[probe] ${r.vendor}`
+    if (r.error) {
+      console.log(`${tag} ERROR ${r.error}`)
+      continue
+    }
+    console.log(
+      `${tag} raw=${r.raw} mapped=${r.mapped} pending=${r.pending} capped=${r.capped} safetyDropped=${r.safetyDropped}`
+    )
+    if (!r.raw) continue
+    console.log(`${tag} types ${r.productTypes.map(([t, n]) => `${t}:${n}`).join(' | ')}`)
+    console.log(`${tag} cats ${r.categories.map(([c, n]) => `${c}:${n}`).join(' | ')}`)
+    if (r.safetyPhrases.length) {
+      console.log(`${tag} dropPhrases ${r.safetyPhrases.map(([t, n]) => `${t}:${n}`).join(' | ')}`)
+    }
+    for (const t of r.sampleApparel) console.log(`${tag} apparel~ ${t}`)
+    for (const t of r.sampleAccessories) console.log(`${tag} accessory~ ${t}`)
+    for (const t of r.sampleDropped) console.log(`${tag} dropped~ ${t}`)
+  }
+
   return NextResponse.json({ probedAt: new Date().toISOString(), results }, {
-    headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
+    headers: { 'X-Robots-Tag': 'noindex' },
   })
 }
