@@ -66,6 +66,43 @@ function hasAny(hay: string, terms: string[]): boolean {
   return false
 }
 
+/**
+ * Like hasAny, but each term must match as a whole word.
+ *
+ * hasAny is a substring test, which is fine for a term long enough to be its own
+ * word ('backpack', 'scrunchie') and actively wrong for a short one. Two short
+ * terms in the accessories rule were misfiling products across the catalogue:
+ *
+ *   'pin'  is a substring of PINK. Every product whose title, tags or blurb
+ *          said "pink" and that reached the accessories rule was filed as an
+ *          accessory — on a site where a large share of the catalogue is pink,
+ *          and where the home rule sits BELOW accessories, so pink blankets,
+ *          pink lamps and pink wall decor all landed there.
+ *   'ring' is a substring of SPRING (and string, watering, offering). Same
+ *          shape of failure: "Spring Meadow" anything became an accessory.
+ *
+ * That is not only a wrong chip on a card. `accessories` is one of
+ * MODEL_SCAN_CATS, so every one of those products was queued for the coco-ssd
+ * person scan and spending a share of its 35s build budget — the budget meant
+ * for the real apparel photos. It is the same failure the BRKOX forceCat comment
+ * describes, arriving by a different route.
+ *
+ * Use this for any term short enough to live inside a longer word. Terms that
+ * cannot (still the majority) stay on hasAny, which is cheaper.
+ */
+const WORD_RX = new Map<string, RegExp>()
+function hasWord(hay: string, terms: string[]): boolean {
+  for (const t of terms) {
+    let rx = WORD_RX.get(t)
+    if (!rx) {
+      rx = new RegExp('(^|[^a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+') + 's?([^a-z0-9]|$)')
+      WORD_RX.set(t, rx)
+    }
+    if (rx.test(hay)) return true
+  }
+  return false
+}
+
 // Hoisted so the garment guard and the plush rule read the SAME list. Two copies
 // would drift, and the drift would be silent: a term added to the rule but not the
 // guard turns that product into apparel without anything failing.
@@ -75,6 +112,44 @@ export function categorize(hay: string): string {
   hay = (hay || '').toLowerCase()
   if (hasAny(hay, ['infant', 'newborn', 'swaddle', 'onesie', 'pacifier', 'teether', 'teething', 'bassinet', 'baby rattle', 'baby gym', 'tummy time', 'baby mobile', 'baby carrier', 'montessori baby'])) return 'learning'
   if (hasAny(hay, ['bag charm', 'bagcharm', 'bag-charm', 'keychain', 'key chain', 'key ring', 'keyring', 'phone charm', 'purse charm', 'hanging charm', 'dangle charm', 'strap charm', 'airpod charm', 'pendant charm', ' charm', 'charm ', 'charms'])) return 'accessories'
+  // Decora and pastel-scene accessories: the cat ears, hair clips, bows,
+  // bracelets, earrings and lip gloss that make an outfit rather than merely
+  // decorate a shelf. Added 2026-08-22 with the kawaii/decora vendor intake,
+  // because none of this vocabulary existed in the classifier and all of it
+  // fell through to 'other' — a cat-ear headband matched no rule at all.
+  //
+  // Placed HIGH, next to the charm rule, and regex-anchored like the garment
+  // test below. High because these nouns are the most specific thing a title
+  // can say and the loose rules underneath would otherwise claim them first
+  // ('hat' is a substring of nothing useful here, but 'pin' and 'ring' are).
+  //
+  // No plush guard on this first group, unlike the garment test: a headband is
+  // not a plushie however plush it is, and "plush cat ears headband" is a
+  // perfectly ordinary product name in this niche.
+  if (/(^|[^a-z0-9])(head|hair) ?bands?([^a-z0-9]|$)|(^|[^a-z0-9])hair ?(clips?|pins?|ties?|bows?|forks?)([^a-z0-9]|$)|(^|[^a-z0-9])(barrettes?|claw clips?|scrunchies?|bobby pins?)([^a-z0-9]|$)/.test(hay)) return 'accessories'
+  // Jewellery and kid-safe beauty. Bare 'ring' is deliberately NOT here: it
+  // would claim jigsawdepot's "Ring Matching Game" and Montessori & Me's
+  // stacking rings, both of which the puzzle and learning rules below get right
+  // today. 'earring' is unambiguous, so it is.
+  if (/(^|[^a-z0-9])(earrings?|necklaces?|bracelets?|bangles?|anklets?|chokers?|brooch(es)?|lip ?gloss|lipsticks?|lip ?balms?|nail (polish|stickers?|wraps?)|press[- ]on nails)([^a-z0-9]|$)/.test(hay)) return 'accessories'
+  // "Cat ears" needs TWO guards, and the second one was learned the hard way.
+  //
+  // The plush guard, because in this catalogue the phrase is equally the name of
+  // a headband and a description of a plushie's face.
+  //
+  // The GARMENT guard, because animal ears are just as often sewn onto a hoodie
+  // or a beanie as sold on their own — and this rule sits above the garment test,
+  // so without it the garment loses. Measured on a real feed: Grumpy Bunny's
+  // "Psycho Nation black & white bunny ears hoodie" and Hypercore's "cat ears
+  // beanie" both moved from apparel to accessories when this rule was added.
+  // A hoodie with ears on it is a hoodie.
+  if (
+    !hasAny(hay, PLUSH_TERMS) &&
+    !/\b(hoodies?|beanies?|hats?|caps?|sweaters?|sweatshirts?|cardigans?|shirts?|dress(es)?|jumpers?|coats?|jackets?)\b/.test(hay) &&
+    /(^|[^a-z0-9])(cat|kitty|neko|bunny|bear|fox|devil|angel) ?ears?([^a-z0-9]|$)/.test(hay)
+  ) {
+    return 'accessories'
+  }
   if (hasAny(hay, ['blind box', 'blindbox', 'popmart', 'pop mart', 'hippers', 'dimoo', 'mighty jaxx', 'sonny angel', 'smiski', 'labubu', 'collectible', 'figurine', 'figure', 'mystery box', 'mystery bag', 'lucky egg', 'series figures'])) return 'collect'
   if (hasAny(hay, ['switch case', 'nintendo switch', 'phone case', 'samsung phone case', 'iphone case', 'ipad case', 'airpods', 'keyboard', 'keycaps', 'mousepad', 'desk pad', 'gaming', 'controller', 'console', 'usb', 'charging', 'charger', 'handheld fan', 'neck fan'])) return 'tech'
   // An unambiguous garment noun beats an age word or a print theme. Every rule
@@ -97,15 +172,64 @@ export function categorize(hay: string): string {
   // for apparel — and `snugible` being in the plush list at all is somebody
   // deciding, on purpose, that these belong in Plushies. A soft-goods hybrid is
   // classified by what it IS, not by the one word in its name that is a garment.
-  if (!hasAny(hay, PLUSH_TERMS) && /\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b/.test(hay)) return 'apparel'
+  //
+  // Widened 2026-08-22 for Ada's brief, which is clothes: shirts, skirts,
+  // pants, lace tops, shoes. Every noun added here is one that cannot mean
+  // anything else in this catalogue, tested at word boundaries, and checked
+  // against the existing vendors before being added:
+  //   'skirt'      — no other meaning. 'mini skirt' is caught by the safety
+  //                  filter long before this rule ever runs.
+  //   'overalls'   — PLURAL ONLY, because "overall length" is ordinary product
+  //                  copy and would drag furniture and puzzle boards in.
+  //   'leggings', 'jeans', 'blouse', 'cardigan', 'jumpsuit', 'romper',
+  //   'dungarees', 'pyjamas'/'pajamas' — unambiguous garment nouns.
+  //   'pants'/'trousers' — 'pants' is safe at a word boundary; as a substring
+  //                  it would have matched nothing here anyway, but the anchor
+  //                  keeps it that way if somebody ever sells a "pantsuit".
+  // Deliberately still NOT here: 'top' (laptop, stopwatch, tabletop), 'dress'
+  // (dressing table, dress-up pretend play, which is a learning toy), 'shoes'
+  // and 'boots' (the loose rule below already has them, after the rules that
+  // claim "boot tray" and similar). Moving those up buys nothing and costs the
+  // rules underneath.
+  if (!hasAny(hay, PLUSH_TERMS) && /\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b|\bskirts?\b|\bleggings\b|\bjeans\b|\bblouses?\b|\bcardigans?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees\b|\boveralls\b|\bpants\b|\btrousers\b|\bp[yj]jamas\b/.test(hay)) return 'apparel'
   if (hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])) return 'kitchen'
   if (hasAny(hay, ['ramen', 'ramune', 'sparkling water', 'ocean bomb', 'pez', 'buldak', 'samyang', 'soda', 'lychee flavor', 'lemon lime', 'white peach', 'candy', 'chocolate', 'gummy', 'tea party'])) return 'food'
   if (hasAny(hay, PLUSH_TERMS)) return 'plush'
   if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'counting', 'alphabet', 'stacking', 'sorting', 'toddler', 'math', 'hape', 'rattle', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
   if (hasAny(hay, ['puzzle', 'jigsaw', '500pc', '1000pc', 'pieces', 'tilting board', 'puzzle table', 'board game', 'yo-yo', 'kite', 'ring matching game'])) return 'puzzle'
   if (hasAny(hay, ['sticker', 'notebook', 'journal', 'planner', 'pen', 'pencil', 'washi', 'memo', 'stationery', 'eraser', 'marker', 'highlighter', 'stapler', 'desk clock'])) return 'stationery'
-  if (hasAny(hay, ['hoodie', 'shirt', 't shirt', 't-shirt', 'tee', 'dress', 'pajamas', 'pyjamas', 'hat', 'bucket hat', 'visor', 'outfit', 'sneakers', 'shoes', 'platform shoes', 'socks', 'sweater', 'sweatshirt', 'beanie', 'kimono', 'swim vest', 'float suit', 'blanket hoodie'])) return 'apparel'
-  if (hasAny(hay, ['bag', 'backpack', 'ita backpack', 'messenger bag', 'cosmetic bag', 'pouch', 'tote', 'purse', 'wallet', 'necklace', 'bracelet', 'earring', 'ring', 'hair ties', 'hair clip', 'scrunchie', 'umbrella', 'pin', 'badge'])) return 'accessories'
+  // The loose apparel rule. Everything here is a substring test, which is only
+  // safe because the kitchen, food, plush, learning, puzzle and stationery rules
+  // above have already claimed the words that collide ('tee' inside "canteen"
+  // and "teether" is the standing example).
+  //
+  // The 2026-08-22 additions are the rest of Ada's list — the pieces of a
+  // decora or fairy-kei outfit that are not covered by the anchored test above:
+  // outerwear, legwear, footwear and the layering pieces. 'platform' earns its
+  // place on its own because platform shoes are a fairy-kei staple and the word
+  // is never used any other way in this catalogue.
+  if (hasAny(hay, ['hoodie', 'shirt', 't shirt', 't-shirt', 'tee', 'dress', 'pajamas', 'pyjamas', 'bucket hat', 'visor', 'outfit', 'sneakers', 'shoes', 'platform shoes', 'platform boots', 'platform sandals', 'mary jane', 'boots', 'sandals', 'slippers', 'socks', 'sweater', 'sweatshirt', 'beanie', 'kimono', 'swim vest', 'float suit', 'blanket hoodie', 'cardigan', 'jacket', 'coat', 'tights', 'leg warmer', 'legwarmer', 'arm warmer', 'armwarmer', 'apron dress', 'pinafore', 'jumper', 'tunic', 'lace top', 'lace shirt', 'lace blouse'])) return 'apparel'
+  // 'hat' and 'vest' are the same hazard as 'pin' and 'ring', and they belong to
+  // this rule rather than the accessories one, so they get the same treatment.
+  //
+  // 'hat'  is a substring of THAT, and `hay` includes the blurb — so a product
+  //        whose description contained the word "that" and which reached this
+  //        rule was filed as apparel. "Kawaii wall lamp that glows softly"
+  //        classified as apparel before this line existed. That is a pre-existing
+  //        bug, not one introduced with the decora terms; it is fixed here
+  //        because this is the rule it lives in.
+  // 'vest' is a substring of HARVEST (and invest). This one WAS introduced with
+  //        the decora terms — 'vest' was added for the layering pieces and
+  //        immediately reclassified "harvest moon wall art" out of home.
+  //
+  // Both still match what they are meant to: hasWord appends an optional plural,
+  // so 'vest' catches "swim vest" and "vests", 'hat' catches "hats".
+  if (hasWord(hay, ['hat', 'vest'])) return 'apparel'
+  // 'ring' and 'pin' moved off hasAny and onto hasWord — see the note on
+  // hasWord for what they were matching ("spring", "pink") and why it mattered
+  // more than a wrong chip. Everything else stays on the cheaper substring test.
+  if (hasAny(hay, ['bag', 'backpack', 'ita backpack', 'messenger bag', 'cosmetic bag', 'pouch', 'tote', 'purse', 'wallet', 'necklace', 'bracelet', 'earring', 'hair ties', 'hair clip', 'scrunchie', 'umbrella', 'badge', 'wristband', 'sunglasses'])) return 'accessories'
+  if (hasWord(hay, ['ring', 'pin', 'brooch', 'choker', 'anklet', 'bangle'])) return 'accessories'
   if (hasAny(hay, ['blanket', 'pillow', 'bedding', 'duvet', 'quilt', 'cover set', 'mat', 'rug', 'frame', 'photo frame', 'picture frame', 'plaque', 'hanger', 'wall', 'decor', 'lamp', 'light', 'mirror', 'clock', 'tent', 'play tent', 'furniture', 'sofa', 'coffee table'])) return 'home'
   return 'other'
 }
@@ -157,6 +281,25 @@ interface ShopifyProductRaw {
   variants?: ShopifyVariant[]
 }
 
+/**
+ * Case-insensitive product_type gate, from VendorConfig.include / .exclude.
+ *
+ * Ported from Legal-Leaf's mapShopify(). Absent config it is a no-op, which is
+ * every vendor on the shelf today — it exists for the intake ahead of it, where
+ * a merchant like The Kawaii Shoppu sells apparel, jewellery, bags, plush AND
+ * stationery out of one feed and we may want only part of that.
+ *
+ * `include` is an allow-list rather than a deny-list on purpose: a product_type
+ * the merchant invents later stays OUT until somebody looks at it, instead of
+ * appearing on the storefront unannounced.
+ */
+function typeAllowed(cfg: typeof VENDORS[number], productType: string): boolean {
+  const t = String(productType || '').trim().toLowerCase()
+  if (cfg.include?.length && !cfg.include.some((x) => x.trim().toLowerCase() === t)) return false
+  if (cfg.exclude?.length && cfg.exclude.some((x) => x.trim().toLowerCase() === t)) return false
+  return true
+}
+
 export function mapShopifyProducts(
   cfg: typeof VENDORS[number],
   raw: ShopifyProductRaw[]
@@ -164,6 +307,7 @@ export function mapShopifyProducts(
   const out: Product[] = []
   for (const p of raw || []) {
     if (!p || !p.handle) continue
+    if (!typeAllowed(cfg, p.product_type ?? '')) continue
     const vars = (p.variants || [])
       .filter((v) => v.available !== false)
       .map((v) => ({

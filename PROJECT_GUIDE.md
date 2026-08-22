@@ -57,7 +57,69 @@ vendor that fails is skipped silently so the others still load.
 - `GET /api/catalog?debug` — per-vendor fetch counts and how many rows the filters dropped
 
 Use `?debug` before assuming a vendor is dead: the silent catch means a failed fetch and an
-empty catalogue look identical from the outside.
+empty catalogue look identical from the outside. The response now carries a `debug` block
+naming the vendors that are `empty`, `failed`, `untracked`, `pending` or `capped`, so you no
+longer have to infer any of that from a count. It ships unconditionally — reading the query
+string would make the route dynamic and cost the 6h prerender (§4b).
+
+**The fetch sends `Mozilla/5.0`**, not a self-identified bot UA — Legal-Leaf's header.
+**This did not fix Tokyo Tiger.** Measured 2026-08-22 from a preview deploy: with that exact
+header, from Vercel's IPs, tokyo-tiger.com answers **HTTP 403**. It is host-level bot
+protection, not a User-Agent problem, and no header gets past it. Don't re-run that
+experiment; the options left are a headless fetch, an Impact product feed, or delisting.
+
+### Probing when this container has no egress
+
+`pnpm probe` cannot reach merchant hosts from a Claude Code container — the proxy refuses
+them, and it refuses `*.vercel.app` too. The way through, used on 2026-08-22 and worth
+repeating:
+
+1. Add a temporary `app/api/vendor-probe/route.ts` that runs the probe logic, marked
+   `export const dynamic = 'force-static'`.
+2. Push. The branch preview builds, and **a prerendered route executes during `next build`**,
+   so its `console.log` lands in the build log.
+3. Read it with the Vercel MCP `get_deployment_build_logs` (filter for `[probe]`; the tfjs
+   kernel-registration spam is ~400 lines you must page past).
+4. Delete the route in the follow-up commit.
+
+Build logs are the trick: preview deploys sit behind Vercel Authentication
+(`ssoProtection: all_except_custom_domains`), which rejects at the edge *before* the function
+runs — so the response can't be fetched and no runtime log is produced either. Build logs
+need no auth.
+
+### Registering a vendor: `pending`, and the probe
+
+Ported from Legal-Leaf's `ShopifyStore.pending` + `scripts/vendor_probe.py`, and it exists
+because of what happened without it. The Impact intake of 2026-08-11 went onto the shelf
+unread, and two failures rode in unannounced: Tokyo Tiger returned nothing, and the two sock
+vendors put 466 products up that still earn nothing because `affiliateParam` is empty.
+
+So a new vendor goes into `VENDORS` with `pending: true`. `getCatalog()` skips it, logs that
+it skipped it, and `?debug` lists it. Then:
+
+```
+pnpm probe                      # every pending vendor
+pnpm probe kawaiibabe.com       # one domain
+```
+
+The probe imports the site's real `mapShopifyProducts`, `categorize` and `adultApparelHit`
+rather than reimplementing them — a second copy would drift silently. It prints the
+`product_type` histogram to write `include` from, which of our categories the feed actually
+lands in, and **how many products the kid-safety phrase filter would delete**.
+
+Read that last number before anything else on a decora vendor. `pleated skirt`, `thigh
+high`, `high waist`, `lace up`, `chiffon` and `satin` are all in `CUT_PHRASES`, and they are
+also the plain vocabulary of a fairy-kei wardrobe — on a sample of twelve typical decora
+items, seven were dropped. That is the filter working as written, not a bug, and the fix for
+a genuine false positive is a narrow `KID_SAFE` entry, never deleting a `CUT_PHRASES` term.
+
+Clearing the flag needs both halves: a feed you have read, **and** a real tracking value in
+`affiliateParam` / `awinMerchantId`. A vendor shipped without one is free traffic for the
+merchant and nothing will say so.
+
+`unstable_cache` keys are versioned (`vendor-catalog-v2`). Bump the version in the same
+commit as any change to what a cached entry contains — UA, mapping, classifier — or a warm
+6h entry serves old-code results after the deploy and the change looks like it did nothing.
 
 Two filter layers drop adult-model apparel — a text filter, then a coco-ssd image scan
 budgeted so a cold build cannot hang. Unscanned items stay; the text filter is the backstop.
@@ -98,6 +160,65 @@ the document and trade a fast background fetch for a slow first byte. `SEED_PROD
 a last-resort fallback, not what visitors see.
 
 ---
+
+### Measured vendor state, 2026-08-22
+
+Every live vendor, read from a real feed. Re-measure with the probe recipe above.
+
+| Vendor | raw | mapped | notes |
+|---|---:|---:|---|
+| Kore Kawaii | 1250 | 1084 | **hits the 5-page cap** — catalogue truncated |
+| The Kawaii Shoppu | 513 | 491 | 145 accessories, 77 apparel |
+| Grumpy Bunny | 591 | 449 | **255 apparel, 125 accessories** — the decora one |
+| sugarhai | 447 | 427 | `exclude`s 38 swimwear/crop-top rows |
+| Sydney Sock Project | 576 | 436 | untracked |
+| Plushible | 337 | 331 | |
+| Kawaii Babe | 1250 | — | fairy kei / decora — **hits the 5-page cap** too |
+| Blippo | 1250 | 313 | **pending** — 90% Japanese snacks, capped |
+| Kawaii Slime Company | 162 | 136 | **pending** — 67 land in `other`, needs a category |
+| Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
+
+Two things that only showed up under real data:
+
+- **Two vendors are truncated.** Kore Kawaii and Kawaii Babe both return a full page at
+  `MAX_PAGES`, so part of each catalogue has never been ingested — and for Kawaii Babe that
+  is the decora stock Ada asked for, so it is worth fixing. Raising `MAX_PAGES` costs build
+  time on every vendor; a per-vendor cap is the better answer. Page generation currently
+  takes 105s against the 240s `staticPageGenerationTimeout`, so there is headroom, but not
+  a lot.
+- **The safety filter reads the product NAME only.** sugarhai sells bikinis named
+  "Kawaii Maneki Neko" — the garment is only in `product_type`, so `adultApparelHit()`
+  scored the feed 0/447. Any merchant that names by design rather than by garment is
+  invisible to the text layer. `exclude` covers it per-vendor; screening `product_type`
+  would fix it generally.
+
+## 4c. Affiliate partnerships
+
+Four networks: **Impact** (largest), **AWIN**, **Refersion**, **GoAffPro**. `VendorConfig.network`
+records which one a vendor's programme lives on. It is documentation — `affiliateParam` and
+`awinMerchantId` are what actually build a link — but the networks differ where it matters:
+
+- **Impact / Refersion / GoAffPro** attribute on a query param, so approval is a one-line
+  change to `affiliateParam`.
+- **AWIN** attributes on a redirect through `awin1.com`. Set `awinMerchantId` and leave
+  `affiliateParam` empty; `affiliateUrl()` builds the deep link from `AWIN_PUBLISHER_ID`.
+
+`lib/partners.ts` (**server-only**, never import it from a `'use client'` file) holds the
+prospect table: merchants worth pursuing, the network each is on, and — just as usefully —
+the ones deliberately rejected, so nobody rediscovers them. Rates in it come from public
+search, not from a dashboard; treat them as leads to confirm at application time.
+
+Two things in there worth knowing without reading it:
+
+1. **Rakuten is migrating onto impact.com** (announced 2026-04-28, ~2,000 programmes). A
+   merchant that reads as "Rakuten, not one of our networks" today may already be reachable
+   through the Impact account we hold. Re-search the marketplace before writing one off.
+2. **Not every good merchant can be ingested.** This site reads Shopify `products.json` and
+   nothing else. Hot Topic, Claire's, Smiggle and TruffleShuffle are all strong fits on
+   networks we use, and all run other platforms — so they need a showcase page
+   (`VendorConfig.showcase`, as BRKOX has) or a bespoke scraper, not a row in `VENDORS`. A
+   row would register a vendor that returns zero products forever, which is the Tokyo Tiger
+   failure by construction.
 
 ## 5. Environment variables
 
@@ -146,3 +267,9 @@ There is no test suite, so verify by hand:
 - Do NOT add product URLs to the sitemap — every product lives on the vendor's own site and
   we should not compete with them for it.
 - Do NOT let `/api/` become crawlable; a crawl costs a live scrape of every vendor (§4).
+- Do NOT add a vendor to `VENDORS` without `pending: true` until its feed has been read with
+  `pnpm probe` and its affiliate tracking value is real (§4). Both halves, not one.
+- Do NOT loosen `CUT_PHRASES` in `lib/adult-apparel.ts` to make a vendor's product count go
+  up. A genuine false positive gets a narrow `KID_SAFE` entry instead (§4).
+- Do NOT import `lib/partners.ts` from a client component — it is our commission paperwork
+  and every byte a client component imports is served to every visitor (§4c).

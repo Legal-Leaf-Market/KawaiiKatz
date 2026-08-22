@@ -46,6 +46,63 @@ export type VendorConfig = {
    * real apparel.
    */
   forceCat?: string
+  /**
+   * Which affiliate network the programme lives on. Documentation, not runtime
+   * config: nothing here builds a link (`affiliateParam` and `awinMerchantId`
+   * do that). It is recorded because the four networks behave differently at
+   * the point where money starts flowing, and the difference is invisible in
+   * the config otherwise:
+   *
+   *   'impact'   — Impact pays through their own tracking link. What goes in
+   *                `affiliateParam` on approval is the campaign's SubId, and
+   *                until then the vendor earns NOTHING (see `pending`).
+   *   'awin'     — paid by redirect through awin1.com; set `awinMerchantId`
+   *                and leave `affiliateParam` empty. See affiliateUrl().
+   *   'refersion' / 'goaffpro' — Shopify apps. Both attribute on a `?ref=`
+   *                style query param, which is exactly what `affiliateParam`
+   *                already is, so approval is a one-line change here.
+   *   'direct'   — the merchant runs their own scheme, no network in between.
+   */
+  network?: 'impact' | 'awin' | 'refersion' | 'goaffpro' | 'direct'
+  /**
+   * Optional product_type allow-list. Present = ONLY these types are ingested,
+   * matched case-insensitively against Shopify's `product_type`.
+   *
+   * Ported from ShopifyStore.include in Legal-Leaf's lib/hlm.ts, and it earns
+   * its place here for the same reason it does there: a vendor's whole
+   * catalogue is not necessarily a fit. An allow-list rather than a deny-list
+   * on purpose — a product_type the merchant invents later stays OUT until
+   * somebody looks at it, instead of silently appearing on the storefront.
+   *
+   * Write it from a real feed read, never a guess: `node scripts/vendor_probe.mjs
+   * <domain>` prints the product_type histogram this list should be built from.
+   */
+  include?: string[]
+  /** Optional product_type deny-list, for stores where taking everything-but is
+   *  the more natural expression. Applied after `include`. */
+  exclude?: string[]
+  /**
+   * Registered but NOT scraped. A pending vendor is one we have signed up to in
+   * every other respect — network, commission, prefix — whose products.json
+   * nobody has actually read yet.
+   *
+   * This is the piece the Impact intake was missing. The four apparel vendors
+   * added on 2026-08-11 went straight onto the shelf unread, and the catalogue
+   * inherited two problems from that in one move: Tokyo Tiger returned nothing
+   * at all while reporting `ok: true`, and the two sock vendors landed 466
+   * products that are still, today, earning zero because `affiliateParam` is
+   * empty. Neither failure announced itself. `pending` is how a vendor waits in
+   * the config, visibly, without either of those happening silently.
+   *
+   * getCatalog() skips these and says so in the log, and `/api/catalog?debug`
+   * lists them under `pending` so the wait is legible from outside too.
+   *
+   * The sequence to clear it: run `node scripts/vendor_probe.mjs <domain>`,
+   * read the histogram, write `include`/`forceCat` from what is actually in the
+   * feed, confirm the affiliate approval landed and put the real tracking value
+   * in `affiliateParam` (or `awinMerchantId`), THEN delete this flag.
+   */
+  pending?: boolean
   /** Shown on the vendor's own showcase page. */
   showcase?: {
     slug: string
@@ -170,7 +227,21 @@ export const VENDORS: VendorConfig[] = [
   // makes. It was contributing 0 products, so removing it cost nothing; the
   // danger was that fixing the fetch later would have quietly started sending
   // real people there.
-  { vendor: 'Tokyo Tiger', domain: 'https://www.tokyo-tiger.com', prefix: 'tt', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0 },
+  // RESOLVED 2026-08-22, and the answer is not the one the comment above
+  // predicted. Probed from a preview deploy with a plain `Mozilla/5.0` UA, from
+  // Vercel's IPs: the host answers **HTTP 403**. Not an empty catalogue, not a
+  // wrong domain, not the User-Agent — a refusal.
+  //
+  // So the browser-vs-bot test written above has been run and it came back
+  // negative. This is host-level bot protection (Cloudflare or equivalent), and
+  // there is no header that gets past it. The remaining honest options are a
+  // headless-browser fetch, an Impact product feed if their programme offers
+  // one, or dropping the vendor.
+  //
+  // It is left registered, contributing nothing, because the 403 is now recorded
+  // rather than hidden behind `ok: true` — /api/catalog reports it under
+  // debug.empty. Do not spend more time on the UA.
+  { vendor: 'Tokyo Tiger', domain: 'https://www.tokyo-tiger.com', prefix: 'tt', affiliateParam: '', network: 'impact', commissionPct: 15, couponCode: '', couponPct: 0 },
   // Both sock vendors are single-purpose catalogues, which is the BRKOX case
   // again: the classifier reads a product's own words, and a sock named
   // "Bamboo Crew" or "Merino Ankle" contains none of the apparel keywords, so
@@ -178,8 +249,161 @@ export const VENDORS: VendorConfig[] = [
   // the catalogue is one thing. Do NOT pin Tokyo Tiger the same way — it sells
   // more than one kind of product, and a pin would flatten real categories into
   // a wrong one.
-  { vendor: 'Sydney Sock Project', domain: 'https://sydneysockproject.com', prefix: 'ssp', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
-  { vendor: 'Vix Socks', domain: 'https://www.vixsocks.com', prefix: 'vix', affiliateParam: '', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+  { vendor: 'Sydney Sock Project', domain: 'https://sydneysockproject.com', prefix: 'ssp', affiliateParam: '', network: 'impact', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+  { vendor: 'Vix Socks', domain: 'https://www.vixsocks.com', prefix: 'vix', affiliateParam: '', network: 'impact', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'apparel' },
+
+  // ---------------------------------------------------------------------------
+  // Kawaii / decora / pastel-scene intake, added 2026-08-22, ALL PENDING.
+  //
+  // Ada's brief was the shelf, not the payout: apparel means clothes — shirts,
+  // skirts, pants, lace tops, shoes — plus the accessories that make an outfit
+  // decora rather than merely cute: cat ears, hair clips and bows, bracelets,
+  // earrings, lip gloss. Today `apparel` holds 466 pairs of socks and nothing
+  // else, so every vendor below was picked for what it puts on that shelf.
+  //
+  // WHY EVERY ONE OF THEM IS `pending`, WITHOUT EXCEPTION.
+  //
+  // None of these feeds has been read. They could not be: egress to merchant
+  // hosts is refused by the proxy in the container this was wired up in, which
+  // is the same wall the 2026-08-11 Impact intake hit — and that intake going
+  // on the shelf unread is precisely why Tokyo Tiger sat at zero products for
+  // eleven days while reporting `ok: true`. Registering these pending is the
+  // fix for that failure mode, not caution for its own sake. Each needs one
+  // `node scripts/vendor_probe.mjs <domain>` run from a box with open egress
+  // before the flag comes off; see the `pending` doc on VendorConfig.
+  //
+  // They are also all Shopify, which is a selection criterion rather than a
+  // coincidence — this catalogue ingests products.json and nothing else. Four
+  // strong candidates are therefore NOT in this list and are recorded in
+  // PARTNER_PROSPECTS below instead: Hot Topic, Claire's, Smiggle and
+  // TruffleShuffle all run non-Shopify platforms, so adding a row here would
+  // register a vendor that can never return a product. That is the same call
+  // Legal-Leaf made keeping St. Francis Herb Farm out of SHOPIFY_STORES.
+  //
+  // ONE THING TO EXPECT ON THE FIRST PROBE, because it will look like a bug and
+  // is not: the kid-safety filters will delete a large share of what these
+  // vendors sell. `pleated skirt`, `thigh high`, `high waist`, `lace up`,
+  // `chiffon` and `satin` are all in CUT_PHRASES in lib/adult-apparel.ts, and
+  // they are also the plain vocabulary of a fairy-kei wardrobe. The probe
+  // prints that count separately for exactly this reason. Do not loosen the
+  // filter to make a number go up — read what it actually dropped first.
+
+  // Fairy kei and decora specifically: ruffle skirts, rainbow knits, platform
+  // shoes, bunny-ear headbands, star and candy jewellery. The closest match in
+  // the whole search to what Ada described, and the reason it sits first.
+  // Affiliate programme exists but is gated on a 10k-follower threshold, so the
+  // commission is unknown until somebody applies — 0 here is "not established",
+  // not "unpaid".
+  // PROBED 2026-08-22 on a preview deploy. Feed reads clean; the filter caught
+  // the handful of items that needed catching (thigh-highs, a cami top, a gothic
+  // mini dress) and left the hair clips, cat-ear pieces, earrings and skirts.
+  { vendor: 'Kawaii Babe', domain: 'https://kawaiibabe.com', prefix: 'kbabe', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0 },
+  // Apparel, jewellery, bags, plush and stationery imported from East Asia.
+  // Publishes 10% on a 30-day cookie through its own on-site affiliate
+  // registration, which is a Shopify affiliate app rather than a network — so
+  // approval should hand back a `?ref=`-shaped value that drops straight into
+  // `affiliateParam`. Widest catalogue of the six; likely to need an `include`.
+  // PROBED 2026-08-22: 513 raw, 491 mapped, 6 dropped by the safety filter.
+  // Lands 145 accessories and 77 apparel — the single biggest accessories
+  // contribution of the intake. No `include` written on purpose: the feed's 20+
+  // product_types are all on-brand (Hair Accessories, Jewellery, Bag, Slippers,
+  // makeup) and 72 rows carry an EMPTY product_type, which an include list
+  // cannot reach — an allow-list here would silently delete them.
+  { vendor: 'The Kawaii Shoppu', domain: 'https://thekawaiishoppu.com', prefix: 'kshop', affiliateParam: '', network: 'direct', commissionPct: 10, couponCode: '', couponPct: 0 },
+  // Japanese kawaii, Harajuku brands, strong on stationery and accessories.
+  // Runs a published affiliate programme; rate not stated on the public page.
+  // PROBED 2026-08-22 and STAYS PENDING on the evidence, which is the probe
+  // doing its job: this is a Japanese SNACK importer that also sells accessories,
+  // not a kawaii fashion shop. Of 1,250 rows read, the top 15 product_types are
+  // all confectionery — Savory Snacks 188, Gummy Candy 167, Chocolate 123, Hard
+  // Candy 113 — and only 12 landed in apparel against 132 in food.
+  //
+  // It also HIT THE 5-PAGE CAP at 1,250 raw for 313 mapped, so the catalogue is
+  // truncated and the accessories may well be in the part we never fetched.
+  // Shipping it now would flood Snacks & Drinks with several hundred Japanese
+  // sweets and still not put a skirt on the apparel shelf.
+  //
+  // To ship it later: raise MAX_PAGES for this vendor or pin it to the
+  // accessory collections, then write an `include` from a FULL type histogram —
+  // the one we have is truncated to the top 20 and is all food.
+  { vendor: 'Blippo', domain: 'https://www.blippo.com', prefix: 'blip', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+  // UK importer stocking ACDC RAG, Dear My Love and Hypercore — actual Harajuku
+  // decora labels rather than decora-styled dropship, and it keeps a
+  // /collections/decora. No affiliate programme found in public search, so this
+  // one needs an approach before it needs a probe.
+  // PROBED 2026-08-22, AND IT IS THE ONE. 591 raw, 449 mapped, 6 safety drops.
+  // 255 apparel and 125 accessories — more apparel than every other vendor in
+  // this catalogue combined, and it is the real thing rather than decora-styled
+  // dropship: product_types are Tops 247, Accessories 114, Skirt 44, Dresses 18,
+  // Socks 13, Outerwear 11, Trousers 10, and the labels are ACDC RAG, Dear My
+  // Love, Psycho Nation, Hypercore and Listen Flavor.
+  //
+  // SHIPPED UNTRACKED. No affiliate programme was found for them in public
+  // search, so `affiliateParam` is empty and every click earns nothing. That is
+  // the deliberate BRKOX/Impact precedent — "payout is not an input to whether a
+  // vendor is worth showing" — and it is now a VISIBLE state rather than a
+  // silent one: isUntracked() reports it and `/api/catalog` lists it under
+  // debug.untracked. They need an approach, not an application.
+  //
+  // WATCH THE JIRAI KEI. Dear My Love is a jirai-kei label, and that subculture
+  // runs older than this site's audience. The 6 drops were the right 6 (a lace-up
+  // tee, three camis, a satin tote), but re-read the feed if the range widens.
+  { vendor: 'Grumpy Bunny', domain: 'https://grumpybunny.com', prefix: 'gbun', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0 },
+  // Pastel, kawaii and mental-health-positive apparel and accessories, US-made.
+  // CHECK THE CATALOGUE CAREFULLY on the probe run: the brand describes part of
+  // its range as "pastel goth", and this site's promise is a kid-safe shelf.
+  // The filters are a backstop, not a substitute for reading the feed.
+  // PROBED 2026-08-22, and this is the entry that justifies the whole `exclude`
+  // mechanism, because the probe found something the safety filter CANNOT.
+  //
+  // 447 raw, 427 mapped, and `safetyDropped: 0` — which looks like a clean feed
+  // and is not. sugarhai sells 12 Bikini Tops, 9 Bikini Bottoms, 9 Swimwear and
+  // 8 Crop Tops, and the filter did not flag one of them, because
+  // adultApparelHit() reads the product NAME and sugarhai names its products
+  // after the artwork: the bikini tops are called "Kawaii Maneki Neko" and
+  // "Jellyfish Bish". The garment is only ever named in `product_type`.
+  //
+  // THAT IS A GENERAL HOLE, not a sugarhai quirk: any merchant that names by
+  // design rather than by garment is invisible to the text layer. Worth fixing
+  // properly one day by screening product_type too. Until then, `exclude` does
+  // it precisely and without touching CUT_PHRASES.
+  //
+  // What is left is the good part and it is substantial: 96 T-shirts, 78
+  // Hoodies, 26 Leggings and 178 stickers.
+  //
+  // ALSO WORTH A HUMAN EYE: the range is pastel-goth as well as pastel, and some
+  // titles ("Dead Inside Kitty Cat") are not the register Ada asked for even
+  // though nothing about them is unsafe.
+  {
+    vendor: 'sugarhai',
+    domain: 'https://www.sugarhai.com',
+    prefix: 'sugar',
+    affiliateParam: '',
+    network: 'direct',
+    commissionPct: 0,
+    couponCode: '',
+    couponPct: 0,
+    exclude: ['Bikini Top', 'Bikini Bottom', 'Swimwear', 'Crop Top'],
+  },
+  // Not apparel — the one exception in this intake, and deliberate. It is the
+  // only candidate found whose affiliate programme is confirmed on a network we
+  // already use (Refersion, 10%), and its stated audience is toy reviewers and
+  // parents, so it is the cleanest kid-friendly signal of the six. Sensory toys
+  // and craft kits; expect it to land in 'puzzle' or 'learning', not 'apparel'.
+  // PROBED 2026-08-22 and STAYS PENDING, for a taxonomy reason rather than a
+  // trust one. 162 raw, 136 mapped — but 67 of those 136 land in 'other', because
+  // this catalogue is slime and there is no category in CATEGORIES that means
+  // "sensory toy". The 11 that reached 'accessories' are worse than useless:
+  // a tub of slime is not an accessory, and `accessories` is a MODEL_SCAN_CAT,
+  // so those 11 would each burn a slice of the coco-ssd budget.
+  //
+  // It also publishes 16 rows with product_type "hide", which is a merchant's
+  // own do-not-show marker and must be excluded whenever this does ship.
+  //
+  // Shipping it needs a new category (and a chip, and an emoji), which is a
+  // bigger change than an intake. Kept registered because it is the only
+  // candidate found whose programme is confirmed on a network we already use.
+  { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
   // First AWIN partner. They approached us. Display frames and cases for LEGO
   // builds — pricier and more grown-up than the rest of the catalogue, which is
@@ -190,6 +414,7 @@ export const VENDORS: VendorConfig[] = [
     domain: 'https://brkox.com',
     prefix: 'brkox',
     affiliateParam: '',
+    network: 'awin',
     // BRKOX's AWIN advertiser id (the `awinmid` in any link AWIN generates for
     // this programme). Supplied by the user 2026-08-08.
     awinMerchantId: '129093',
@@ -263,6 +488,40 @@ export function affiliateUrl(url: string, vendor: string): string {
 export function isUntrackedAwin(vendor: string): boolean {
   const cfg = vendorCfg(vendor)
   return Boolean(cfg?.awinMerchantId !== undefined && (!cfg?.awinMerchantId || !AWIN_PUBLISHER_ID))
+}
+
+/**
+ * True when clicks to this vendor earn nothing, whatever the reason.
+ *
+ * `isUntrackedAwin` only ever looked at AWIN, and the gap that left is not
+ * theoretical: Sydney Sock Project and Vix Socks between them put 466 products
+ * on the shelf on 2026-08-11 with an empty `affiliateParam`, and every outbound
+ * click since has been free traffic for the merchant. Nothing in the config or
+ * the UI said so, because the only untracked-vendor test in the codebase
+ * returned false for anything that was not AWIN.
+ *
+ * The link still works and the shopper still arrives — that is the deliberate
+ * choice recorded on those entries, and this does not change it. It just makes
+ * the state answerable, which is what `/api/catalog?debug` reports it from.
+ */
+export function isUntracked(vendor: string): boolean {
+  const cfg = vendorCfg(vendor)
+  if (!cfg) return false
+  if (cfg.awinMerchantId !== undefined) return isUntrackedAwin(vendor)
+  return !cfg.affiliateParam
+}
+
+/**
+ * The vendors that actually get scraped. `pending` ones are registered but
+ * unread, so they are skipped everywhere a catalogue is built — see the
+ * `pending` doc on VendorConfig for how a vendor leaves this state.
+ */
+export function liveVendors(): VendorConfig[] {
+  return VENDORS.filter((v) => !v.pending)
+}
+
+export function pendingVendors(): VendorConfig[] {
+  return VENDORS.filter((v) => v.pending)
 }
 
 /** Vendors with a dedicated showcase page. */
