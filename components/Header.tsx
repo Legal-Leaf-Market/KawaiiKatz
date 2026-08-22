@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useStore, cartCount } from '@/lib/store'
 import { CatMark, PandaMark } from '@/components/BrandMark'
+import { CartIcon, GiftIcon, HeartIcon, SearchIcon, ShopIcon } from '@/components/Icons'
 
 type HeaderProps = {
   onSearch: (q: string) => void
@@ -53,10 +54,10 @@ type HeaderProps = {
           <span className="font-display font-extrabold text-lg text-[#4f4550] inline-flex items-center gap-1.5"><CatMark size={22} /> Kawaii Katz</span>
           <button onClick={() => setMobileMenuOpen(false)} className="text-2xl text-[#9a8fa3]" aria-label="Close menu">×</button>
         </div>
-        <a href="#shop" onClick={() => setMobileMenuOpen(false)} className="block py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]">🛍️ Shop</a>
-        <button onClick={() => { setMobileMenuOpen(false); onOpenGift() }} className="block text-left py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550] w-full">🎁 Gift Finder</button>
+        <a href="#shop" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]"><ShopIcon size={18} /> Shop</a>
+        <button onClick={() => { setMobileMenuOpen(false); onOpenGift() }} className="flex items-center gap-2 text-left py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550] w-full"><GiftIcon size={18} /> Gift Finder</button>
         <button onClick={() => { setMobileMenuOpen(false); onOpenWish() }} className="block text-left py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550] w-full">
-          ❤️ My Board {wishCount > 0 && <span className="ml-1 bg-[#ff5a7a] text-white rounded-full text-xs px-2 py-0.5">{wishCount}</span>}
+          <span className="inline-flex items-center gap-2"><HeartIcon size={18} /> My Board</span> {wishCount > 0 && <span className="ml-1 bg-[#ff5a7a] text-white rounded-full text-xs px-2 py-0.5">{wishCount}</span>}
         </button>
       </nav>
 
@@ -103,14 +104,14 @@ type HeaderProps = {
                 aria-label="Clear search"
               >×</button>
             ) : (
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg pointer-events-none">🔍</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c4bccb] pointer-events-none"><SearchIcon /></span>
             )}
           </div>
 
           {/* Desktop nav */}
           <nav className="hidden sm:flex gap-1 flex-wrap" aria-label="Main navigation">
-            <a href="#shop" className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors">🛍️ Shop</a>
-            <button onClick={onOpenGift} className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors cursor-pointer">🎁 Gift Finder</button>
+            <a href="#shop" className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors inline-flex items-center gap-1.5"><ShopIcon /> Shop</a>
+            <button onClick={onOpenGift} className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors cursor-pointer inline-flex items-center gap-1.5"><GiftIcon /> Gift Finder</button>
           </nav>
 
           {/* Wishlist button */}
@@ -119,7 +120,7 @@ type HeaderProps = {
             className="relative border-[3px] border-[#ff5a7a] bg-white text-[#ff5a7a] font-extrabold px-3.5 py-[9px] rounded-full cursor-pointer text-sm shadow-[0_4px_12px_rgba(255,138,101,.18)] font-display"
             aria-label={`Wishlist, ${wishCount} items`}
           >
-            ❤️ Board
+            <span className="inline-flex items-center gap-1.5"><HeartIcon /> Board</span>
             {wishCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-[#ff5a7a] text-white border-2 border-white rounded-full min-w-[22px] h-[22px] text-xs flex items-center justify-center px-1">
                 {wishCount}
@@ -133,7 +134,7 @@ type HeaderProps = {
             className="relative border-[3px] border-[#ff8a65] bg-[#ffb199] text-[#4f4550] font-extrabold px-4 py-[9px] rounded-full cursor-pointer text-sm shadow-[0_4px_12px_rgba(255,138,101,.18)] font-display"
             aria-label={`Cart, ${count} items`}
           >
-            🛒 Cart
+            <span className="inline-flex items-center gap-1.5"><CartIcon /> Cart</span>
             {count > 0 && (
               <span className="absolute -top-2 -right-2 bg-[#7fc4d4] text-white border-2 border-white rounded-full min-w-[22px] h-[22px] text-xs flex items-center justify-center px-1">
                 {count}
@@ -149,7 +150,7 @@ type HeaderProps = {
           onClick={onOpenCart}
           className="relative flex-1 border-[2.5px] border-[#ff8a65] bg-[#ffb199] rounded-full font-display font-extrabold py-2.5 text-[13.5px] text-[#4f4550] flex items-center justify-center gap-1.5"
         >
-          🛒 Cart
+          <span className="inline-flex items-center gap-1.5"><CartIcon /> Cart</span>
           {count > 0 && (
             <span className="absolute -top-1.5 right-2.5 bg-[#7fc4d4] text-white border-2 border-white rounded-full min-w-[19px] h-[19px] text-[11px] flex items-center justify-center px-1">
               {count}
@@ -160,7 +161,7 @@ type HeaderProps = {
           onClick={onOpenWish}
           className="relative flex-1 border-[2.5px] border-[#7fc4d4] bg-white rounded-full font-display font-extrabold py-2.5 text-[13.5px] text-[#7fc4d4] flex items-center justify-center gap-1.5"
         >
-          ❤️ Board
+          <span className="inline-flex items-center gap-1.5"><HeartIcon /> Board</span>
           {wishCount > 0 && (
             <span className="absolute -top-1.5 right-2.5 bg-[#ff5a7a] text-white border-2 border-white rounded-full min-w-[19px] h-[19px] text-[11px] flex items-center justify-center px-1">
               {wishCount}
