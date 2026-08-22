@@ -31,6 +31,11 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       { src: '/icon.svg', type: 'image/svg+xml', sizes: 'any' },
       { src: '/apple-icon.png', type: 'image/png', sizes: '180x180' },
+      // Android/Chrome install prompts want a real 192 and 512 raster; with only
+      // the SVG and the 180 above, some launchers fall back to a screenshot of
+      // the page instead of the icon.
+      { src: '/icon-192.png', type: 'image/png', sizes: '192x192', purpose: 'any' },
+      { src: '/icon-512.png', type: 'image/png', sizes: '512x512', purpose: 'any' },
     ],
   }
 }

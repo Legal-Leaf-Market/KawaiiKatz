@@ -44,6 +44,26 @@ export const metadata: Metadata = {
     description: 'Curated kawaii finds for every budget.',
     images: ['/icon.png'],
   },
+  /**
+   * Declared explicitly rather than left to Next's app/icon.png convention.
+   *
+   * That convention gives the browser one image and lets it downscale, and a
+   * 1024px cat-and-panda pair downscaled to 16px is two grey blobs. These point
+   * the tab at public/icon-16.png and icon-32.png, which are rendered from a
+   * SEPARATE, simplified source (assets/icon-small.svg) — same pair, drawn with
+   * fewer details and a much heavier outline so it survives. See
+   * scripts/mkicons.mjs.
+   *
+   * The SVG is listed first so any browser that supports it gets the vector.
+   */
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   robots: { index: true, follow: true },
 }
 

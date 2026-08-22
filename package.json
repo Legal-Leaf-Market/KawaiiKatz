@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit",
-    "probe": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/vendor_probe.mjs"
+    "probe": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/vendor_probe.mjs",
+    "icons": "node scripts/mkicons.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
