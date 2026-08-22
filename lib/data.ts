@@ -434,6 +434,108 @@ export const VENDORS: VendorConfig[] = [
   },
 ]
 
+/**
+ * A showcase page for a merchant we CANNOT ingest.
+ *
+ * The existing `VendorConfig.showcase` (BRKOX) renders a grid of scraped
+ * products: /brkox calls getCatalog() and filters to that vendor. That only
+ * works for a Shopify merchant with an open products.json. Hot Topic, Claire's,
+ * Smiggle and TruffleShuffle are all strong fits on networks we use and none of
+ * them runs Shopify, so there is no feed, no grid, and a row in VENDORS would
+ * register a vendor that returns zero products forever — the Tokyo Tiger
+ * failure by construction.
+ *
+ * This is the other half: a curated brand page that links into the merchant's
+ * OWN category pages through the affiliate redirect. No catalogue, no prices,
+ * no cart. It is a signpost, and it is exactly what the AWIN applications in
+ * docs/affiliate-applications.md describe us doing — written that way so the
+ * application and the site agree.
+ *
+ * WHY EVERY ENTRY IS `pending` TODAY, and why that is not caution.
+ *
+ * An AWIN deep link needs the advertiser id, and an advertiser id is issued on
+ * approval. We hold none of them: Claire's and Smiggle have not been applied to
+ * yet, and TruffleShuffle's 1465 was read off a public profile URL rather than
+ * the dashboard. Without an id, awinDeepLink() correctly returns the plain
+ * destination — so an ungated page would be a branded funnel handing our
+ * traffic to a merchant for free, which is the exact problem the untracked sock
+ * vendors already illustrate.
+ *
+ * To ship one: put the real advertiser id in `awinMerchantId`, delete
+ * `pending`, done. generateStaticParams() picks it up and the sitemap follows.
+ */
+export type LinkShowcase = {
+  /** URL segment. Lives at the site root, beside /brkox. */
+  slug: string
+  merchant: string
+  /** Their homepage. Used for the fallback link and the visible domain. */
+  domain: string
+  emoji: string
+  tagline: string
+  intro: string
+  /** AWIN advertiser id, issued on approval. Empty = every link is untracked. */
+  awinMerchantId: string
+  /** Curated entry points into the merchant's own site. */
+  sections: { label: string; emoji: string; blurb: string; url: string }[]
+  /** Anything a shopper should know before they click through. */
+  note?: string
+  /** No advertiser id yet — no page is generated. See the note above. */
+  pending?: boolean
+}
+
+export const LINK_SHOWCASES: LinkShowcase[] = [
+  {
+    slug: 'claires',
+    merchant: "Claire's",
+    domain: 'https://www.claires.com',
+    emoji: '💎',
+    tagline: 'The accessories aisle, and nothing but',
+    intro:
+      "Claire's is where most of us got our ears pierced, and it is still the widest range of " +
+      'hair clips, bows, scrunchies, cat-ear headbands, stud earrings and kid-safe lip gloss ' +
+      'anywhere. We cannot list their pieces individually — they are not on a platform we can ' +
+      'read — so this is a way in to the parts of their shop worth your time.',
+    awinMerchantId: '',
+    sections: [
+      { label: 'Hair accessories', emoji: '🎀', blurb: 'Clips, bows, claw clips and scrunchies.', url: 'https://www.claires.com/us/accessories/hair-accessories' },
+      { label: 'Earrings', emoji: '✨', blurb: 'Studs, hoops and sensitive-skin ranges.', url: 'https://www.claires.com/us/jewelry/earrings' },
+      { label: 'Jewellery', emoji: '💫', blurb: 'Necklaces, bracelets and friendship sets.', url: 'https://www.claires.com/us/jewelry' },
+      { label: 'Costume & cat ears', emoji: '🐱', blurb: 'Ears, tiaras and dress-up headbands.', url: 'https://www.claires.com/us/accessories' },
+      { label: 'Kids beauty', emoji: '💄', blurb: 'Lip gloss, nail sets and body glitter.', url: 'https://www.claires.com/us/beauty' },
+    ],
+    pending: true,
+  },
+  {
+    slug: 'smiggle',
+    merchant: 'Smiggle',
+    domain: 'https://www.smiggle.co.uk',
+    emoji: '✏️',
+    tagline: 'Stationery loud enough to be a personality',
+    intro:
+      'Smiggle makes pencil cases, backpacks and drink bottles for 6-to-12s in colours that can ' +
+      'be seen from space, which is the entire point. It is the closest thing to this site\'s ' +
+      'own aesthetic that a high-street brand has ever produced.',
+    awinMerchantId: '',
+    note: 'UK shop — prices in GBP, and delivery is UK-first.',
+    sections: [
+      { label: 'Pencil cases', emoji: '🖊️', blurb: 'The ones with too many compartments.', url: 'https://www.smiggle.co.uk/shop/en/smiggleuk/pencil-cases' },
+      { label: 'Backpacks', emoji: '🎒', blurb: 'School bags, and the hardtop ones.', url: 'https://www.smiggle.co.uk/shop/en/smiggleuk/bags' },
+      { label: 'Lunch & drink bottles', emoji: '🍱', blurb: 'Lunchboxes, bottles and snack pots.', url: 'https://www.smiggle.co.uk/shop/en/smiggleuk/lunch-boxes-drink-bottles' },
+      { label: 'Notebooks & stationery', emoji: '📓', blurb: 'Journals, pens and desk things.', url: 'https://www.smiggle.co.uk/shop/en/smiggleuk/stationery' },
+    ],
+    pending: true,
+  },
+]
+
+/** Link showcases with an advertiser id, i.e. the ones that get a page. */
+export function liveLinkShowcases(): LinkShowcase[] {
+  return LINK_SHOWCASES.filter((s) => !s.pending)
+}
+
+export function linkShowcase(slug: string): LinkShowcase | undefined {
+  return LINK_SHOWCASES.find((s) => s.slug === slug)
+}
+
 export const SEED_PRODUCTS: Product[] = [
   { id: 'plbl-14-inch-brown-plush-bunny', vendor: 'Plushible', domain: 'https://plushible.com', name: 'Poppy the Plush Unicorn', cat: 'plush', character: '', price: 12.99, unit: 'from', onSale: false, wasPrice: 0, discountPct: 0, commissionPct: 20, couponCode: '', couponPct: 0, image: '', url: 'https://plushible.com/products/14-inch-brown-plush-bunny', badge: '', added: '2026-07-22', variants: [{ id: 'seed-plbl-1', title: '10 in', price: 12.99, available: true }, { id: 'seed-plbl-2', title: '34 in Jumbo', price: 49.99, available: true }], blurb: 'Soft huggable plush bunny. A classic cuddle buddy for all ages.' },
   { id: 'plbl-manhattan-toy-kreecher-pillow', vendor: 'Plushible', domain: 'https://plushible.com', name: 'Pawley the Plush Pillow Pal', cat: 'plush', character: '', price: 15.29, unit: '', onSale: true, wasPrice: 17.99, discountPct: 15, commissionPct: 20, couponCode: '', couponPct: 0, image: '', url: 'https://plushible.com/products/manhattan-toy-kreecher-pillow', badge: '', added: '2026-07-20', variants: [], blurb: 'Classic pillow pal plush — timeless and squishy-soft.' },
@@ -464,21 +566,37 @@ export function catEmoji(key: string): string {
 export function vendorCfg(vendor: string): VendorConfig | undefined {
   return VENDORS.find((v) => v.vendor === vendor)
 }
+/**
+ * Build an AWIN deep link to `url` for advertiser `merchantId`.
+ *
+ * Hoisted out of affiliateUrl() when the link showcases arrived, so that the
+ * awin1.com URL shape has exactly one definition. Two copies of it would drift,
+ * and the drift would be silent in the worst way: a link that still redirects
+ * the shopper to the right page while crediting nobody. Nothing would error and
+ * the money would simply not arrive.
+ *
+ * Returns the plain destination when either id is missing — untracked, but
+ * never a broken link. That is the standing rule here: the shopper always gets
+ * where they were going.
+ */
+export function awinDeepLink(url: string, merchantId: string): string {
+  if (!url) return url
+  if (!merchantId || !AWIN_PUBLISHER_ID) return url
+  return (
+    'https://www.awin1.com/cread.php' +
+    `?awinmid=${encodeURIComponent(merchantId)}` +
+    `&awinaffid=${encodeURIComponent(AWIN_PUBLISHER_ID)}` +
+    `&ued=${encodeURIComponent(url)}`
+  )
+}
+
 export function affiliateUrl(url: string, vendor: string): string {
   const cfg = vendorCfg(vendor)
   if (!url || !cfg) return url
 
   // AWIN advertisers: the commission is attributed by the redirect through
   // awin1.com, so the destination goes in `ued` and no query param is appended.
-  if (cfg.awinMerchantId) {
-    if (!AWIN_PUBLISHER_ID) return url // untracked, but never a broken link
-    return (
-      'https://www.awin1.com/cread.php' +
-      `?awinmid=${encodeURIComponent(cfg.awinMerchantId)}` +
-      `&awinaffid=${encodeURIComponent(AWIN_PUBLISHER_ID)}` +
-      `&ued=${encodeURIComponent(url)}`
-    )
-  }
+  if (cfg.awinMerchantId) return awinDeepLink(url, cfg.awinMerchantId)
 
   if (!cfg.affiliateParam) return url
   return url + (url.includes('?') ? '&' : '?') + cfg.affiliateParam
