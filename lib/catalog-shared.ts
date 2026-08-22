@@ -9,6 +9,34 @@ export function proxied(src: string): string {
   return `/api/img?u=${encodeURIComponent(src)}`
 }
 
+/**
+ * Inverse of proxied(): recover the vendor's own CDN URL from a proxy path.
+ *
+ * `proxied()` returns a ROOT-RELATIVE path, which is right for an <img> on our
+ * own page and wrong for anything that leaves the site. Pinterest was being
+ * handed `/api/img?u=…` as the image to pin and rejected it — "Parameter
+ * 'image_url' … is not a valid URL format" — because a share target has no base
+ * to resolve it against. The layout already learned this once for og:image; the
+ * note there says a bare path is rejected by every social scraper.
+ *
+ * Unwrapping to the CDN URL rather than absolutising to
+ * https://www.kawaiikatz.com/api/img?u=… on purpose. Two reasons, either
+ * sufficient: the CDN URL is the actual image rather than a redirect through us,
+ * and robots.txt disallows `/api/` — so pointing a crawler that respects it at
+ * our proxy would be asking for a fetch we have told it not to make.
+ *
+ * Anything that is not a proxy path is returned untouched, so this is safe to
+ * call on a raw URL, an empty string, or an already-unwrapped value.
+ */
+export function unproxied(src: string): string {
+  if (!src || !src.startsWith('/api/img?')) return src
+  try {
+    return new URLSearchParams(src.slice(src.indexOf('?') + 1)).get('u') || src
+  } catch {
+    return src
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Content safety — keep the catalog kid-appropriate (ported from original)
 // ---------------------------------------------------------------------------

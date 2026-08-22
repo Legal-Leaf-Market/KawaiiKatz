@@ -1,4 +1,5 @@
 import { catName, money, affiliateUrl, couponWrapUrl, type Product } from './data'
+import { unproxied } from './catalog-shared'
 
 /**
  * Ported from the original Kawaii Katz app: builds a Pinterest "Pin it" share
@@ -102,14 +103,21 @@ function pinDescription(o: Pinnable): string {
 }
 
 export function pinItUrl(o: Pinnable): string {
-  const img = o.image || ''
+  // Every caller passes the proxied image, because that is what the cards
+  // render — a root-relative /api/img path. Pinterest cannot resolve one and
+  // says so: "Parameter 'image_url' … is not a valid URL format". Unwrap it
+  // back to the vendor's CDN URL; see the note on unproxied().
+  const img = unproxied(o.image || '')
   const url = pinCartUrl(o)
   const desc = pinDescription(o)
+  // Omit `media` entirely rather than sending something Pinterest will reject.
+  // Without it the composer lets the pinner choose an image off the destination
+  // page, which is a working pin; with a bad one it is an error dialog.
+  const media = /^https?:\/\//i.test(img) ? '&media=' + encodeURIComponent(img) : ''
   return (
     'https://www.pinterest.com/pin/create/button/?url=' +
     encodeURIComponent(url) +
-    '&media=' +
-    encodeURIComponent(img) +
+    media +
     '&description=' +
     encodeURIComponent(desc)
   )
