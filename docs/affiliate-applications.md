@@ -230,3 +230,150 @@ Send it from a real person, not a shared inbox.
 **If they say yes:** the tracking value goes in `affiliateParam` in `lib/data.ts` (or
 `awinMerchantId` if they somehow turn out to be on AWIN), and `isUntracked('Grumpy Bunny')`
 stops reporting them under `debug.untracked`. Set `commissionPct` to whatever they agree.
+
+---
+
+## Claire's and Smiggle — AWIN applications
+
+**These are not cold emails.** Both already run AWIN programmes and you are already an AWIN
+publisher (`3022399`), so the thing that gets submitted is an advertiser application inside
+the dashboard — Advertisers → Advertiser Directory → search → Join Programme. The free-text
+box on that form is what needs writing, and it is below.
+
+Send the accompanying note as well. Both programmes are managed, a small publisher is easy
+to auto-reject on volume alone, and a short human note to the affiliate manager is the
+normal way that gets a second look. Applications with no note get judged on traffic numbers,
+which is the one axis we currently lose on.
+
+### ⚠ Two things to get right before submitting either
+
+**Do not invent traffic numbers.** Both forms ask for monthly visitors. This repo carries
+only Vercel Web Analytics — real page-view data is in the Vercel dashboard, so take the
+figure from there and put the real one in. If it is small, say the real number: an affiliate
+manager who approves you on an inflated figure and sees the truth in month one is worse than
+a no.
+
+**Do not describe a catalogue integration.** We cannot ingest either of them — neither runs
+Shopify, so there is no `products.json` and the showcase page as built renders from scraped
+products. What we would actually do is a curated brand page linking into *their* category
+pages through the AWIN deep link. Both drafts below describe that, accurately. Do not
+upgrade it to "we list your products" to make the application sound better; it would be a
+promise the site cannot keep, and the first thing they check is what the link goes to.
+
+---
+
+### Claire's — 2%, 30-day cookie
+
+Check whether to apply to the **US or UK** programme (both exist) — or both, if the audience
+split justifies it. Take the one that matches where the traffic actually is.
+
+**Application free-text:**
+
+> Kawaii Katz (www.kawaiikatz.com) is a curated gift-discovery site in the kawaii and
+> Japanese pop-culture space. We aggregate and curate products from partner merchants and
+> link out to them; we never take payment or hold stock.
+>
+> Claire's fits a gap we have rather than duplicating something we carry. Our Accessories
+> category is one of our two largest, and the demand we see in it is specifically for
+> hair clips and bows, scrunchies, cat-ear headbands, stud earrings, bracelets and kid-safe
+> lip gloss — which is Claire's core range almost exactly. Our audience is gift buyers and
+> parents shopping for children and teenagers.
+>
+> How we would promote you: a dedicated Claire's brand page linking into your own category
+> pages through the AWIN deep link, plus placement in our accessories and gift-finder
+> browsing. Content and curation only — no PPC on your brand terms, no cookie stuffing, no
+> incentivised traffic, no toolbar or extension.
+>
+> One thing that may be relevant given your customer base: we run an automated two-layer
+> content filter over every apparel and accessory listing we ingest — a curated phrase
+> screen plus an image scan that flags photos featuring adult models — to keep the catalogue
+> appropriate for the children and teenagers our visitors are shopping for. We drop listings
+> rather than risk them. We also screen merchants for trustworthiness before listing, and
+> have delisted a partner on reputation concerns despite their programme being live.
+>
+> We are already live on AWIN (publisher ID 3022399) and run three sister retail sites.
+
+**Note to the affiliate manager:**
+
+> Hi [name],
+>
+> I have just applied to the Claire's programme through AWIN (publisher 3022399) and wanted
+> to put a face to it.
+>
+> Kawaii Katz is a curated kawaii and Japanese pop-culture gift site. Accessories is one of
+> our two biggest categories and the demand in it — hair clips, bows, cat-ear headbands,
+> stud earrings, kid-safe lip gloss — is Claire's range almost line for line. It is a gap we
+> genuinely have rather than a category we are already covered in.
+>
+> Worth mentioning because of who your customer is: we run an automated content filter over
+> every apparel and accessory listing to keep the catalogue appropriate for children and
+> teenagers, and we drop anything borderline rather than risk it. Not many discovery sites
+> in this niche bother, and it is the reason I thought Claire's would be comfortable being
+> listed with us.
+>
+> Happy to answer anything about traffic or placement.
+>
+> Best,
+> Jacob — www.kawaiikatz.com
+
+---
+
+### Smiggle — 7%, 30-day cookie
+
+UK-first catalogue and pricing. Say plainly what share of the audience is UK/EU so the geo
+mix is not a surprise later — take the real figure from Vercel Analytics.
+
+**Application free-text:**
+
+> Kawaii Katz (www.kawaiikatz.com) is a curated gift-discovery site in the kawaii and
+> Japanese pop-culture space, aggregating products from partner merchants and linking out to
+> them. We never take payment or hold stock.
+>
+> Smiggle is the closest fit to our audience of any brand we have looked at. We carry
+> Stationery & Stickers and Accessories as standing categories, our visitors are
+> overwhelmingly gift buyers and parents shopping for children, and Smiggle's range —
+> pencil cases, notebooks, backpacks, wallets and purses, lunch and drink bottles — sits
+> exactly across those two shelves. The bright pastel design language is also the aesthetic
+> our whole site is built around, so it would not look like an inserted advert.
+>
+> How we would promote you: a dedicated Smiggle brand page linking into your own category
+> pages through the AWIN deep link, plus placement in our stationery, accessories and
+> gift-finder browsing. Content and curation only — no PPC on your brand terms, no cookie
+> stuffing, no incentivised traffic, no toolbar or extension.
+>
+> On suitability: we run an automated two-layer content filter over every apparel and
+> accessory listing we ingest, to keep the catalogue appropriate for the age group our
+> visitors are buying for. Given Smiggle is aimed at 6-12s, it seemed worth stating up front.
+>
+> Approximately [X]% of our traffic is UK/EU. We are already live on AWIN (publisher ID
+> 3022399) and run three sister retail sites.
+
+**Note to the affiliate manager:**
+
+> Hi [name],
+>
+> I have applied to the Smiggle programme via AWIN (publisher 3022399).
+>
+> Kawaii Katz is a curated kawaii gift-discovery site, and of every brand we have assessed
+> Smiggle is the cleanest fit — you sit across both our Stationery and Accessories
+> categories, our visitors are parents and gift buyers shopping for kids, and the bright
+> pastel look is the aesthetic the whole site is built on rather than something we would be
+> bolting on.
+>
+> We also filter our catalogue for age-appropriateness automatically, which felt worth
+> mentioning for a brand aimed at 6-12s.
+>
+> Around [X]% of our traffic is UK/EU — happy to share the fuller picture if useful.
+>
+> Best,
+> Jacob — www.kawaiikatz.com
+
+---
+
+### Sequencing note
+
+Both approvals give you a deep-link format, which is what a brand page needs in order to be
+built — so applying before the page exists is the right order, not the wrong one. But do not
+let an approval sit idle for months: managed programmes prune dormant publishers, and the
+brand page is a small piece of work (`VendorConfig.showcase` exists; what it needs for a
+feedless merchant is a hand-curated variant that does not call `getCatalog()`).
