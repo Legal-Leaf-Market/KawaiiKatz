@@ -173,16 +173,19 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | sugarhai | 447 | 427 | `exclude`s 38 swimwear/crop-top rows |
 | Sydney Sock Project | 576 | 436 | untracked |
 | Plushible | 337 | 331 | |
-| Kawaii Babe | — | — | fairy kei / decora |
+| Kawaii Babe | 1250 | — | fairy kei / decora — **hits the 5-page cap** too |
 | Blippo | 1250 | 313 | **pending** — 90% Japanese snacks, capped |
 | Kawaii Slime Company | 162 | 136 | **pending** — 67 land in `other`, needs a category |
 | Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
 
 Two things that only showed up under real data:
 
-- **Kore Kawaii is truncated.** It returns a full page at `MAX_PAGES`, so some of its
-  catalogue has never been ingested. Raising `MAX_PAGES` costs build time on every vendor;
-  a per-vendor cap would be the better fix.
+- **Two vendors are truncated.** Kore Kawaii and Kawaii Babe both return a full page at
+  `MAX_PAGES`, so part of each catalogue has never been ingested — and for Kawaii Babe that
+  is the decora stock Ada asked for, so it is worth fixing. Raising `MAX_PAGES` costs build
+  time on every vendor; a per-vendor cap is the better answer. Page generation currently
+  takes 105s against the 240s `staticPageGenerationTimeout`, so there is headroom, but not
+  a lot.
 - **The safety filter reads the product NAME only.** sugarhai sells bikinis named
   "Kawaii Maneki Neko" — the garment is only in `product_type`, so `adultApparelHit()`
   scored the feed 0/447. Any merchant that names by design rather than by garment is
