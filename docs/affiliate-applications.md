@@ -172,3 +172,61 @@ So: file the AWIN applications because they are cheap and they unlock the
 showcase work. But if the goal is a fuller apparel and accessories shelf this
 week, the Shopify six are the path, and `pnpm probe` plus an approval is all
 each one needs.
+
+---
+
+## The Grumpy Bunny email
+
+They have no affiliate programme, so this is an approach rather than an application.
+Send it from a real person, not a shared inbox.
+
+**Before sending, check two things:**
+
+1. **Find a name.** They are a small UK importer and there is likely one or two people
+   behind it. A name beats "Grumpy Bunny team" by a mile. Their contact page or Instagram
+   will have it.
+2. **Do not claim traffic numbers.** They went live on the site on 2026-08-22, so there is
+   no history to cite, and this repo only carries Vercel Web Analytics, which cannot measure
+   outbound clicks per merchant. The email below deliberately promises nothing it cannot
+   back, and instead points at the one number neither of us can fudge: what *their* affiliate
+   dashboard shows once a link exists.
+
+**Subject:** We're listing ~450 of your products — can we make it official?
+
+> Hi [name],
+>
+> I run Kawaii Katz (www.kawaiikatz.com), a curated kawaii storefront. It pulls products
+> from a dozen merchants into one catalogue and links every one of them straight out to the
+> merchant's own checkout — we never take payment or hold stock.
+>
+> I added Grumpy Bunny this week: around 450 products, and you are immediately the largest
+> clothing range on the site. The ACDC RAG, Listen Flavor, Psycho Nation and Dear My Love
+> pieces are the reason — nobody else we work with carries anything close, and decora and
+> fairy kei are exactly what our visitors come looking for.
+>
+> The honest part: I could not find an affiliate programme for you anywhere, so those
+> clicks are currently coming to you untracked and we are not earning anything on them.
+> That is fine for now, but it is not something either of us can build on.
+>
+> Two ways to fix it, whichever is less trouble for you:
+>
+> 1. A free Shopify affiliate app — GoAffPro, Refersion and UpPromote all do this. You set
+>    the commission rate, we get a tracking link, and it is about ten minutes to install.
+> 2. Simpler still: give us a `?ref=` parameter or a discount code you honour, and we settle
+>    on attributed orders however suits you.
+>
+> Either way you would see the traffic in your own dashboard before you owe us anything,
+> which seems like the fairest way round for you to judge whether it is worth having.
+>
+> And if you would rather we were not listing you at all — say so and I will take the
+> products down the same day. No hard feelings; I would rather ask than assume.
+>
+> Either way, it is a genuinely good shop and I am glad it exists.
+>
+> Best,
+> Jacob
+> www.kawaiikatz.com
+
+**If they say yes:** the tracking value goes in `affiliateParam` in `lib/data.ts` (or
+`awinMerchantId` if they somehow turn out to be on AWIN), and `isUntracked('Grumpy Bunny')`
+stops reporting them under `debug.untracked`. Set `commissionPct` to whatever they agree.
