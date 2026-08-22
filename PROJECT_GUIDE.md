@@ -62,12 +62,30 @@ naming the vendors that are `empty`, `failed`, `untracked`, `pending` or `capped
 longer have to infer any of that from a count. It ships unconditionally — reading the query
 string would make the route dynamic and cost the 6h prerender (§4b).
 
-**The fetch sends `Mozilla/5.0`**, not a self-identified bot UA. It used to send
-`KawaiiKatzBot/1.0`, which is the most likely reason Tokyo Tiger returned nothing for eleven
-days while reporting `ok: true`: stores behind bot protection reject a bot and serve a
-browser. This is Legal-Leaf's header, adopted from a scraper that has been reading nine
-storefronts with it for months. Confirm it worked by checking Tokyo Tiger's `fetched` on the
-next deploy; if it is still 0, the UA was not the cause.
+**The fetch sends `Mozilla/5.0`**, not a self-identified bot UA — Legal-Leaf's header.
+**This did not fix Tokyo Tiger.** Measured 2026-08-22 from a preview deploy: with that exact
+header, from Vercel's IPs, tokyo-tiger.com answers **HTTP 403**. It is host-level bot
+protection, not a User-Agent problem, and no header gets past it. Don't re-run that
+experiment; the options left are a headless fetch, an Impact product feed, or delisting.
+
+### Probing when this container has no egress
+
+`pnpm probe` cannot reach merchant hosts from a Claude Code container — the proxy refuses
+them, and it refuses `*.vercel.app` too. The way through, used on 2026-08-22 and worth
+repeating:
+
+1. Add a temporary `app/api/vendor-probe/route.ts` that runs the probe logic, marked
+   `export const dynamic = 'force-static'`.
+2. Push. The branch preview builds, and **a prerendered route executes during `next build`**,
+   so its `console.log` lands in the build log.
+3. Read it with the Vercel MCP `get_deployment_build_logs` (filter for `[probe]`; the tfjs
+   kernel-registration spam is ~400 lines you must page past).
+4. Delete the route in the follow-up commit.
+
+Build logs are the trick: preview deploys sit behind Vercel Authentication
+(`ssoProtection: all_except_custom_domains`), which rejects at the edge *before* the function
+runs — so the response can't be fetched and no runtime log is produced either. Build logs
+need no auth.
 
 ### Registering a vendor: `pending`, and the probe
 
@@ -142,6 +160,34 @@ the document and trade a fast background fetch for a slow first byte. `SEED_PROD
 a last-resort fallback, not what visitors see.
 
 ---
+
+### Measured vendor state, 2026-08-22
+
+Every live vendor, read from a real feed. Re-measure with the probe recipe above.
+
+| Vendor | raw | mapped | notes |
+|---|---:|---:|---|
+| Kore Kawaii | 1250 | 1084 | **hits the 5-page cap** — catalogue truncated |
+| The Kawaii Shoppu | 513 | 491 | 145 accessories, 77 apparel |
+| Grumpy Bunny | 591 | 449 | **255 apparel, 125 accessories** — the decora one |
+| sugarhai | 447 | 427 | `exclude`s 38 swimwear/crop-top rows |
+| Sydney Sock Project | 576 | 436 | untracked |
+| Plushible | 337 | 331 | |
+| Kawaii Babe | — | — | fairy kei / decora |
+| Blippo | 1250 | 313 | **pending** — 90% Japanese snacks, capped |
+| Kawaii Slime Company | 162 | 136 | **pending** — 67 land in `other`, needs a category |
+| Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
+
+Two things that only showed up under real data:
+
+- **Kore Kawaii is truncated.** It returns a full page at `MAX_PAGES`, so some of its
+  catalogue has never been ingested. Raising `MAX_PAGES` costs build time on every vendor;
+  a per-vendor cap would be the better fix.
+- **The safety filter reads the product NAME only.** sugarhai sells bikinis named
+  "Kawaii Maneki Neko" — the garment is only in `product_type`, so `adultApparelHit()`
+  scored the feed 0/447. Any merchant that names by design rather than by garment is
+  invisible to the text layer. `exclude` covers it per-vendor; screening `product_type`
+  would fix it generally.
 
 ## 4c. Affiliate partnerships
 

@@ -132,9 +132,24 @@ export function categorize(hay: string): string {
   // stacking rings, both of which the puzzle and learning rules below get right
   // today. 'earring' is unambiguous, so it is.
   if (/(^|[^a-z0-9])(earrings?|necklaces?|bracelets?|bangles?|anklets?|chokers?|brooch(es)?|lip ?gloss|lipsticks?|lip ?balms?|nail (polish|stickers?|wraps?)|press[- ]on nails)([^a-z0-9]|$)/.test(hay)) return 'accessories'
-  // "Cat ears" DOES need the plush guard, because in this catalogue the phrase
-  // is equally the name of a headband and a description of a plushie's face.
-  if (!hasAny(hay, PLUSH_TERMS) && /(^|[^a-z0-9])(cat|kitty|neko|bunny|bear|fox|devil|angel) ?ears?([^a-z0-9]|$)/.test(hay)) return 'accessories'
+  // "Cat ears" needs TWO guards, and the second one was learned the hard way.
+  //
+  // The plush guard, because in this catalogue the phrase is equally the name of
+  // a headband and a description of a plushie's face.
+  //
+  // The GARMENT guard, because animal ears are just as often sewn onto a hoodie
+  // or a beanie as sold on their own — and this rule sits above the garment test,
+  // so without it the garment loses. Measured on a real feed: Grumpy Bunny's
+  // "Psycho Nation black & white bunny ears hoodie" and Hypercore's "cat ears
+  // beanie" both moved from apparel to accessories when this rule was added.
+  // A hoodie with ears on it is a hoodie.
+  if (
+    !hasAny(hay, PLUSH_TERMS) &&
+    !/\b(hoodies?|beanies?|hats?|caps?|sweaters?|sweatshirts?|cardigans?|shirts?|dress(es)?|jumpers?|coats?|jackets?)\b/.test(hay) &&
+    /(^|[^a-z0-9])(cat|kitty|neko|bunny|bear|fox|devil|angel) ?ears?([^a-z0-9]|$)/.test(hay)
+  ) {
+    return 'accessories'
+  }
   if (hasAny(hay, ['blind box', 'blindbox', 'popmart', 'pop mart', 'hippers', 'dimoo', 'mighty jaxx', 'sonny angel', 'smiski', 'labubu', 'collectible', 'figurine', 'figure', 'mystery box', 'mystery bag', 'lucky egg', 'series figures'])) return 'collect'
   if (hasAny(hay, ['switch case', 'nintendo switch', 'phone case', 'samsung phone case', 'iphone case', 'ipad case', 'airpods', 'keyboard', 'keycaps', 'mousepad', 'desk pad', 'gaming', 'controller', 'console', 'usb', 'charging', 'charger', 'handheld fan', 'neck fan'])) return 'tech'
   // An unambiguous garment noun beats an age word or a print theme. Every rule

@@ -64,24 +64,25 @@ export type CatalogResult = {
 /**
  * The User-Agent every vendor fetch is made with.
  *
- * It used to be `KawaiiKatzBot/1.0`, and that was the most likely reason Tokyo
- * Tiger returned zero products for eleven days while reporting `ok: true`: a
- * store behind bot protection rejects a self-identified bot and serves a
- * browser. The old comment on that vendor entry laid the test out — compare the
- * two UAs against the same URL, and if only the bot one fails, the fix is the
- * UA. That test cannot be run from this container (egress to merchant hosts is
- * refused by the proxy), but it does not need to be run to be acted on, because
- * Legal-Leaf's scraper has been fetching nine storefronts with plain
- * `Mozilla/5.0` for months — including four behind the same protection — and
- * this is that scraper's header, adopted rather than invented.
+ * It used to be `KawaiiKatzBot/1.0`. The standing theory was that a
+ * self-identified bot UA was why Tokyo Tiger returned nothing, and this is
+ * Legal-Leaf's header, adopted from a scraper that reads nine storefronts with
+ * it.
  *
- * The honest caveat: this is UNVERIFIED against Tokyo Tiger specifically. What
- * confirms it is `GET /api/catalog?debug` on the next deploy showing a non-zero
- * `fetched` for that vendor. If it is still zero, the UA was not the cause and
- * the next suspect is Cloudflare-level blocking that no header will get past.
+ * THE THEORY WAS WRONG, and it is recorded here so nobody re-runs the
+ * experiment. Measured 2026-08-22 from a preview deploy (see the probe note in
+ * PROJECT_GUIDE §4): with this exact header, from Vercel's own IPs, Tokyo Tiger
+ * answers **HTTP 403**. It is not the User-Agent. It is host-level bot
+ * protection, and no header will get past it — which was named as the fallback
+ * suspect and is now the finding.
  *
- * Changing this is not free: the other nine vendors currently work, so if one
- * of them ever starts failing, suspect this line first.
+ * The change is kept anyway. It costs nothing, it matches the sister site, and
+ * `Mozilla/5.0` is what the other eleven vendors are now measured working with.
+ * But it is a tidy-up, not a fix, and the shelf did not grow by one product
+ * because of it.
+ *
+ * Changing it is not free: eleven vendors currently work. If one of them ever
+ * starts failing, suspect this line first.
  */
 const SCRAPE_UA = 'Mozilla/5.0'
 

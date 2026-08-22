@@ -134,14 +134,24 @@ Not what was asked for, but they are the ones that can actually put products on
 the shelf, because all six are Shopify and this site ingests `products.json`.
 Each is a form on the merchant's own site.
 
-| Merchant | Apply at | Rate | Status |
-|---|---|---|---|
-| The Kawaii Shoppu | `/pages/register-affiliate-account` | 10%, 30d | ☐ |
-| Kawaii Slime Company | `kawaiislimecompany.refersion.com` (Refersion) | 10% | ☐ |
-| Kawaii Babe | `/pages/collab` | ? — gated at 10k followers | ☐ |
-| Blippo | `/pages/affiliate` | ? | ☐ |
-| sugarhai | `/pages/collab` | ? | ☐ |
-| Grumpy Bunny | no programme found — cold approach | — | ☐ |
+These are now **urgent rather than optional**, because four of them are already live on the
+site and sending real shoppers out for free. Feeds were read on 2026-08-22; the product
+counts below are what each is contributing right now.
+
+| Merchant | Apply at | Rate | Live? | Status |
+|---|---|---|---|---|
+| **Grumpy Bunny** | no programme found — **cold approach needed** | — | ● 449 products | ☐ **highest value** |
+| **The Kawaii Shoppu** | `/pages/register-affiliate-account` | 10%, 30d | ● 491 products | ☐ |
+| **Kawaii Babe** | `/pages/collab` | ? — gated at 10k followers | ● live | ☐ |
+| **sugarhai** | `/pages/collab` | ? | ● 427 products | ☐ |
+| Kawaii Slime Company | `kawaiislimecompany.refersion.com` (Refersion) | 10% | ○ pending | ☐ |
+| Blippo | `/pages/affiliate` | ? | ○ pending | ☐ |
+
+**Grumpy Bunny is the one to write to first.** It contributes 255 apparel and 125 accessory
+products — more apparel than the rest of the catalogue put together, and it is genuine
+Harajuku decora (ACDC RAG, Dear My Love, Psycho Nation). It has no affiliate programme we
+could find, so this is an email, not a form. They are a small UK importer; a direct note
+offering to send them traffic is likely to land better than a network application would.
 
 ---
 

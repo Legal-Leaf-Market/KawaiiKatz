@@ -227,6 +227,20 @@ export const VENDORS: VendorConfig[] = [
   // makes. It was contributing 0 products, so removing it cost nothing; the
   // danger was that fixing the fetch later would have quietly started sending
   // real people there.
+  // RESOLVED 2026-08-22, and the answer is not the one the comment above
+  // predicted. Probed from a preview deploy with a plain `Mozilla/5.0` UA, from
+  // Vercel's IPs: the host answers **HTTP 403**. Not an empty catalogue, not a
+  // wrong domain, not the User-Agent — a refusal.
+  //
+  // So the browser-vs-bot test written above has been run and it came back
+  // negative. This is host-level bot protection (Cloudflare or equivalent), and
+  // there is no header that gets past it. The remaining honest options are a
+  // headless-browser fetch, an Impact product feed if their programme offers
+  // one, or dropping the vendor.
+  //
+  // It is left registered, contributing nothing, because the 403 is now recorded
+  // rather than hidden behind `ok: true` — /api/catalog reports it under
+  // debug.empty. Do not spend more time on the UA.
   { vendor: 'Tokyo Tiger', domain: 'https://www.tokyo-tiger.com', prefix: 'tt', affiliateParam: '', network: 'impact', commissionPct: 15, couponCode: '', couponPct: 0 },
   // Both sock vendors are single-purpose catalogues, which is the BRKOX case
   // again: the classifier reads a product's own words, and a sock named
@@ -280,32 +294,116 @@ export const VENDORS: VendorConfig[] = [
   // Affiliate programme exists but is gated on a 10k-follower threshold, so the
   // commission is unknown until somebody applies — 0 here is "not established",
   // not "unpaid".
-  { vendor: 'Kawaii Babe', domain: 'https://kawaiibabe.com', prefix: 'kbabe', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+  // PROBED 2026-08-22 on a preview deploy. Feed reads clean; the filter caught
+  // the handful of items that needed catching (thigh-highs, a cami top, a gothic
+  // mini dress) and left the hair clips, cat-ear pieces, earrings and skirts.
+  { vendor: 'Kawaii Babe', domain: 'https://kawaiibabe.com', prefix: 'kbabe', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0 },
   // Apparel, jewellery, bags, plush and stationery imported from East Asia.
   // Publishes 10% on a 30-day cookie through its own on-site affiliate
   // registration, which is a Shopify affiliate app rather than a network — so
   // approval should hand back a `?ref=`-shaped value that drops straight into
   // `affiliateParam`. Widest catalogue of the six; likely to need an `include`.
-  { vendor: 'The Kawaii Shoppu', domain: 'https://thekawaiishoppu.com', prefix: 'kshop', affiliateParam: '', network: 'direct', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+  // PROBED 2026-08-22: 513 raw, 491 mapped, 6 dropped by the safety filter.
+  // Lands 145 accessories and 77 apparel — the single biggest accessories
+  // contribution of the intake. No `include` written on purpose: the feed's 20+
+  // product_types are all on-brand (Hair Accessories, Jewellery, Bag, Slippers,
+  // makeup) and 72 rows carry an EMPTY product_type, which an include list
+  // cannot reach — an allow-list here would silently delete them.
+  { vendor: 'The Kawaii Shoppu', domain: 'https://thekawaiishoppu.com', prefix: 'kshop', affiliateParam: '', network: 'direct', commissionPct: 10, couponCode: '', couponPct: 0 },
   // Japanese kawaii, Harajuku brands, strong on stationery and accessories.
   // Runs a published affiliate programme; rate not stated on the public page.
+  // PROBED 2026-08-22 and STAYS PENDING on the evidence, which is the probe
+  // doing its job: this is a Japanese SNACK importer that also sells accessories,
+  // not a kawaii fashion shop. Of 1,250 rows read, the top 15 product_types are
+  // all confectionery — Savory Snacks 188, Gummy Candy 167, Chocolate 123, Hard
+  // Candy 113 — and only 12 landed in apparel against 132 in food.
+  //
+  // It also HIT THE 5-PAGE CAP at 1,250 raw for 313 mapped, so the catalogue is
+  // truncated and the accessories may well be in the part we never fetched.
+  // Shipping it now would flood Snacks & Drinks with several hundred Japanese
+  // sweets and still not put a skirt on the apparel shelf.
+  //
+  // To ship it later: raise MAX_PAGES for this vendor or pin it to the
+  // accessory collections, then write an `include` from a FULL type histogram —
+  // the one we have is truncated to the top 20 and is all food.
   { vendor: 'Blippo', domain: 'https://www.blippo.com', prefix: 'blip', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
   // UK importer stocking ACDC RAG, Dear My Love and Hypercore — actual Harajuku
   // decora labels rather than decora-styled dropship, and it keeps a
   // /collections/decora. No affiliate programme found in public search, so this
   // one needs an approach before it needs a probe.
-  { vendor: 'Grumpy Bunny', domain: 'https://grumpybunny.com', prefix: 'gbun', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+  // PROBED 2026-08-22, AND IT IS THE ONE. 591 raw, 449 mapped, 6 safety drops.
+  // 255 apparel and 125 accessories — more apparel than every other vendor in
+  // this catalogue combined, and it is the real thing rather than decora-styled
+  // dropship: product_types are Tops 247, Accessories 114, Skirt 44, Dresses 18,
+  // Socks 13, Outerwear 11, Trousers 10, and the labels are ACDC RAG, Dear My
+  // Love, Psycho Nation, Hypercore and Listen Flavor.
+  //
+  // SHIPPED UNTRACKED. No affiliate programme was found for them in public
+  // search, so `affiliateParam` is empty and every click earns nothing. That is
+  // the deliberate BRKOX/Impact precedent — "payout is not an input to whether a
+  // vendor is worth showing" — and it is now a VISIBLE state rather than a
+  // silent one: isUntracked() reports it and `/api/catalog` lists it under
+  // debug.untracked. They need an approach, not an application.
+  //
+  // WATCH THE JIRAI KEI. Dear My Love is a jirai-kei label, and that subculture
+  // runs older than this site's audience. The 6 drops were the right 6 (a lace-up
+  // tee, three camis, a satin tote), but re-read the feed if the range widens.
+  { vendor: 'Grumpy Bunny', domain: 'https://grumpybunny.com', prefix: 'gbun', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0 },
   // Pastel, kawaii and mental-health-positive apparel and accessories, US-made.
   // CHECK THE CATALOGUE CAREFULLY on the probe run: the brand describes part of
   // its range as "pastel goth", and this site's promise is a kid-safe shelf.
   // The filters are a backstop, not a substitute for reading the feed.
-  { vendor: 'sugarhai', domain: 'https://www.sugarhai.com', prefix: 'sugar', affiliateParam: '', network: 'direct', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+  // PROBED 2026-08-22, and this is the entry that justifies the whole `exclude`
+  // mechanism, because the probe found something the safety filter CANNOT.
+  //
+  // 447 raw, 427 mapped, and `safetyDropped: 0` — which looks like a clean feed
+  // and is not. sugarhai sells 12 Bikini Tops, 9 Bikini Bottoms, 9 Swimwear and
+  // 8 Crop Tops, and the filter did not flag one of them, because
+  // adultApparelHit() reads the product NAME and sugarhai names its products
+  // after the artwork: the bikini tops are called "Kawaii Maneki Neko" and
+  // "Jellyfish Bish". The garment is only ever named in `product_type`.
+  //
+  // THAT IS A GENERAL HOLE, not a sugarhai quirk: any merchant that names by
+  // design rather than by garment is invisible to the text layer. Worth fixing
+  // properly one day by screening product_type too. Until then, `exclude` does
+  // it precisely and without touching CUT_PHRASES.
+  //
+  // What is left is the good part and it is substantial: 96 T-shirts, 78
+  // Hoodies, 26 Leggings and 178 stickers.
+  //
+  // ALSO WORTH A HUMAN EYE: the range is pastel-goth as well as pastel, and some
+  // titles ("Dead Inside Kitty Cat") are not the register Ada asked for even
+  // though nothing about them is unsafe.
+  {
+    vendor: 'sugarhai',
+    domain: 'https://www.sugarhai.com',
+    prefix: 'sugar',
+    affiliateParam: '',
+    network: 'direct',
+    commissionPct: 0,
+    couponCode: '',
+    couponPct: 0,
+    exclude: ['Bikini Top', 'Bikini Bottom', 'Swimwear', 'Crop Top'],
+  },
   // Not apparel — the one exception in this intake, and deliberate. It is the
   // only candidate found whose affiliate programme is confirmed on a network we
   // already use (Refersion, 10%), and its stated audience is toy reviewers and
   // parents, so it is the cleanest kid-friendly signal of the six. Sensory toys
   // and craft kits; expect it to land in 'puzzle' or 'learning', not 'apparel'.
-  { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+  // PROBED 2026-08-22 and STAYS PENDING, for a taxonomy reason rather than a
+  // trust one. 162 raw, 136 mapped — but 67 of those 136 land in 'other', because
+  // this catalogue is slime and there is no category in CATEGORIES that means
+  // "sensory toy". The 11 that reached 'accessories' are worse than useless:
+  // a tub of slime is not an accessory, and `accessories` is a MODEL_SCAN_CAT,
+  // so those 11 would each burn a slice of the coco-ssd budget.
+  //
+  // It also publishes 16 rows with product_type "hide", which is a merchant's
+  // own do-not-show marker and must be excluded whenever this does ship.
+  //
+  // Shipping it needs a new category (and a chip, and an emoji), which is a
+  // bigger change than an intake. Kept registered because it is the only
+  // candidate found whose programme is confirmed on a network we already use.
+  { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
   // First AWIN partner. They approached us. Display frames and cases for LEGO
   // builds — pricier and more grown-up than the rest of the catalogue, which is
