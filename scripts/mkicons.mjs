@@ -31,9 +31,13 @@ import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const p = (...a) => join(root, ...a)
-const CAT = p('assets/logo-cat.png')
-const PANDA = p('assets/logo-panda.png')
-const ARTWORK = existsSync(CAT) && existsSync(PANDA)
+/* Match on the NAME, not the extension — one less way for an upload to land
+ * and silently do nothing because it happened to be a .jpg. */
+const find = (stem) =>
+  ['png', 'jpg', 'jpeg', 'webp', 'PNG', 'JPG'].map((e) => p(`assets/${stem}.${e}`)).find(existsSync)
+const CAT = find('logo-cat')
+const PANDA = find('logo-panda')
+const ARTWORK = Boolean(CAT && PANDA)
 
 const TILE = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">
   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
@@ -158,7 +162,8 @@ if (ARTWORK) {
     `<image href="data:image/png;base64,${embed}" width="256" height="256"/></svg>`))
 } else {
   console.log(
-    'No artwork found. Expected assets/logo-cat.png and assets/logo-panda.png.\n' +
+    'No artwork found. Expected assets/logo-cat.* and assets/logo-panda.*\n' +
+    '(png, jpg, jpeg or webp).\n' +
     'Nothing was written — the icons currently in app/ and public/ are the\n' +
     "original Kawaii Katz cat, restored by hand. Drop the artwork in and re-run."
   )
