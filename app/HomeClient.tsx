@@ -57,6 +57,22 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
     [gridProducts, excludedIds, state.adaMode]
   )
 
+  /**
+   * Pool the flip side of each card draws its "more like this" pair from.
+   *
+   * `gridProducts`, not `allProducts`: showcase vendors are held out of the grid
+   * on purpose (§4b) and suggesting BRKOX display frames off the back of a
+   * plushie is the same mistake in a smaller frame. It is still a subset of
+   * `allProducts`, so anything added from here resolves in the cart.
+   *
+   * Excluded products are stripped too — putting something Ada has pulled from
+   * the store one tap from the cart is worse than suggesting nothing.
+   */
+  const similarPool = useMemo(
+    () => gridProducts.filter((p) => p.image && !excludedIds.has(p.id)),
+    [gridProducts, excludedIds]
+  )
+
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<Filters>({ store: '', cat: '', priceBucket: '', onSaleOnly: false, newOnly: false })
   const [page, setPage] = useState(1)
@@ -309,6 +325,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
                     onTogglePick={state.adaMode ? toggleAdaPick : undefined}
                     onToggleExclude={state.adaMode ? toggleExclude : undefined}
                     priority={i < EAGER_CARDS}
+                    similarPool={similarPool}
                   />
                 ) : (
                   <ProductCard
@@ -320,6 +337,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
                     onTogglePick={state.adaMode ? toggleAdaPick : undefined}
                     onToggleExclude={state.adaMode ? toggleExclude : undefined}
                     priority={i < EAGER_CARDS}
+                    similarPool={similarPool}
                   />
                 )
               )}

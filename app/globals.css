@@ -78,3 +78,84 @@ a { color: inherit; text-decoration: none; }
 /* Cart drawer scrollbar */
 .cart-body::-webkit-scrollbar { width: 6px; }
 .cart-body::-webkit-scrollbar-thumb { background: #ffb199; border-radius: 999px; }
+
+/* ---------------------------------------------------------------------------
+   Product card: hover zoom + pulse, cornflower-blue flip affordance, 3D flip.
+
+   The zoom and the pulse live on two nested wrappers on purpose. A single
+   element doing both would have to end its keyframe at the zoomed scale, and
+   when the animation is removed on mouse-out the value snaps back with no
+   transition. Splitting them means the outer wrapper only ever *transitions*
+   (smooth in and out, guaranteed) while the inner one runs a pulse that both
+   starts and ends at scale(1), so removing it is a no-op.
+   --------------------------------------------------------------------------- */
+
+.kk-zoom {
+  transform: scale(1);
+  transition: transform .45s cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+}
+.kk-pulse { transform: scale(1); }
+
+@keyframes kkPulse {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.035); }
+  55%  { transform: scale(1.005); }
+  78%  { transform: scale(1.022); }
+  100% { transform: scale(1); }
+}
+
+/* Cornflower-blue wash over the photo. Hidden entirely where there is no real
+   hover (phones, tablets) — those get .kk-flip-pill instead, which is always
+   visible, because an affordance you can only discover by hovering does not
+   exist on a touch screen. */
+.kk-flip-wash { display: none; }
+.kk-flip-pill { display: inline-flex; }
+
+@media (hover: hover) and (pointer: fine) {
+  .kk-flip-wash {
+    display: flex;
+    opacity: 0;
+    transition: opacity .28s ease;
+  }
+  .kk-flip-pill { display: none; }
+  .kk-card:hover .kk-flip-wash { opacity: 1; }
+  .kk-card:hover .kk-zoom { transform: scale(1.07); }
+  .kk-card:hover .kk-pulse { animation: kkPulse 1.05s cubic-bezier(.34, 1.4, .64, 1); }
+}
+
+/* Keyboard parity: tabbing to the flip control lights the same affordance. */
+.kk-flip-wash:focus-visible { opacity: 1; }
+
+/* The flip itself. The front face stays in normal flow so it keeps defining the
+   card's height (grid rows stretch every card in a row to match); the back is
+   absolutely positioned over it. */
+.kk-flip-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  transform-style: preserve-3d;
+  transition: transform .62s cubic-bezier(.4, .1, .2, 1);
+}
+.kk-flip-inner[data-flipped='true'] { transform: rotateY(180deg); }
+
+.kk-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.kk-face-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kk-zoom,
+  .kk-pulse,
+  .kk-flip-inner {
+    transition: none !important;
+    animation: none !important;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .kk-card:hover .kk-zoom { transform: scale(1.02); }
+  }
+}
