@@ -4,6 +4,7 @@ import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
 import { useStore } from '@/lib/store'
 import { shouldNudge, tasteBonus, isLearning, type TasteProfile } from '@/lib/taste'
 import { useTaste } from '@/hooks/useTaste'
+import TasteNote from './TasteNote'
 
 type Props = {
   open: boolean
@@ -165,6 +166,8 @@ export default function GiftFinder({ open, onClose, products }: Props) {
             )}
           </div>
         )}
+
+        <TasteNote variant="panel" />
 
         {/* Results */}
         <div className="flex-1 min-h-0 overflow-y-auto mt-3">

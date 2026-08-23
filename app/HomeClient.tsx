@@ -16,6 +16,7 @@ import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
 import AdaLoginModal from '@/components/AdaLoginModal'
 import { CatMark, PandaMark } from '@/components/BrandMark'
+import TasteNote from '@/components/TasteNote'
 
 const PAGE_SIZE = 18
 const ADA_SECRET_CODE = 'adamode'
@@ -368,6 +369,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
             <p className="mt-0.5">
               <a href="mailto:hello@kawaiikatz.com" className="font-extrabold hover:underline">hello@kawaiikatz.com</a>
             </p>
+            <TasteNote variant="footer" />
           </div>
         </div>
       </footer>
