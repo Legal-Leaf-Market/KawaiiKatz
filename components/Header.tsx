@@ -77,10 +77,10 @@ type HeaderProps = {
           {/* Logo */}
           <a
             href="/"
-            className="font-display font-extrabold text-[22px] text-[#4f4550] whitespace-nowrap bg-gradient-to-r from-[#ffb199] to-[#bfe3ea] px-4 py-1 rounded-full shadow-[0_4px_12px_rgba(255,138,101,.18)]"
+            className="font-display font-extrabold text-[22px] text-[#4f4550] whitespace-nowrap bg-gradient-to-r from-[#ffb199] to-[#bfe3ea] px-4 py-1.5 rounded-full shadow-[0_4px_12px_rgba(255,138,101,.18)] flex flex-col items-center justify-center leading-none"
           >
-            <span className="inline-flex items-center gap-2 leading-none"><CatMark size={28} /> Kawaii Katz <PandaMark size={28} /></span>
-            <small className="block font-sans text-[9.5px] leading-none mt-[3px] tracking-[1.1px] font-extrabold uppercase text-[#4f4550] opacity-70 text-center">
+            <span className="flex items-center gap-2"><CatMark size={28} /> Kawaii Katz <PandaMark size={28} /></span>
+            <small className="font-sans text-[9.5px] leading-none mt-[1px] tracking-[1.1px] font-extrabold uppercase text-[#4f4550] opacity-70 text-center">
               Kawaii, Clever &amp; Kind
             </small>
           </a>
