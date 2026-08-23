@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { useStore } from '@/lib/store'
 import { usePicks } from '@/hooks/usePicks'
+import { CatMark } from '@/components/BrandMark'
 import { catEmoji, money, type Product, type AdaPick } from '@/lib/data'
 import { openPin } from '@/lib/pinterest'
 import { useCarousel } from '@/hooks/useCarousel'
@@ -56,8 +57,10 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#e6dcff] to-[#ffb199] flex items-center justify-center text-3xl shadow-[0_3px_6px_rgba(183,156,255,.38)]" aria-hidden="true">
-              🌙
+            {/* The curator's avatar is the cat itself now, not a moon emoji —
+                one more place the brand shows up as the real mark. */}
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#e6dcff] to-[#ffb199] flex items-center justify-center shadow-[0_3px_6px_rgba(183,156,255,.38)] overflow-hidden" aria-hidden="true">
+              <CatMark size={42} />
             </div>
             <div>
               <h2 className="font-display font-extrabold text-[25px] text-[#4f4550] leading-none">Ada&apos;s Picks</h2>
