@@ -1,12 +1,13 @@
 import type { Product } from './data'
+import { tasteBonus, type TasteProfile } from './taste'
 
 /**
  * "More like this" ranking for the flip side of a product card.
  *
  * Deliberately pure and deterministic: a card renders on the server for first
  * paint and again on the client during hydration, so anything built on
- * `Math.random()` here would mismatch. Shuffling is done by *walking* a stable
- * ranked list (see `pairAt`) rather than reshuffling it.
+ * `Math.random()` here would mismatch. Shuffling walks down this ranking
+ * instead of re-rolling it, so each press shows something not yet seen.
  */
 
 /** Words that say nothing about what a product IS, so they must not score. */
@@ -40,7 +41,12 @@ export type Scored = { product: Product; score: number }
  * Capped at `limit` because the whole point is a shortlist to page through;
  * scoring ~1,600 products is cheap, holding all of them is not.
  */
-export function rankSimilar(target: Product, pool: Product[], limit = 24): Product[] {
+export function rankSimilar(
+  target: Product,
+  pool: Product[],
+  limit = 24,
+  taste?: TasteProfile | null,
+): Product[] {
   const tTokens = new Set(tokens(target.name))
   const scored: Scored[] = []
 
@@ -62,25 +68,37 @@ export function rankSimilar(target: Product, pool: Product[], limit = 24): Produ
     if (c.vendor === target.vendor) score += 0.4
     if (c.onSale) score += 0.3
 
+    // Note the filter is on the *similarity* score alone. Learned taste is
+    // applied below, never here — a run of thumbs-down must be able to reorder
+    // the shortlist but never to empty it.
     if (score <= 0) continue
     scored.push({ product: c, score })
   }
 
   // Tie-break on id so the order is identical on server and client.
   scored.sort((a, b) => b.score - a.score || (a.product.id < b.product.id ? -1 : 1))
-  return scored.slice(0, limit).map((s) => s.product)
-}
+  if (!taste) return scored.slice(0, limit).map((s) => s.product)
 
-/**
- * The `n`th pair from a ranked list. Walking two at a time means the shuffle
- * button steps *down* the ranking rather than re-rolling it, so every press
- * shows something the visitor has not seen yet until the list wraps.
- */
-export function pairAt(ranked: Product[], n: number): Product[] {
-  if (ranked.length === 0) return []
-  if (ranked.length === 1) return [ranked[0]]
-  const len = ranked.length
-  const a = ranked[(n * 2) % len]
-  const b = ranked[(n * 2 + 1) % len]
-  return a.id === b.id ? [a] : [a, b]
+  // Rank a window rather than the whole pool: taste should reorder plausible
+  // matches, not promote something unrelated because its category scored well.
+  const window = scored.slice(0, Math.max(limit * 2, 40))
+  const adjusted = [...window].sort((a, b) => {
+    const d = (b.score + tasteBonus(taste, b.product)) - (a.score + tasteBonus(taste, a.product))
+    return d || (a.product.id < b.product.id ? -1 : 1)
+  })
+
+  // The last quarter of the shortlist is reserved for the best *unadjusted*
+  // matches that taste pushed out. Without it a confident profile narrows to
+  // one thing and the finder stops finding; with it there is always something
+  // to discover further down the shuffle.
+  const keep = Math.max(1, Math.floor(limit * 0.75))
+  const out = adjusted.slice(0, keep)
+  const seen = new Set(out.map((s) => s.product.id))
+  for (const s of window) {
+    if (out.length >= limit) break
+    if (seen.has(s.product.id)) continue
+    out.push(s)
+    seen.add(s.product.id)
+  }
+  return out.map((s) => s.product)
 }

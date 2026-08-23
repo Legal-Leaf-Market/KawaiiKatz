@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
 import { useStore } from '@/lib/store'
+import { shouldNudge, tasteBonus, isLearning, type TasteProfile } from '@/lib/taste'
+import { useTaste } from '@/hooks/useTaste'
 
 type Props = {
   open: boolean
@@ -14,27 +16,72 @@ export default function GiftFinder({ open, onClose, products }: Props) {
   const [budget, setBudget] = useState('')
   const [picks, setPicks] = useState<Product[]>([])
   const [searched, setSearched] = useState(false)
+  const [liked, setLiked] = useState<Record<string, boolean>>({})
   const { dispatch } = useStore()
+  const { taste, record } = useTaste()
 
-  function findGifts() {
+  function matching(): Product[] {
     const maxPrice = parseFloat(budget) || Infinity
-    const pool = products.filter((p) => {
+    return products.filter((p) => {
       if (cat && p.cat !== cat) return false
       if (p.price > maxPrice) return false
       return true
     })
-    // Fisher-Yates shuffle
-    const arr = [...pool]
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
-    }
-    setPicks(arr.slice(0, 3))
+  }
+
+  /**
+   * `count` suggestions from the pool the filters allow.
+   *
+   * Randomness stays — a gift finder that returns the same three every time is
+   * a search box — but taste now decides *which* random draw wins. Each
+   * candidate gets its learned bonus plus a jitter wide enough that a modest
+   * preference tilts the odds rather than fixing the answer, so the finder can
+   * still surprise someone who has told it very little.
+   *
+   * `excluding` keeps what is already on screen from being drawn again. Random
+   * alone would return a just-rejected item about a third of the time, which
+   * reads as the thumbs-down having done nothing.
+   */
+  function pick(t: TasteProfile, excluding: Set<string>, count: number): Product[] {
+    const all = matching()
+    let pool = all.filter((p) => !excluding.has(p.id))
+    // Exhausted the filtered pool — better to repeat than to return nothing.
+    if (pool.length < count) pool = all
+    return pool
+      .map((p) => ({ p, s: tasteBonus(t, p) + Math.random() * 7 }))
+      .sort((a, b) => b.s - a.s)
+      .slice(0, count)
+      .map((x) => x.p)
+  }
+
+  function findGifts() {
+    setPicks(pick(taste, new Set(), 3))
+    setLiked({})
     setSearched(true)
   }
 
-  function addToCart(id: string) {
-    dispatch({ type: 'ADD_TO_CART', productId: id, variantIndex: 0 })
+  /** Shuffling past three suggestions is three weak "not that one"s. */
+  function shuffleGifts() {
+    let t = taste
+    for (const p of picks) t = record(p, 'skip')
+    setPicks(pick(t, new Set(picks.map((p) => p.id)), 3))
+    setLiked({})
+  }
+
+  function vote(item: Product, signal: 'up' | 'down') {
+    const t = record(item, signal)
+    if (signal === 'up') { setLiked((m) => ({ ...m, [item.id]: true })); return }
+    // Thumbs-down replaces that one card where it stands. Rebuilding the row
+    // around it would move the two the visitor said nothing about, which reads
+    // as the whole search having been thrown away.
+    const [replacement] = pick(t, new Set(picks.map((x) => x.id)), 1)
+    if (!replacement) return
+    setPicks((cur) => cur.map((x) => (x.id === item.id ? replacement : x)))
+  }
+
+  function addToCart(item: Product) {
+    dispatch({ type: 'ADD_TO_CART', productId: item.id, variantIndex: 0 })
+    record(item, 'cart')
   }
 
   if (!open) return null
@@ -98,13 +145,26 @@ export default function GiftFinder({ open, onClose, products }: Props) {
           </button>
           {searched && (
             <button
-              onClick={findGifts}
+              onClick={shuffleGifts}
               className="border-[2.5px] border-[#b79cff] bg-[#e6dcff] text-[#4f4550] font-display font-extrabold px-4 py-2 rounded-full cursor-pointer text-[13px]"
             >
               🔀 Shuffle
             </button>
           )}
         </div>
+
+        {/* What the finder has picked up so far. The prompt only appears once
+            someone has actually shown friction — asking for feedback before
+            they have rejected anything is noise. */}
+        {searched && (shouldNudge(taste) || isLearning(taste)) && (
+          <div className="mt-1.5 text-[12px] font-bold leading-snug rounded-[14px] px-3 py-2 border-2 border-dashed border-[#6495ED] bg-[rgba(100,149,237,.08)] text-[#4a6fb5]">
+            {shouldNudge(taste) ? (
+              <>Don&apos;t quite see what you&apos;re looking for? Keep telling us what you like and what you don&apos;t with 👍 and 👎, and we&apos;ll help you find the perfect gift.</>
+            ) : (
+              <>Learning what you like 🎀 — keep using 👍 and 👎 and these picks get sharper.</>
+            )}
+          </div>
+        )}
 
         {/* Results */}
         <div className="flex-1 min-h-0 overflow-y-auto mt-3">
@@ -130,18 +190,39 @@ export default function GiftFinder({ open, onClose, products }: Props) {
                   key={p.id}
                   className="flex flex-col bg-white border-[3px] border-[#ffb199] rounded-[20px] overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(255,138,101,.16)]"
                 >
-                  <div className="flex-1 min-h-[160px] bg-gradient-to-br from-[#ffb199] to-[#bfe3ea] flex items-center justify-center text-[64px] overflow-hidden">
+                  <div className="relative flex-1 min-h-[160px] bg-gradient-to-br from-[#ffb199] to-[#bfe3ea] flex items-center justify-center text-[64px] overflow-hidden">
                     {p.image
                       ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                       : <span aria-hidden="true">{catEmoji(p.cat)}</span>
                     }
+                    <div className="absolute top-2 right-2 flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => vote(p, 'up')}
+                        className={`w-[32px] h-[32px] rounded-full border-2 text-[15px] leading-none flex items-center justify-center cursor-pointer shadow-[0_2px_8px_rgba(79,69,80,.28)] transition-colors
+                          ${liked[p.id] ? 'border-[#2e7d32] bg-[#c9ecd2]' : 'border-white bg-[rgba(255,255,255,.92)] hover:bg-white'}`}
+                        aria-label={`More like ${p.name}`}
+                        title="More like this"
+                      >
+                        👍
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => vote(p, 'down')}
+                        className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[rgba(255,255,255,.92)] text-[15px] leading-none flex items-center justify-center cursor-pointer shadow-[0_2px_8px_rgba(79,69,80,.28)] hover:bg-white transition-colors"
+                        aria-label={`Fewer like ${p.name}`}
+                        title="Not this — show me something else"
+                      >
+                        👎
+                      </button>
+                    </div>
                   </div>
                   <div className="p-3 px-3.5 pb-3.5">
                     <div className="font-bold text-[14px] leading-tight line-clamp-2 mb-1">{p.name}</div>
                     <div className="font-display text-[#ff8a65] text-[18px] mb-2">{money(p.price)}</div>
                     <button
                       type="button"
-                      onClick={() => addToCart(p.id)}
+                      onClick={() => addToCart(p)}
                       className="block w-full border-[2.5px] border-[#ff8a65] bg-[#ffb199] rounded-xl font-display font-extrabold text-[13px] py-2.5 text-center cursor-pointer text-[#4f4550] hover:bg-[#ff8a65] hover:text-white transition-colors active:translate-y-0.5"
                       aria-label={`Add ${p.name} to cart`}
                     >

@@ -1,9 +1,11 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, isNewItem, type Product } from '@/lib/data'
 import { pinProduct } from '@/lib/pinterest'
-import { rankSimilar, pairAt } from '@/lib/similar'
+import { rankSimilar } from '@/lib/similar'
+import { shouldNudge, type TasteProfile, type TasteSignal } from '@/lib/taste'
+import { useTaste } from '@/hooks/useTaste'
 import ProductImage from './ProductImage'
 
 type Props = {
@@ -34,12 +36,24 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
   const [selVariant, setSelVariant] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [flipped, setFlipped] = useState(false)
-  const [shuffle, setShuffle] = useState(0)
   const [addedBoth, setAddedBoth] = useState(false)
+  const { taste, record } = useTaste()
+
+  /**
+   * The pair currently on the flip side, and every id this card has already
+   * shown. Held as state rather than derived by index from a ranked list,
+   * because the ranking now moves under us: a thumbs-down re-ranks immediately,
+   * and an index into a list that just changed points at something arbitrary.
+   * Keeping the pair explicit also lets a thumbs-down replace one tile instead
+   * of both.
+   */
+  const [picks, setPicks] = useState<Product[]>([])
+  const [seen, setSeen] = useState<Set<string>>(() => new Set())
+  const [poolSize, setPoolSize] = useState(0)
+
   /**
    * Ranking the pool is cheap per card and ruinous times eighteen at mount, so
-   * it waits for the first sign of interest — a hover, a focus, or the flip
-   * itself. After that the memo keeps it.
+   * it waits for the first sign of interest — a hover, a focus, or the flip.
    */
   const [primed, setPrimed] = useState(false)
 
@@ -48,24 +62,72 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
   const inWish = state.wish.includes(p.id)
   const isNew = isNewItem(p)
   const isFeedPick = isFeedPickProp ?? false
-
-  const ranked = useMemo(
-    () => (primed && similarPool.length > 1 ? rankSimilar(p, similarPool) : []),
-    [primed, p, similarPool]
-  )
-  const picks = useMemo(() => pairAt(ranked, shuffle), [ranked, shuffle])
   const canFlip = similarPool.length > 1
 
+  /** Ranked shortlist under a given profile. Deep enough that shuffling has
+   *  somewhere to go, including into the exploration reserve at the tail. */
+  function shortlist(t: TasteProfile): Product[] {
+    return rankSimilar(p, similarPool, 40, t)
+  }
+
   function prime() {
-    if (!primed) setPrimed(true)
+    if (primed || !canFlip) return
+    setPrimed(true)
+    const list = shortlist(taste)
+    setPoolSize(list.length)
+    const next = list.slice(0, 2)
+    setPicks(next)
+    setSeen(new Set(next.map((x) => x.id)))
+  }
+
+  /** Both tiles replaced — the shuffle button. Each one shown counts as a weak
+   *  "not that", which is the whole reason shuffle is a signal at all. */
+  function shufflePicks() {
+    let t = taste
+    for (const item of picks) t = record(item, 'skip')
+    const list = shortlist(t)
+    setPoolSize(list.length)
+    let avail = list.filter((x) => !seen.has(x.id))
+    // Wrapped: everything has been shown once, so start the cycle again rather
+    // than leaving the visitor on a dead button.
+    const fresh = avail.length >= 2 ? seen : new Set<string>()
+    if (avail.length < 2) avail = list
+    const next = avail.slice(0, 2)
+    setPicks(next)
+    setSeen(new Set([...fresh, ...next.map((x) => x.id)]))
+  }
+
+  /** One tile replaced — a thumbs-down. The other stays put, because the
+   *  visitor said nothing about it. */
+  function replaceOne(item: Product, t: TasteProfile) {
+    const list = shortlist(t)
+    setPoolSize(list.length)
+    let cand = list.find((x) => !seen.has(x.id))
+    let nextSeen = seen
+    if (!cand) {
+      nextSeen = new Set(picks.map((x) => x.id))
+      cand = list.find((x) => !nextSeen.has(x.id))
+    }
+    if (!cand) return
+    setSeen(new Set([...nextSeen, cand.id]))
+    setPicks((cur) => cur.map((x) => (x.id === item.id ? cand! : x)))
+  }
+
+  function vote(item: Product, signal: TasteSignal) {
+    const next = record(item, signal)
+    if (signal === 'down') replaceOne(item, next)
   }
 
   function addToCart() {
     dispatch({ type: 'ADD_TO_CART', productId: p.id, variantIndex: selVariant })
+    record(p, 'cart')
   }
 
   function addBoth() {
-    for (const item of picks) dispatch({ type: 'ADD_TO_CART', productId: item.id, variantIndex: 0 })
+    for (const item of picks) {
+      dispatch({ type: 'ADD_TO_CART', productId: item.id, variantIndex: 0 })
+      record(item, 'cart')
+    }
     setAddedBoth(true)
     setTimeout(() => setAddedBoth(false), 1400)
   }
@@ -320,12 +382,12 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                   button lands in the gap between the two on its own. */}
               <div className="flex-1 min-h-0 flex flex-col gap-2 relative">
                 {picks.map((item) => (
-                  <MiniRow key={item.id} item={item} />
+                  <MiniRow key={item.id} item={item} onVote={vote} onAdd={() => record(item, 'cart')} />
                 ))}
-                {ranked.length > 2 && (
+                {poolSize > 2 && (
                   <button
                     type="button"
-                    onClick={() => setShuffle((n) => n + 1)}
+                    onClick={shufflePicks}
                     className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[38px] h-[38px] rounded-full bg-white border-[2.5px] border-[#6495ED] text-[#6495ED] text-[16px] font-black leading-none flex items-center justify-center cursor-pointer shadow-[0_3px_10px_rgba(100,149,237,.4)] hover:bg-[#6495ED] hover:text-white active:scale-90 transition-all"
                     aria-label="Shuffle in different similar products"
                     title="Shuffle more options"
@@ -348,9 +410,15 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                   >
                     {addedBoth ? 'Both added ✓' : 'Add both 🛒'}
                   </button>
-                  <div className="text-center text-[9.5px] font-bold text-[#c9bfd1] leading-none">
-                    {ranked.length} similar · ⇄ to shuffle
-                  </div>
+                  {shouldNudge(taste) ? (
+                    <div className="text-center text-[9.5px] font-bold text-[#6495ED] leading-snug px-1">
+                      Not quite it? Keep telling us with 👍 and 👎 — we&apos;ll narrow it down.
+                    </div>
+                  ) : (
+                    <div className="text-center text-[9.5px] font-bold text-[#c9bfd1] leading-none">
+                      {poolSize} similar · ⇄ to shuffle
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -362,12 +430,18 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
 }
 
 /** One suggestion on a card's flip side: full-width photo, price, add. */
-function MiniRow({ item }: { item: Product }) {
+function MiniRow({ item, onVote, onAdd }: {
+  item: Product
+  onVote: (item: Product, signal: TasteSignal) => void
+  onAdd: () => void
+}) {
   const { dispatch } = useStore()
   const [added, setAdded] = useState(false)
+  const [liked, setLiked] = useState(false)
 
   function add() {
     dispatch({ type: 'ADD_TO_CART', productId: item.id, variantIndex: 0 })
+    onAdd()
     setAdded(true)
     setTimeout(() => setAdded(false), 1400)
   }
@@ -383,6 +457,30 @@ function MiniRow({ item }: { item: Product }) {
           fallbackClassName="absolute inset-0 flex items-center justify-center text-[38px]"
           width={320}
         />
+        {/* On the photo rather than in the caption line: the caption is already
+            carrying a name, a price and a button, and these have to be reachable
+            without reading anything. */}
+        <div className="absolute top-1.5 right-1.5 flex gap-1 z-10">
+          <button
+            type="button"
+            onClick={() => { setLiked(true); onVote(item, 'up') }}
+            className={`w-[26px] h-[26px] rounded-full border-2 text-[12px] leading-none flex items-center justify-center cursor-pointer shadow-[0_2px_6px_rgba(79,69,80,.25)] transition-colors
+              ${liked ? 'border-[#2e7d32] bg-[#c9ecd2]' : 'border-white bg-[rgba(255,255,255,.9)] hover:bg-white'}`}
+            aria-label={`More like ${item.name}`}
+            title="More like this"
+          >
+            👍
+          </button>
+          <button
+            type="button"
+            onClick={() => onVote(item, 'down')}
+            className="w-[26px] h-[26px] rounded-full border-2 border-white bg-[rgba(255,255,255,.9)] text-[12px] leading-none flex items-center justify-center cursor-pointer shadow-[0_2px_6px_rgba(79,69,80,.25)] hover:bg-white transition-colors"
+            aria-label={`Fewer like ${item.name}`}
+            title="Not this — show me something else"
+          >
+            👎
+          </button>
+        </div>
       </div>
       {/* Price and button share a line so the photo keeps the height. */}
       <div className="flex items-center gap-2 shrink-0 min-w-0">
