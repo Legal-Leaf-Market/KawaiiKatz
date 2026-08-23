@@ -151,12 +151,10 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                 <button
                   type="button"
                   onClick={() => { prime(); setFlipped(true) }}
-                  className="kk-flip-wash absolute inset-0 z-10 items-center justify-center cursor-pointer bg-[rgba(100,149,237,.52)]"
+                  className="kk-flip-wash absolute inset-0 z-10 items-center justify-center text-center px-3 cursor-pointer"
                   aria-label={`Flip ${p.name} over for similar options`}
                 >
-                  <span className="font-display font-extrabold text-white text-[12.5px] sm:text-[13px] leading-none tracking-[.3px] bg-[rgba(255,255,255,.24)] border-2 border-[rgba(255,255,255,.8)] rounded-full px-3.5 py-2 text-center drop-shadow-[0_2px_4px_rgba(0,0,0,.35)]">
-                    ↻ flip for more options
-                  </span>
+                  Flip for more details
                 </button>
                 {/* Touch devices have no hover, so the affordance is always on. */}
                 <button
@@ -317,32 +315,24 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
             </div>
           ) : (
             <>
-              {/* Photos and captions are two separate rows rather than two
-                  self-contained tiles: it keeps the two Add buttons on one line
-                  when the names wrap differently, and it gives the shuffle
-                  button a row to centre itself in that has nothing to cover. */}
-              <div className="flex-1 min-h-0 flex flex-col justify-center gap-1.5">
-                <div className="relative min-h-0 flex-[0_1_230px] grid grid-cols-2 gap-3">
-                  {picks.map((item) => (
-                    <MiniPhoto key={item.id} item={item} />
-                  ))}
-                  {ranked.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => setShuffle((n) => n + 1)}
-                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[38px] h-[38px] rounded-full bg-white border-[2.5px] border-[#6495ED] text-[#6495ED] text-[16px] font-black leading-none flex items-center justify-center cursor-pointer shadow-[0_3px_10px_rgba(100,149,237,.4)] hover:bg-[#6495ED] hover:text-white active:scale-90 transition-all"
-                      aria-label="Shuffle in different similar products"
-                      title="Shuffle more options"
-                    >
-                      ⇄
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-3 shrink-0">
-                  {picks.map((item) => (
-                    <MiniMeta key={item.id} item={item} />
-                  ))}
-                </div>
+              {/* Stacked, not side by side: a full-width photo reads as the
+                  product, a half-width one reads as a thumbnail. The shuffle
+                  button lands in the gap between the two on its own. */}
+              <div className="flex-1 min-h-0 flex flex-col gap-2 relative">
+                {picks.map((item) => (
+                  <MiniRow key={item.id} item={item} />
+                ))}
+                {ranked.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setShuffle((n) => n + 1)}
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[38px] h-[38px] rounded-full bg-white border-[2.5px] border-[#6495ED] text-[#6495ED] text-[16px] font-black leading-none flex items-center justify-center cursor-pointer shadow-[0_3px_10px_rgba(100,149,237,.4)] hover:bg-[#6495ED] hover:text-white active:scale-90 transition-all"
+                    aria-label="Shuffle in different similar products"
+                    title="Shuffle more options"
+                  >
+                    ⇄
+                  </button>
+                )}
               </div>
 
               {picks.length === 2 && (
@@ -371,24 +361,8 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
   )
 }
 
-/** The photo half of one suggestion on a card's flip side. */
-function MiniPhoto({ item }: { item: Product }) {
-  return (
-    <div className="relative min-h-0 min-w-0 rounded-[12px] overflow-hidden border-2 border-[#ffe0d6] bg-gradient-to-br from-[#ffb199] to-[#bfe3ea]">
-      <ProductImage
-        src={item.image}
-        alt={item.name}
-        fallback={catEmoji(item.cat)}
-        className="w-full h-full object-cover"
-        fallbackClassName="absolute inset-0 flex items-center justify-center text-[32px]"
-        width={200}
-      />
-    </div>
-  )
-}
-
-/** The price-and-add half of one suggestion on a card's flip side. */
-function MiniMeta({ item }: { item: Product }) {
+/** One suggestion on a card's flip side: full-width photo, price, add. */
+function MiniRow({ item }: { item: Product }) {
   const { dispatch } = useStore()
   const [added, setAdded] = useState(false)
 
@@ -399,24 +373,39 @@ function MiniMeta({ item }: { item: Product }) {
   }
 
   return (
-    <div className="flex flex-col gap-1 min-w-0">
-      <div className="text-[9.5px] leading-tight text-[#9a8fa3] font-bold line-clamp-1" title={item.name}>
-        {item.name}
+    <div className="flex-1 min-h-0 flex flex-col gap-1 min-w-0">
+      <div className="relative flex-1 min-h-0 rounded-[12px] overflow-hidden border-2 border-[#ffe0d6] bg-gradient-to-br from-[#ffb199] to-[#bfe3ea]">
+        <ProductImage
+          src={item.image}
+          alt={item.name}
+          fallback={catEmoji(item.cat)}
+          className="w-full h-full object-cover"
+          fallbackClassName="absolute inset-0 flex items-center justify-center text-[38px]"
+          width={320}
+        />
       </div>
-      <div className={`font-display text-[15px] leading-none ${item.onSale ? 'text-[#e0227a]' : 'text-[#ff8a65]'}`}>
-        {money(item.price)}
+      {/* Price and button share a line so the photo keeps the height. */}
+      <div className="flex items-center gap-2 shrink-0 min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="text-[9.5px] leading-tight text-[#9a8fa3] font-bold line-clamp-1" title={item.name}>
+            {item.name}
+          </div>
+          <div className={`font-display text-[16px] leading-tight ${item.onSale ? 'text-[#e0227a]' : 'text-[#ff8a65]'}`}>
+            {money(item.price)}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className={`shrink-0 border-2 font-display font-extrabold px-3 py-[7px] rounded-[11px] cursor-pointer text-[11.5px] leading-none text-center transition-colors
+            ${added
+              ? 'border-[#2e7d32] bg-[#c9ecd2] text-[#1b4d20]'
+              : 'border-[#ff8a65] bg-[#ffb199] text-[#4f4550] hover:bg-[#ff8a65] hover:text-white'}`}
+          aria-label={`Add ${item.name} to cart`}
+        >
+          {added ? 'Added ✓' : 'Add 🛒'}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={add}
-        className={`border-2 font-display font-extrabold px-1 py-[7px] rounded-[11px] cursor-pointer text-[11.5px] leading-none text-center transition-colors
-          ${added
-            ? 'border-[#2e7d32] bg-[#c9ecd2] text-[#1b4d20]'
-            : 'border-[#ff8a65] bg-[#ffb199] text-[#4f4550] hover:bg-[#ff8a65] hover:text-white'}`}
-        aria-label={`Add ${item.name} to cart`}
-      >
-        {added ? 'Added ✓' : 'Add 🛒'}
-      </button>
     </div>
   )
 }
