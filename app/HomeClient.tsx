@@ -15,7 +15,6 @@ import CartDrawer from '@/components/CartDrawer'
 import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
 import AdaLoginModal from '@/components/AdaLoginModal'
-import { CatMark, PandaMark } from '@/components/BrandMark'
 
 const PAGE_SIZE = 18
 const ADA_SECRET_CODE = 'adamode'
@@ -342,7 +341,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
       <footer className="bg-gradient-to-r from-[#bfe3ea] to-[#ffb199] py-6 mt-5" role="contentinfo">
         <div className="max-w-[1180px] mx-auto px-4 flex flex-wrap gap-3.5 justify-between items-center text-[#4f4550]">
           <div>
-            <strong className="font-display text-[18px] inline-flex items-center gap-1.5"><CatMark size={20} /> Kawaii Katz <PandaMark size={20} /></strong>
+            <strong className="font-display text-[18px]">Kawaii Katz</strong>
             <p className="text-sm font-semibold opacity-80 mt-0.5">Kawaii, Clever &amp; Kind</p>
           </div>
           <div className="text-sm font-semibold opacity-80 text-center">

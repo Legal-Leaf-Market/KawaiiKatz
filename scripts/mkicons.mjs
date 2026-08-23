@@ -157,24 +157,9 @@ if (ARTWORK) {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">` +
     `<image href="data:image/png;base64,${embed}" width="256" height="256"/></svg>`))
 } else {
-  console.log('vector mode — assets/logo-cat.png + logo-panda.png not found\n')
-  const full = readFileSync(p('assets/icon.svg'))
-  const small = readFileSync(p('assets/icon-small.svg'))
-  const svgPng = (svg, size) =>
-    sharp(svg, { density: 600 }).resize(size, size).png({ compressionLevel: 9 }).toBuffer()
-  write('app/icon.png', await svgPng(full, 1024))
-  write('public/apple-icon.png', await svgPng(full, 180))
-  write('public/icon-192.png', await svgPng(full, 192))
-  write('public/icon-512.png', await svgPng(full, 512))
-  write('public/icon-32.png', await svgPng(small, 32))
-  write('public/icon-16.png', await svgPng(small, 16))
-  write('public/icon.svg', full)
-  // The header marks are emitted in BOTH modes so components/BrandMark.tsx has
-  // one code path. In vector mode they are cut from the same SVG; in artwork
-  // mode they are the real illustrations. Either way the component just points
-  // at /brand-cat.png and /brand-panda.png.
-  const soloCat = readFileSync(p('assets/icon-solo-cat.svg'))
-  const soloPanda = readFileSync(p('assets/icon-solo-panda.svg'))
-  write('public/brand-cat.png', await svgPng(soloCat, 128))
-  write('public/brand-panda.png', await svgPng(soloPanda, 128))
+  console.log(
+    'No artwork found. Expected assets/logo-cat.png and assets/logo-panda.png.\n' +
+    'Nothing was written — the icons currently in app/ and public/ are the\n' +
+    "original Kawaii Katz cat, restored by hand. Drop the artwork in and re-run."
+  )
 }
