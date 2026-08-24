@@ -137,9 +137,80 @@ function hasWord(hay: string, terms: string[]): boolean {
 // guard turns that product into apparel without anything failing.
 const PLUSH_TERMS = ['plush', 'plushie', 'plushy', 'stuffed', 'teddy', 'rag doll', 'hand puppet', 'finger puppet', 'puppet', 'snugible', 'blankie', 'cuddle', 'cuddly', 'soft toy', 'soft plush', 'pillow pet', 'gund', 'squishmallow', 'jumbo plush', 'plush figure']
 
+/**
+ * Nouns that mean "an object, not a thing you eat".
+ *
+ * The food rule is gated on this, because in a kawaii catalogue almost
+ * everything is *shaped* like something edible. Matched as whole words, and
+ * deliberately excluding nouns that can themselves be groceries — 'box', 'tin',
+ * 'jar', 'can' and 'pack' are NOT here, because real snacks come in all five.
+ */
+const FOOD_FORM_NOUNS = [
+  // carried
+  'bag', 'handbag', 'backpack', 'tote', 'pouch', 'pouches', 'purse', 'wallet', 'case',
+  // worn
+  'hat', 'cap', 'beanie', 'glove', 'jacket', 'coat', 'dress', 'dresses', 'skirt',
+  'vest', 'tights', 'leggings', 'pant', 'trouser', 'scarf', 'scarves', 'sock',
+  'shirt', 'tee', 'hoodie', 'sweater', 'sweatshirt', 'sweatpant', 'jogger', 'tracksuit',
+  'slipper', 'apron', 'wig',
+  'costume', 'shade', 'sunglasses', 'beret', 'headband', 'hairband',
+  // desk & paper
+  'sticker', 'decal', 'eraser', 'notebook', 'notepad', 'note pad', 'sticky note',
+  'journal', 'planner', 'pin', 'badge',
+  // soft furnishings & decor
+  // 'night light', not a bare 'light': drink copy is full of "a light,
+  // refreshing…", which was sending real sparkling water to the home shelf.
+  'pillow', 'cushion', 'blanket', 'towel', 'tapestry', 'rug', 'lamp', 'night light', 'candle',
+  // hard goods
+  'keychain', 'keyring', 'charm', 'stand', 'holder', 'grip', 'tray', 'coaster',
+  // No 'bottle', 'mug' or 'tumbler': the kitchen rule already claims those and
+  // runs first, so listing them here could only ever block a real bottled drink.
+  'magnet', 'lanyard', 'piggy bank', 'money box',
+  // jewellery & beauty
+  'earring', 'necklace', 'bracelet', 'glaze', 'gloss', 'balm',
+  // toys that merely look edible
+  'squishy', 'squishie', 'squishies', 'squish', 'figure', 'figurine', 'plushie',
+]
+
+/**
+ * Names that only ever belong to something you eat or drink. Kept separate from
+ * the food vocabulary because these can run BEFORE the rules that claim 'bag'
+ * and 'bottle' — packaging nouns that a snack shares with a handbag.
+ *
+ * Matched as whole words, not substrings: 'fanta' is inside FANTASY and
+ * FANTASIA, 'lotte' inside LOTTERY, 'oreo' inside MOREOVER. A fantasy fox
+ * plushie is not a soft drink.
+ */
+const GROCERY_BRANDS = [
+  'fanta', 'coca-cola', 'coca cola', 'pepsi', 'sprite', 'minute maid', 'sangaria',
+  'qdol', 'ocean bomb', 'calpis', 'yakult', 'ramune',
+  'cheetos', 'doritos', 'lay\'s', 'calbee', 'pringles', 'chips ahoy', 'oreo',
+  'pocky', 'kit kat', 'kitkat', 'hi-chew', 'meiji', 'glico', 'morinaga', 'lotte',
+  'samyang', 'buldak', 'nongshim', 'nissin',
+]
+
+/**
+ * Nouns a snack's own packaging uses. They cannot disqualify a brand match — a
+ * bag of Lay's is still Lay's — so the brand rule screens on everything in
+ * FOOD_FORM_NOUNS except these. The generic food vocabulary still screens on
+ * the full list, where 'bag' really does mean the thing is a handbag.
+ */
+const PACKAGING_NOUNS = new Set(['bag', 'case', 'tray', 'pouch', 'pouches'])
+const BRAND_FORM_NOUNS = FOOD_FORM_NOUNS.filter((n) => !PACKAGING_NOUNS.has(n))
+
 export function categorize(hay: string): string {
   hay = (hay || '').toLowerCase()
   if (hasAny(hay, ['infant', 'newborn', 'swaddle', 'onesie', 'pacifier', 'teether', 'teething', 'bassinet', 'baby rattle', 'baby gym', 'tummy time', 'baby mobile', 'baby carrier', 'montessori baby'])) return 'learning'
+  // Grocery brands, high — above the rules that own 'bag' and 'bottle'. A bag of
+  // Lay's was being filed as an accessory and a 500ml Fanta as kitchenware,
+  // because a snack's packaging is described with the same nouns as the objects
+  // this catalogue mostly sells. A brand name is the one unambiguous signal:
+  // nothing called Doritos is a hair clip. Still behind the form guard, so a
+  // Pocky plushie stays a plushie.
+  if (
+    !hasAny(hay, PLUSH_TERMS) && !hasWord(hay, BRAND_FORM_NOUNS) &&
+    hasWord(hay, GROCERY_BRANDS)
+  ) return 'food'
   if (hasAny(hay, ['bag charm', 'bagcharm', 'bag-charm', 'keychain', 'key chain', 'key ring', 'keyring', 'phone charm', 'purse charm', 'hanging charm', 'dangle charm', 'strap charm', 'airpod charm', 'pendant charm', ' charm', 'charm ', 'charms'])) return 'accessories'
   // Decora and pastel-scene accessories: the cat ears, hair clips, bows,
   // bracelets, earrings and lip gloss that make an outfit rather than merely
@@ -160,7 +231,7 @@ export function categorize(hay: string): string {
   // would claim jigsawdepot's "Ring Matching Game" and Montessori & Me's
   // stacking rings, both of which the puzzle and learning rules below get right
   // today. 'earring' is unambiguous, so it is.
-  if (/(^|[^a-z0-9])(earrings?|necklaces?|bracelets?|bangles?|anklets?|chokers?|brooch(es)?|lip ?gloss|lipsticks?|lip ?balms?|nail (polish|stickers?|wraps?)|press[- ]on nails)([^a-z0-9]|$)/.test(hay)) return 'accessories'
+  if (/(^|[^a-z0-9])(earrings?|necklaces?|bracelets?|bangles?|anklets?|chokers?|brooch(es)?|lip ?gloss|lip ?glazes?|lipsticks?|lip ?balms?|nail (polish|stickers?|wraps?)|press[- ]on nails)([^a-z0-9]|$)/.test(hay)) return 'accessories'
   // "Cat ears" needs TWO guards, and the second one was learned the hard way.
   //
   // The plush guard, because in this catalogue the phrase is equally the name of
@@ -222,19 +293,32 @@ export function categorize(hay: string): string {
   // rules underneath.
   if (!hasAny(hay, PLUSH_TERMS) && /\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b|\bskirts?\b|\bleggings\b|\bjeans\b|\bblouses?\b|\bcardigans?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees\b|\boveralls\b|\bpants\b|\btrousers\b|\bp[yj]jamas\b/.test(hay)) return 'apparel'
   if (hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])) return 'kitchen'
-  if (hasAny(hay, ['ramen', 'ramune', 'sparkling water', 'ocean bomb', 'pez', 'buldak', 'samyang', 'soda', 'lychee flavor', 'lemon lime', 'white peach', 'candy', 'chocolate', 'gummy', 'tea party'])) return 'food'
   if (hasAny(hay, PLUSH_TERMS)) return 'plush'
-  // Split for the same reason 'pin' and 'ring' were split out of the accessories
-  // rule: hasAny is a substring test, and 'hape' — the wooden-toy brand — is a
-  // substring of SHAPE. Measured on the live feed, that one term put 44 products
-  // on the children's-learning shelf on the strength of the word "shaped":
-  // mouse pads, wall clocks, a lint roller, two cat beds, a Bluetooth speaker,
-  // a dustpan set. 47 of the 87 products classified `learning` had no learning
-  // signal in them at all.
+  // Food comes AFTER plush, and behind a guard, because in a kawaii catalogue
+  // almost everything is *shaped* like something edible. Before both, the food
+  // rule was claiming Plushible's "Chocolate Strawberry Snugible | Blanket
+  // Hoodie & Pillow" on 'chocolate', a "Cute Tea Party Bag" on 'tea party' and
+  // a "Candy Lover's Tote Bag" on 'candy'. The guard is what separates a snack
+  // from an object with a snack printed on it — "Cookie Monster" and "Mochi
+  // Bunny" are plushies, not groceries.
   //
-  // 'counting' is a substring of DISCOUNTING and ACCOUNTING, both of which turn
-  // up in sale copy. The rest are here because they are short enough to be worth
-  // anchoring even where no collision has bitten yet.
+  // Vocabulary widened for drinks, which the rule never had at all: it knew
+  // 'ramune' and 'ocean bomb' by brand but not 'drink', 'boba' or 'milk tea',
+  // so a Pusheen fizzy drink and a Keroppi matcha boba were reaching the home
+  // rule and being filed as decor.
+  if (!hasWord(hay, FOOD_FORM_NOUNS)) {
+    if (hasAny(hay, [
+      // drinks
+      'ramune', 'sparkling water', 'ocean bomb', 'fizzy drink', 'soft drink',
+      'energy drink', 'milk tea', 'bubble tea', 'boba', 'iced tea', 'lemonade',
+      'melon soda', 'cream soda',
+      // instant / savoury
+      'ramen', 'instant noodle', 'cup noodle', 'yakisoba', 'udon', 'furikake',
+      'senbei', 'dagashi', 'seaweed snack', 'rice cracker', 'potato chips',
+    ])) return 'food'
+    if (hasWord(hay, ['soda', 'juice', 'cola'])) return 'food'
+  }
+
   if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'alphabet', 'toddler', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
   if (hasWord(hay, ['counting', 'stacking', 'sorting', 'math', 'hape', 'rattle'])) return 'learning'
   if (hasAny(hay, ['puzzle', 'jigsaw', '500pc', '1000pc', 'pieces', 'tilting board', 'puzzle table', 'board game', 'yo-yo', 'kite', 'ring matching game'])) return 'puzzle'
@@ -293,6 +377,19 @@ export function categorize(hay: string): string {
   if (hasAny(hay, ['tissue box', 'toothbrush', 'bookend', 'coin bank', 'money bank', 'piggy bank', 'soap dish', 'toilet', 'curtain', 'storage shelf', 'storage box', 'storage rack', 'organizer', 'organiser', 'trinket dish', 'incense holder', 'plant pot', 'planter', 'waste bin', 'laundry'])) return 'home'
   if (hasWord(hay, ['vase', 'shelf', 'poster', 'wall art'])) return 'home'
   if (hasWord(hay, ['mat', 'wall', 'light', 'tent'])) return 'home'
+  // Sweets vocabulary, last. These words are not reliable evidence of food in
+  // this catalogue — they are how it describes a LOOK. 'candycore' sneakers, a
+  // "Lovecore Lolly" belt chain, a "Cherry Puppy" jacket, a chocolate-brown
+  // plaid dress. Run high they claimed all of those; run here, apparel,
+  // accessories, stationery and home have already taken what is theirs and what
+  // is left is much more likely to be an actual sweet.
+  if (!hasWord(hay, FOOD_FORM_NOUNS)) {
+    if (hasAny(hay, ['candy', 'chocolate', 'gummy', 'gummies', 'marshmallow',
+      'lollipop', 'wafer', 'biscuit', 'caramel', 'popcorn', 'macaron',
+      'dorayaki', 'daifuku', 'konpeito', 'lychee flavor', 'lemon lime',
+      'white peach', 'tea party'])) return 'food'
+    if (hasWord(hay, ['jelly', 'pudding', 'snack', 'pez', 'mochi', 'cookie', 'noodle', 'chips', 'crisps'])) return 'food'
+  }
   return 'other'
 }
 
