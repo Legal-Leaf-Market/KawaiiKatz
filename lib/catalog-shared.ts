@@ -224,7 +224,19 @@ export function categorize(hay: string): string {
   if (hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])) return 'kitchen'
   if (hasAny(hay, ['ramen', 'ramune', 'sparkling water', 'ocean bomb', 'pez', 'buldak', 'samyang', 'soda', 'lychee flavor', 'lemon lime', 'white peach', 'candy', 'chocolate', 'gummy', 'tea party'])) return 'food'
   if (hasAny(hay, PLUSH_TERMS)) return 'plush'
-  if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'counting', 'alphabet', 'stacking', 'sorting', 'toddler', 'math', 'hape', 'rattle', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
+  // Split for the same reason 'pin' and 'ring' were split out of the accessories
+  // rule: hasAny is a substring test, and 'hape' — the wooden-toy brand — is a
+  // substring of SHAPE. Measured on the live feed, that one term put 44 products
+  // on the children's-learning shelf on the strength of the word "shaped":
+  // mouse pads, wall clocks, a lint roller, two cat beds, a Bluetooth speaker,
+  // a dustpan set. 47 of the 87 products classified `learning` had no learning
+  // signal in them at all.
+  //
+  // 'counting' is a substring of DISCOUNTING and ACCOUNTING, both of which turn
+  // up in sale copy. The rest are here because they are short enough to be worth
+  // anchoring even where no collision has bitten yet.
+  if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'alphabet', 'toddler', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
+  if (hasWord(hay, ['counting', 'stacking', 'sorting', 'math', 'hape', 'rattle'])) return 'learning'
   if (hasAny(hay, ['puzzle', 'jigsaw', '500pc', '1000pc', 'pieces', 'tilting board', 'puzzle table', 'board game', 'yo-yo', 'kite', 'ring matching game'])) return 'puzzle'
   if (hasAny(hay, ['sticker', 'notebook', 'journal', 'planner', 'pen', 'pencil', 'washi', 'memo', 'stationery', 'eraser', 'marker', 'highlighter', 'stapler', 'desk clock'])) return 'stationery'
   // The loose apparel rule. Everything here is a substring test, which is only
@@ -259,7 +271,28 @@ export function categorize(hay: string): string {
   // more than a wrong chip. Everything else stays on the cheaper substring test.
   if (hasAny(hay, ['bag', 'backpack', 'ita backpack', 'messenger bag', 'cosmetic bag', 'pouch', 'tote', 'purse', 'wallet', 'necklace', 'bracelet', 'earring', 'hair ties', 'hair clip', 'scrunchie', 'umbrella', 'badge', 'wristband', 'sunglasses'])) return 'accessories'
   if (hasWord(hay, ['ring', 'pin', 'brooch', 'choker', 'anklet', 'bangle'])) return 'accessories'
-  if (hasAny(hay, ['blanket', 'pillow', 'bedding', 'duvet', 'quilt', 'cover set', 'mat', 'rug', 'frame', 'photo frame', 'picture frame', 'plaque', 'hanger', 'wall', 'decor', 'lamp', 'light', 'mirror', 'clock', 'tent', 'play tent', 'furniture', 'sofa', 'coffee table'])) return 'home'
+  // Same split, same reason. Four terms here are substrings of common unrelated
+  // words and were pulling products onto the home shelf on nothing:
+  //   'mat'   ⊂ MATCHA — and this is a kawaii catalogue, so matcha is
+  //           everywhere. A Keroppi matcha boba milk tea was filed as home decor.
+  //   'light' ⊂ DELIGHT, LIGHTWEIGHT, HIGHLIGHT, LIGHTNING
+  //   'wall'  ⊂ WALLET
+  //   'tent'  ⊂ CONTENT, POTENTIAL
+  // 60 of the 200 products classified `home` rested on one of these and nothing
+  // else. 'frame' and 'clock' stay in the substring list: they collide with
+  // nothing in this catalogue, and anchoring 'frame' would lose "framed".
+  //
+  // The second list is vocabulary this rule never had. Anchoring the four terms
+  // above took away the accident that had been carrying real homeware here:
+  // a tissue box, a toothbrush container, cat-paw bookends and a coin bank were
+  // all landing on the home shelf because their blurbs happened to contain
+  // "matcha" or "delight". They deserve to arrive on purpose — including the
+  // storage shelf that started this, which was on the children's-learning shelf
+  // because it is "shaped like an ice cream cone".
+  if (hasAny(hay, ['blanket', 'pillow', 'bedding', 'duvet', 'quilt', 'cover set', 'rug', 'frame', 'photo frame', 'picture frame', 'plaque', 'hanger', 'decor', 'lamp', 'mirror', 'clock', 'play tent', 'furniture', 'sofa', 'coffee table'])) return 'home'
+  if (hasAny(hay, ['tissue box', 'toothbrush', 'bookend', 'coin bank', 'money bank', 'piggy bank', 'soap dish', 'toilet', 'curtain', 'storage shelf', 'storage box', 'storage rack', 'organizer', 'organiser', 'trinket dish', 'incense holder', 'plant pot', 'planter', 'waste bin', 'laundry'])) return 'home'
+  if (hasWord(hay, ['vase', 'shelf', 'poster', 'wall art'])) return 'home'
+  if (hasWord(hay, ['mat', 'wall', 'light', 'tent'])) return 'home'
   return 'other'
 }
 
