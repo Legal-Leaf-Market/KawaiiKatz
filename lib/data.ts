@@ -411,6 +411,34 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Second AWIN partner, and like BRKOX they came to us (2026-08-24).
+  // Personalised baby and nursery goods: custom cotton-rope baskets with a
+  // name on them, newborn and baby-shower gifts, kids' backpacks and lunch
+  // bags. A better fit for the kid-safe filter than anything else in here —
+  // this is a shelf of things bought FOR a child by an adult, which is what
+  // the Gift Finder's "For a kid" mode is for.
+  //
+  // `pending` because PROJECT_GUIDE §4 wants both halves and only one is done.
+  // The tracking half IS real: awinMerchantId below is the advertiser id from
+  // the AWIN profile (126891, status Joined), so links would earn from the
+  // moment the flag comes off. The feed is the missing half — nobody has read
+  // it, so there is no honest `include` or `forceCat` to write yet, and this
+  // container cannot reach mamaraya.com to find out.
+  {
+    vendor: 'MamaRaya',
+    domain: 'https://www.mamaraya.com',
+    prefix: 'mama',
+    affiliateParam: '',
+    network: 'awin',
+    awinMerchantId: '126891',
+    // Not yet confirmed from the AWIN dashboard — 0 until it is, so nothing
+    // downstream quotes a rate we invented.
+    commissionPct: 0,
+    couponCode: '',
+    couponPct: 0,
+    pending: true,
+  },
+
   // First AWIN partner. They approached us. Display frames and cases for LEGO
   // builds — pricier and more grown-up than the rest of the catalogue, which is
   // exactly why they get their own showcase instead of being scattered through
