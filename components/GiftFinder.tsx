@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
+import { isKidSafe } from '@/lib/kid-safe'
 import { useStore } from '@/lib/store'
 import { shouldNudge, tasteBonus, isLearning, type TasteProfile } from '@/lib/taste'
 import { useTaste } from '@/hooks/useTaste'
@@ -18,14 +19,18 @@ export default function GiftFinder({ open, onClose, products }: Props) {
   const [picks, setPicks] = useState<Product[]>([])
   const [searched, setSearched] = useState(false)
   const [liked, setLiked] = useState<Record<string, boolean>>({})
+  const [kidsOnly, setKidsOnly] = useState(false)
   const { dispatch } = useStore()
   const { taste, record } = useTaste()
 
-  function matching(): Product[] {
+  /** `kids` is passed rather than read from state so the toggle can redraw with
+   *  its new value immediately instead of a render behind. */
+  function matching(kids: boolean): Product[] {
     const maxPrice = parseFloat(budget) || Infinity
     return products.filter((p) => {
       if (cat && p.cat !== cat) return false
       if (p.price > maxPrice) return false
+      if (kids && !isKidSafe(p)) return false
       return true
     })
   }
@@ -43,8 +48,8 @@ export default function GiftFinder({ open, onClose, products }: Props) {
    * alone would return a just-rejected item about a third of the time, which
    * reads as the thumbs-down having done nothing.
    */
-  function pick(t: TasteProfile, excluding: Set<string>, count: number): Product[] {
-    const all = matching()
+  function pick(t: TasteProfile, excluding: Set<string>, count: number, kids = kidsOnly): Product[] {
+    const all = matching(kids)
     let pool = all.filter((p) => !excluding.has(p.id))
     // Exhausted the filtered pool — better to repeat than to return nothing.
     if (pool.length < count) pool = all
@@ -59,6 +64,16 @@ export default function GiftFinder({ open, onClose, products }: Props) {
     setPicks(pick(taste, new Set(), 3))
     setLiked({})
     setSearched(true)
+  }
+
+  /** Toggling who it is for is a different question, not a refinement of the
+   *  last answer — so it redraws rather than waiting for another Find Gifts. */
+  function toggleKids() {
+    const next = !kidsOnly
+    setKidsOnly(next)
+    if (!searched) return
+    setPicks(pick(taste, new Set(), 3, next))
+    setLiked({})
   }
 
   /** Shuffling past three suggestions is three weak "not that one"s. */
@@ -139,6 +154,17 @@ export default function GiftFinder({ open, onClose, products }: Props) {
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#b79cff] font-black">▾</span>
           </div>
           <button
+            onClick={toggleKids}
+            aria-pressed={kidsOnly}
+            title="Show only things suitable as a gift for a child"
+            className={`border-[2.5px] font-display font-extrabold px-4 py-2.5 rounded-full cursor-pointer text-[13.5px] transition-colors
+              ${kidsOnly
+                ? 'border-[#2e7d32] bg-[#c9ecd2] text-[#1b4d20]'
+                : 'border-[#b79cff] bg-white text-[#4f4550] hover:bg-[#e6dcff]'}`}
+          >
+            🧸 For a kid{kidsOnly ? ' ✓' : ''}
+          </button>
+          <button
             onClick={findGifts}
             className="border-[3px] border-[#ff8a65] bg-[#ff8a65] text-white font-display font-extrabold px-5 py-2.5 rounded-full cursor-pointer text-[15px] hover:opacity-90 transition-opacity active:translate-y-0.5"
           >
@@ -182,7 +208,10 @@ export default function GiftFinder({ open, onClose, products }: Props) {
 
           {searched && picks.length === 0 && (
             <div className="flex items-center justify-center h-40 text-[#9a8fa3] font-bold text-center">
-              <p>No matches for that combo yet — try loosening a filter. 🌸</p>
+              <p>
+                No matches for that combo yet — try loosening a filter
+                {kidsOnly ? ', or turn off “For a kid”' : ''}. 🌸
+              </p>
             </div>
           )}
 

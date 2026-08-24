@@ -1,4 +1,5 @@
 import { VENDORS, type Product } from './data'
+import { isKidSafeText } from './kid-safe'
 
 // Route vendor CDN images through our own proxy so strict hotlink-protected
 // stores (which reject cross-origin <img> requests) still render. Autoplush &
@@ -378,6 +379,7 @@ export function mapShopifyProducts(
       name: p.title || '',
       cat,
       character: detectCharacter(hay),
+      kidSafe: isKidSafeText(hay, cat, p.title || ''),
       price: minP,
       unit: vars.length > 1 ? 'from' : '',
       onSale,

@@ -19,6 +19,12 @@ export type Product = {
   added: string
   variants: { id: string; title: string; price: number; available: boolean }[]
   blurb: string
+  /**
+   * Decided at scrape time, where `product_type` and tags are still around —
+   * far more signal than the name alone (PROJECT_GUIDE §4). Optional because
+   * SEED_PRODUCTS predate it; `isKidSafe()` re-derives a verdict for those.
+   */
+  kidSafe?: boolean
 }
 
 export type Category = { key: string; name: string; emoji: string }
