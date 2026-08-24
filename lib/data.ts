@@ -418,12 +418,17 @@ export const VENDORS: VendorConfig[] = [
   // this is a shelf of things bought FOR a child by an adult, which is what
   // the Gift Finder's "For a kid" mode is for.
   //
-  // `pending` because PROJECT_GUIDE §4 wants both halves and only one is done.
-  // The tracking half IS real: awinMerchantId below is the advertiser id from
-  // the AWIN profile (126891, status Joined), so links would earn from the
-  // moment the flag comes off. The feed is the missing half — nobody has read
-  // it, so there is no honest `include` or `forceCat` to write yet, and this
-  // container cannot reach mamaraya.com to find out.
+  // Probed 2026-08-24 (build-log recipe, §4). Both halves are done, so it ships:
+  //
+  //   52 products, 52 survive mapping — nothing dropped for stock or safety.
+  //   0 of the 19 apparel/accessory rows would be cut by the phrase filter,
+  //   which is the cleanest result any vendor here has returned.
+  //   48 of 52 (92%) carry the kid-safe flag, the highest in the catalogue.
+  //
+  // NO `include` list, deliberately. 16 of the 52 rows have an EMPTY
+  // product_type, and an include list cannot reach an empty type — writing one
+  // from the histogram would silently delete 31% of the shelf. The feed holds
+  // no gift cards, samples or subscriptions, so there is nothing to keep out.
   {
     vendor: 'MamaRaya',
     domain: 'https://www.mamaraya.com',
@@ -436,7 +441,6 @@ export const VENDORS: VendorConfig[] = [
     commissionPct: 0,
     couponCode: '',
     couponPct: 0,
-    pending: true,
   },
 
   // First AWIN partner. They approached us. Display frames and cases for LEGO

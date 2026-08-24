@@ -177,6 +177,7 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Blippo | 1250 | 313 | **pending** — 90% Japanese snacks, capped |
 | Kawaii Slime Company | 162 | 136 | **pending** — 67 land in `other`, needs a category |
 | Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
+| MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
 
 Two things that only showed up under real data:
 
@@ -191,6 +192,16 @@ Two things that only showed up under real data:
   scored the feed 0/447. Any merchant that names by design rather than by garment is
   invisible to the text layer. `exclude` covers it per-vendor; screening `product_type`
   would fix it generally.
+
+### An empty `product_type` beats an `include` list
+
+MamaRaya's probe (2026-08-24) is the clean example. Its 52 rows carry 25 distinct
+product_types and **16 of them are empty**. Writing `include` from the histogram —
+the normal move — would have silently deleted 31% of the shelf, and the vendor
+would have looked like a merchant with a thin catalogue rather than a config
+mistake. The probe warns about this in so many words; heed it. When a feed has
+empty types and nothing worth excluding, the honest answer is no `include` list
+at all.
 
 ## 4c. Affiliate partnerships
 
