@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, type Product } from '@/lib/data'
-import { pinProduct } from '@/lib/pinterest'
+import { pinProductPage } from '@/lib/pinterest'
 import ProductImage from './ProductImage'
 
 /**
@@ -119,7 +119,7 @@ export default function BrkoxCard({
                 {inWish ? '♥' : '♡'}
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); pinProduct(p) }}
+                onClick={(e) => { e.stopPropagation(); pinProductPage(p) }}
                 aria-label={`Pin ${p.name} to Pinterest`}
                 className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-full w-[34px] h-[34px] cursor-pointer text-[15px] flex items-center justify-center shadow-[0_4px_12px_rgba(255,138,101,.18)] hover:bg-[#e60023] hover:text-white transition-colors"
               >

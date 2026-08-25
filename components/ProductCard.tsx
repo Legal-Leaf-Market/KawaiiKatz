@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, isNewItem, type Product } from '@/lib/data'
-import { pinProduct } from '@/lib/pinterest'
+import { pinProductPage } from '@/lib/pinterest'
 import { rankSimilar } from '@/lib/similar'
 import { shouldNudge, type TasteProfile, type TasteSignal } from '@/lib/taste'
 import { useTaste } from '@/hooks/useTaste'
@@ -241,7 +241,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                 {inWish ? '♥' : '♡'}
               </button>
               <button
-                onClick={() => pinProduct(p)}
+                onClick={() => pinProductPage(p)}
                 className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-full w-[34px] h-[34px] cursor-pointer text-[15px] shadow-[0_4px_12px_rgba(255,138,101,.18)] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                 aria-label={`Pin ${p.name} to Pinterest`}
                 title="Share this to Pinterest"

@@ -1,7 +1,7 @@
 'use client'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, type Product } from '@/lib/data'
-import { pinProduct } from '@/lib/pinterest'
+import { pinProductPage } from '@/lib/pinterest'
 
 type Props = {
   open: boolean
@@ -88,7 +88,7 @@ export default function WishlistDrawer({ open, onClose, products }: Props) {
                       Add 🛒
                     </button>
                     <button
-                      onClick={() => pinProduct(p)}
+                      onClick={() => pinProductPage(p)}
                       className="flex-none border-2 border-[#e60023] bg-white text-[#e60023] rounded-[10px] w-8 cursor-pointer text-[13px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                       aria-label={`Pin ${p.name} to Pinterest`}
                       title="Save to Pinterest"
