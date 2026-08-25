@@ -374,6 +374,14 @@ tile that actually shipped in a preview:
   college mascot (both called a "Plush Figure"), squishies with a blanket hoodie called a
   Mochi Bunny. Demote rather than exclude: a puzzle board on the puzzle page is useful, just
   not first.
+- **`notWords`** — `demote` was not enough. Plushible carries 72 college-mascot and NASCAR
+  licences, and demoting them only pushed them down a list that still had to be filled from
+  somewhere; in a price band with thin stock, down the list still means on the page, and
+  "Ohio State Brutus" shipped in the live plushies RSS feed. They stay in the catalogue —
+  they are simply a different market from a kawaii guide, and a guide that gets pinned is the
+  public face of the brand. Note `racing` is deliberately NOT in `SPORTS_LICENCE_TERMS`: it
+  caught a genuine BRKOX display frame, and every NASCAR row already says NASCAR. Narrow the
+  term; do not accept the false positive.
 - **`maxPerVendor`** — the gift-guide cap of 3 is wrong for a theme one shop legitimately
   owns. jigsawdepot is 80% of every puzzle in the catalogue; capping it at three leaves the
   page unable to fill a section from the stock that exists.
@@ -430,6 +438,13 @@ dead Pin. All three carry the **un-proxied** CDN URL: `Product.image` is an `/ap
 which robots.txt disallows. That is the third time this trap has been hit (the Pin button,
 then `og:image`, now here); if you are writing a URL for something outside this site to
 fetch, call `unproxied()`.
+
+**`CAT_LEAD` is spelled out, not derived.** The caption's category word came from
+`catName()` by lowercasing, cutting at `" & "` and stripping a trailing `s` — fine for
+"Plushies", broken for the two that do not pluralise that way. "Blind Boxes & Collectibles"
+became **"blind boxe"** and "Accessories" became **"accessorie"**, so 993 of 4,426 products
+carried a typo into every Pin caption and RSS description. Twelve entries written out cannot
+be wrong in a new way when someone adds the thirteenth.
 
 The caption comes from `pinCaption()` in `lib/pinterest.ts` — the same function the Pin
 button uses, so a Pin Pinterest creates reads exactly like one a person made, `#ad` included.

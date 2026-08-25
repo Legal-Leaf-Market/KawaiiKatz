@@ -104,6 +104,21 @@ export type Board = {
    */
   demote?: string[]
   /**
+   * Words that keep a product OFF the page entirely, matched against the name.
+   *
+   * `demote` was not enough. Plushible carries 74 college-mascot and NASCAR
+   * licences — "University of Oklahoma Boomer 14 Inch Plush Figure", "NASCAR |
+   * Team Penske Joey Logano 36in Plush Figure" — and demoting them only pushed
+   * them down a list that then had to be filled from somewhere. In a section
+   * with limited stock in its price band, down the list still means on the
+   * page, and "Ohio State Brutus" shipped in the live plushies RSS feed.
+   *
+   * They are real, tracked products and they stay in the catalogue. They are
+   * simply a different market from a kawaii gift guide, and a guide that is
+   * pinned to Pinterest is the public face of the brand.
+   */
+  notWords?: string[]
+  /**
    * Tiles from one shop per section. Three is right for a gift guide, where a
    * band that is ten tiles of one shop reads as an advert.
    *
@@ -154,6 +169,24 @@ const OFF_SEASON_TERMS = [
   'thanksgiving', 'lunar new year', 'chinese new year', 'ramadan', 'diwali',
   'st patrick', 'graduation',
 ]
+
+/**
+ * Licensed sports and college merchandise, kept off every guide.
+ *
+ * Plushible's 74 of these are perfectly good products for somebody; that
+ * somebody is not searching Pinterest for kawaii plushies. Measured against the
+ * live catalogue: this list catches 74 rows and nothing else — no kawaii
+ * product in 4,426 uses any of these words.
+ */
+export const SPORTS_LICENCE_TERMS = [
+  'nascar', 'ncaa', 'collegiate', 'university', 'buckeye', 'hoosier',
+  'sooner', 'crimson tide', 'longhorn', 'wolverine', 'gator', 'aggie',
+]
+// `racing` is deliberately absent, though every NASCAR row would match it.
+// It also caught BRKOX's "Wall Display Frame for LEGO Technic Oracle Red Bull
+// Racing" — a genuine collectible from a paying AWIN partner. Every NASCAR row
+// already carries the word NASCAR, so the broad term bought nothing and cost a
+// partner's product. Narrow the term; do not accept the false positive.
 
 /** Categories a gift guide should lead with. Not a filter — a ranking nudge. */
 const GIFTY_CATS = new Set([
@@ -206,6 +239,7 @@ function tiebreak(id: string): number {
 /** Does this product belong on this page at all? */
 function belongs(b: Board, p: Product): boolean {
   if (b.notCats?.length && b.notCats.includes(p.cat)) return false
+  if (b.notWords?.length && hasWord(String(p.name || '').toLowerCase(), b.notWords)) return false
   const byCat = b.cats?.length ? b.cats.includes(p.cat) : false
   const byWord = b.words?.length ? hasWord(haystack(p), b.words) : false
   if (!b.cats?.length && !b.words?.length) return true
@@ -385,6 +419,7 @@ export const BOARDS: Board[] = [
     cats: ['collect'],
     words: ['blind box', 'blindbox', 'mystery box', 'art toy'],
     demote: ['plush', 'plushie', 'snugible'],
+    notWords: SPORTS_LICENCE_TERMS,
     maxPerVendor: 8,
     sections: themeSections('The series we would open first.'),
   },
@@ -404,7 +439,7 @@ export const BOARDS: Board[] = [
     words: ['plush', 'plushie', 'stuffed animal', 'soft toy'],
     // Plushible carries college-mascot and NASCAR licences. Real products, and
     // nobody arrives at a kawaii plushie page hoping for Bucky Badger.
-    demote: ['nascar', 'university', 'ncaa', 'collegiate', 'racing', 'mascot'],
+    notWords: SPORTS_LICENCE_TERMS,
     maxPerVendor: 5,
     sections: themeSections('The ones that keep getting picked up.'),
   },
