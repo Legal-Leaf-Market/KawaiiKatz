@@ -34,6 +34,35 @@ const TAG_NAME: Record<string, string> = {
 }
 
 /**
+ * ...and the tag's FIELD names are not the API's either.
+ *
+ * Quantity is `num_items` on the Conversions API and `order_quantity` on the
+ * tag. Pinterest's "Install the event code" page shows the tag form —
+ * `pintrk('track', 'addtocart', { event_id, value, order_quantity, currency })`
+ * — while the API reference shows `custom_data.num_items`. We build one
+ * custom_data for both transports, so without this translation the tag was
+ * being handed a field it does not read and no quantity at all: every AddToCart
+ * recorded a quantity of nothing, while the API side recorded it correctly.
+ *
+ * `value` is likewise a number in every tag sample and a string on the API
+ * (which documents it as a string). Send each what it asks for.
+ */
+function tagPayload(custom_data: Record<string, unknown> | undefined): Record<string, unknown> {
+  const d = { ...(custom_data ?? {}) }
+  if ('num_items' in d) {
+    d.order_quantity = d.num_items
+    delete d.num_items
+  }
+  if (typeof d.value === 'string' && d.value !== '' && Number.isFinite(Number(d.value))) {
+    d.value = Number(d.value)
+  }
+  // `contents` is an API concept; the tag has line_items and does not read it.
+  // Sending it is harmless but it is a few hundred bytes per event of nothing.
+  delete d.contents
+  return d
+}
+
+/**
  * Do Not Track and Global Privacy Control, checked before the tag fires.
  *
  * The server route already flags these to the API, but the tag is a different
@@ -109,7 +138,7 @@ export function track({ event_name, custom_data }: TrackOpts): void {
   const tagName = TAG_NAME[event_name]
   if (pt && tagName && !trackingOptedOut()) {
     try {
-      pt('track', tagName, { ...(custom_data ?? {}), event_id })
+      pt('track', tagName, { ...tagPayload(custom_data), event_id })
     } catch { /* the tag is best-effort; the API call below is the reliable half */ }
   }
 
