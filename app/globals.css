@@ -70,9 +70,16 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* Scrollbar styling */
-.ap-rail::-webkit-scrollbar,
+/* Ada's Picks scrolls without a scrollbar: the mascot arrows are the
+   affordance now, and a thin grey bar was doing that job badly. Swiping and
+   keyboard scrolling are unaffected — only the visual track is gone.
+   The old `.ap-rail` rules are gone rather than overridden: they set
+   `height: 8px` and sat AFTER this block, so as an override they would have
+   won and quietly put the scrollbar back. */
+.ap-rail-bare { scrollbar-width: none; -ms-overflow-style: none; }
+.ap-rail-bare::-webkit-scrollbar { display: none; height: 0; }
+
 .featured-rail::-webkit-scrollbar { height: 8px; }
-.ap-rail::-webkit-scrollbar-thumb { background: #b79cff; border-radius: 999px; }
 .featured-rail::-webkit-scrollbar-thumb { background: #7fc4d4; border-radius: 999px; }
 
 /* Cart drawer scrollbar */

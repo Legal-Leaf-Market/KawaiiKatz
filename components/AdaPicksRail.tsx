@@ -2,11 +2,10 @@
 import { useMemo } from 'react'
 import { useStore } from '@/lib/store'
 import { usePicks } from '@/hooks/usePicks'
-import { CatMark } from '@/components/BrandMark'
+import { CatMark, PandaMark } from '@/components/BrandMark'
 import { catEmoji, money, type Product, type AdaPick } from '@/lib/data'
 import { openPin } from '@/lib/pinterest'
 import { useCarousel } from '@/hooks/useCarousel'
-import { CarouselArrow } from './FeaturedCollection'
 import ProductImage from './ProductImage'
 
 export type { AdaPick }
@@ -100,10 +99,10 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
           </p>
         ) : (
           <div className="relative">
-            <CarouselArrow direction="prev" show={canPrev} onClick={prev} />
+            <MascotArrow direction="prev" show={canPrev} onClick={prev} />
             <div
               ref={ref}
-              className="flex gap-4 overflow-x-auto pb-3.5 pt-1.5 ap-rail scroll-smooth"
+              className="flex gap-4 overflow-x-auto pb-3.5 pt-1.5 ap-rail-bare scroll-smooth"
               style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
             >
               {resolved.map(({ pick, live, image, price, name }) => {
@@ -175,10 +174,59 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
                 )
               })}
             </div>
-            <CarouselArrow direction="next" show={canNext} onClick={next} />
+            <MascotArrow direction="next" show={canNext} onClick={next} />
           </div>
         )}
       </div>
     </section>
+  )
+}
+
+/**
+ * The carousel control for Ada's Picks: our own mascots, holding an arrow.
+ *
+ * It replaced a plain circular chevron, and the reason is that the rail had a
+ * scrollbar doing the work of saying "there is more over here" — which is a
+ * thin, grey, easily-missed thing on a page that is neither. The cat leads on
+ * the left and the panda on the right, in the same order they sit in the logo,
+ * with the arrow on the outside of each so the direction reads outward.
+ *
+ * Bigger than the chevron on purpose: this is the affordance now, so it has to
+ * be visible at a glance and comfortable on a thumb.
+ */
+function MascotArrow({
+  direction,
+  show,
+  onClick,
+}: {
+  direction: 'prev' | 'next'
+  show: boolean
+  onClick: () => void
+}) {
+  const isPrev = direction === 'prev'
+  return (
+    <button
+      onClick={onClick}
+      aria-label={isPrev ? 'Scroll picks left' : 'Scroll picks right'}
+      title={isPrev ? 'Back' : 'More picks'}
+      className={[
+        'absolute top-1/2 -translate-y-1/2 z-30 flex items-center gap-0.5',
+        'bg-white border-[3px] border-[#b79cff] rounded-full py-1 cursor-pointer',
+        'shadow-[0_6px_16px_rgba(183,156,255,.42)] transition-all',
+        'hover:bg-[#b79cff] hover:scale-105 group',
+        isPrev ? 'left-0 -translate-x-1/4 pl-1.5 pr-2' : 'right-0 translate-x-1/4 pl-2 pr-1.5',
+        show ? 'opacity-100' : 'opacity-0 pointer-events-none',
+      ].join(' ')}
+    >
+      {isPrev && (
+        <span className="text-[22px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-0.5">‹</span>
+      )}
+      <span className="block w-[34px] h-[34px]" aria-hidden="true">
+        {isPrev ? <CatMark size={34} /> : <PandaMark size={34} />}
+      </span>
+      {!isPrev && (
+        <span className="text-[22px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-0.5">›</span>
+      )}
+    </button>
   )
 }
