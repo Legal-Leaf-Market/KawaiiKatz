@@ -495,6 +495,46 @@ export function boardInSeason(b: Board, month: number): boolean {
 
 export type BoardPick = { section: BoardSection; products: Product[] }
 
+/**
+ * Deals a ranked list into pages, applying a per-vendor cap within each page.
+ *
+ * Exported because the grid re-deals client-side once a visitor has a taste
+ * profile: the pool is re-ordered by what they have thumbed, then dealt again.
+ * The cap has to travel with the dealing — a shuffled page that is twelve tiles
+ * of one shop is the advert problem the cap exists to prevent, and taste
+ * ordering makes it MORE likely, not less, because a visitor who liked one
+ * thing from a shop will rank that shop's whole shelf.
+ *
+ * A product the cap defers waits for the next page rather than being dropped.
+ */
+export function dealPages(list: Product[], size: number, cap: number, maxPages = 6): Product[][] {
+  const pages: Product[][] = []
+  const remaining = list.slice()
+  while (pages.length < maxPages && remaining.length) {
+    const page: Product[] = []
+    const perVendor = new Map<string, number>()
+    for (let i = 0; i < remaining.length && page.length < size; ) {
+      const p = remaining[i]
+      const n = perVendor.get(p.vendor) ?? 0
+      if (n < cap) {
+        perVendor.set(p.vendor, n + 1)
+        page.push(p)
+        remaining.splice(i, 1)
+      } else {
+        i++
+      }
+    }
+    if (!page.length) break
+    pages.push(page)
+  }
+  return pages
+}
+
+/** The per-vendor cap a board deals with, for callers outside this module. */
+export function vendorCap(b: Board): number {
+  return b.maxPerVendor ?? MAX_PER_VENDOR_PER_SECTION
+}
+
 /** A section, dealt into pages of `section.max` so the grid can shuffle. */
 export type BoardPaged = { section: BoardSection; pages: Product[][] }
 

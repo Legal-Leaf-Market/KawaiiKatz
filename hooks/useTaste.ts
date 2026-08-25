@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useSyncExternalStore } from 'react'
-import { EMPTY_TASTE, applySignal, type TasteProfile, type TasteSignal } from '@/lib/taste'
+import { EMPTY_TASTE, applySignal, clearHidden, unhide, type TasteProfile, type TasteSignal } from '@/lib/taste'
 import type { Product } from '@/lib/data'
 
 /**
@@ -38,6 +38,7 @@ function load(): void {
       character: saved.character ?? {},
       band: saved.band ?? {},
       counts: { ...EMPTY_TASTE.counts, ...(saved.counts ?? {}) },
+      hidden: Array.isArray(saved.hidden) ? saved.hidden : [],
     }
   } catch {
     /* corrupt or unavailable storage: start clean rather than break the page */
@@ -78,6 +79,24 @@ export function useTaste() {
     return profile
   }, [])
 
+  /** Puts one hidden product back on the shelf. */
+  const unhideOne = useCallback((id: string): TasteProfile => {
+    load()
+    profile = unhide(profile, id)
+    save()
+    emit()
+    return profile
+  }, [])
+
+  /** Puts them all back, without touching what was learned from them. */
+  const showHidden = useCallback((): TasteProfile => {
+    load()
+    profile = clearHidden(profile)
+    save()
+    emit()
+    return profile
+  }, [])
+
   const reset = useCallback((): void => {
     loaded = true
     profile = EMPTY_TASTE
@@ -85,5 +104,5 @@ export function useTaste() {
     emit()
   }, [])
 
-  return { taste, record, reset }
+  return { taste, record, reset, unhideOne, showHidden }
 }
