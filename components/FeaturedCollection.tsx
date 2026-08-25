@@ -4,6 +4,7 @@ import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
 import { pinProductPage } from '@/lib/pinterest'
 import { useStore } from '@/lib/store'
 import { useCarousel } from '@/hooks/useCarousel'
+import MascotArrow, { wrapScroll } from '@/components/MascotArrow'
 import ProductImage from './ProductImage'
 
 type Props = { products: Product[]; excludedIds?: Set<string> }
@@ -25,6 +26,9 @@ export default function FeaturedCollection({ products, excludedIds }: Props) {
   useEffect(() => { setSeed(Math.random()) }, [])
   const { dispatch } = useStore()
   const { ref, canPrev, canNext, prev, next, update } = useCarousel<HTMLDivElement>()
+  // Panda first here, cat first on Ada's Picks — so the two rails on the home
+  // page are not the same pair of buttons twice.
+  const { goPrev, goNext } = wrapScroll(ref.current, prev, next)
 
   // Excluded products are never promoted here — the Featured carousel has no
   // restore control, so hidden items must not surface (even for the admin).
@@ -96,8 +100,9 @@ export default function FeaturedCollection({ products, excludedIds }: Props) {
           <p className="text-[#9a8fa3] font-bold py-3.5 px-1">No items in this category yet. 🌸</p>
         ) : (
           <div className="relative">
-            {/* Prev arrow */}
-            <CarouselArrow direction="prev" show={canPrev} onClick={prev} />
+            {(canPrev || canNext) && (
+              <MascotArrow direction="prev" mascot="panda" accent="#7fc4d4" label="featured items" onClick={goPrev} />
+            )}
             {/* Rail */}
             <div
               ref={ref}
@@ -150,30 +155,13 @@ export default function FeaturedCollection({ products, excludedIds }: Props) {
                 </div>
               ))}
             </div>
-            {/* Next arrow */}
-            <CarouselArrow direction="next" show={canNext} onClick={next} />
+            {(canPrev || canNext) && (
+              <MascotArrow direction="next" mascot="cat" accent="#7fc4d4" label="featured items" onClick={goNext} />
+            )}
           </div>
         )}
       </div>
     </section>
-  )
-}
-
-export function CarouselArrow({ direction, show, onClick }: { direction: 'prev' | 'next'; show: boolean; onClick: () => void }) {
-  const isPrev = direction === 'prev'
-  return (
-    <button
-      onClick={onClick}
-      aria-label={isPrev ? 'Scroll left' : 'Scroll right'}
-      className={[
-        'absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white border-[3px] border-[#ff8a65] text-[#ff8a65] shadow-[0_6px_16px_rgba(255,138,101,.32)]',
-        'flex items-center justify-center text-xl font-black cursor-pointer transition-all hover:bg-[#ff8a65] hover:text-white',
-        isPrev ? 'left-0 -translate-x-1/4' : 'right-0 translate-x-1/4',
-        show ? 'opacity-100' : 'opacity-0 pointer-events-none',
-      ].join(' ')}
-    >
-      {isPrev ? '‹' : '›'}
-    </button>
   )
 }
 
