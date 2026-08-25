@@ -25,8 +25,8 @@ function tokens(s: string): string[] {
     .filter((t) => t.length > 2 && !STOP.has(t))
 }
 
-/** How close two prices are, 0 (far) → 1 (same). Ratio-based so £4 vs £8 is as
- *  distant as £40 vs £80 — which is how a gift budget actually feels. */
+/** How close two prices are, 0 (far) → 1 (same). Ratio-based so $4 vs $8 is as
+ *  distant as $40 vs $80 — which is how a gift budget actually feels. */
 function priceAffinity(a: number, b: number): number {
   if (a <= 0 || b <= 0) return 0
   const ratio = a > b ? b / a : a / b
