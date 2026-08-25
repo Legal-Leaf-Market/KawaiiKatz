@@ -231,12 +231,40 @@ Two things in there worth knowing without reading it:
    row would register a vendor that returns zero products forever, which is the Tokyo Tiger
    failure by construction.
 
+## 4d. Pinterest
+
+Domain verified 2026-08-25 via `metadata.verification.other` in `app/layout.tsx`.
+That is the organic half and the half that matters: it attributes pins from this
+site to the Kawaii Katz account.
+
+**Conversions API** (`lib/pinterest-capi.ts`, `app/api/pinterest-event/route.ts`)
+reports `page_visit`, `add_to_cart` and an outbound-click `custom` event to ad
+account `549770649417`. Three things about it are deliberate:
+
+- **`checkout` is refused in code, not merely unused.** We never take payment, so
+  we never learn whether a sale completed. Sending one would put a number in the
+  ROAS column that nothing backs up. The outbound click goes as `custom` with an
+  `event_label`, which is honest about what it is.
+- **Identifiers are read from the request, never the body.** A client that could
+  set its own IP could forge conversions against an ad account that gets billed.
+- **`event_id` is generated per event** so a Pinterest tag, if one is ever
+  installed, dedupes against it. Both sides must use the SAME id or every
+  conversion is counted twice.
+
+**Policy, before scaling any of this.** Pinterest's community guidelines
+prohibit affiliate Pins "repetitively or in large volumes" and unapproved
+automation, and the merchant guidelines say merchants **must not be affiliate
+marketers** — which closes catalogues, Product Pins and shopping tags to this
+site entirely. The per-product Pin button is user-initiated and fine. An
+auto-poster is not. Read policy.pinterest.com before building one.
+
 ## 5. Environment variables
 
 | Name | Required | Purpose |
 |---|---|---|
 | `ADA_PIN` | for curator mode | Gates `/api/ada-login`; unset ⇒ 503 |
 | `DATABASE_URL` | for write persistence | Neon Postgres, `store_exclusions` table |
+| `PINTEREST_CONVERSION_TOKEN` | for ad measurement | Bearer token for the Conversions API. **Unset ⇒ nothing is sent to Pinterest at all** — that is the opt-in, so the site collects nothing for advertising until there are ads to measure. Regenerate it in Ads Manager if it is ever pasted anywhere; Pinterest does not store it either. |
 
 The storefront runs without either: `GET /api/exclusions` catches DB errors and returns an
 empty list, so only hiding/restoring products breaks.
