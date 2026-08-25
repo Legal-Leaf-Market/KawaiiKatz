@@ -355,6 +355,46 @@ entirely so a Pin never carries two seasons.
 Adding a guide is a `BOARDS` entry and nothing else — `generateStaticParams`, the sitemap and
 the `/gifts` index all read from it.
 
+### Two kinds: `season` and `theme`
+
+A season is tied to a date; a theme answers a standing question ("wooden toys for a
+two-year-old") and is worth pinning in any month. `Board.kind` splits them, and it earns its
+keep in three places: the index groups by it, only a season carries a peak-months note, and
+**only a season screens out other holidays** — a Halloween plush belongs on the plushies page
+and does not belong in a Christmas price band.
+
+A season takes the whole catalogue. A theme is narrower, so `cats` / `words` decide
+membership and `notCats` / `demote` clean it up. Every one of those was added because of a
+tile that actually shipped in a preview:
+
+- **`notCats`** — wooden-toys led with jigsawdepot's wooden puzzle *boards* and sorting
+  trays (real matches for `wooden` and `sorting`, and not Montessori toys); squishies led
+  with a silicone coffee cup called "Squishy". One excluded category each.
+- **`demote`** — jigsaws led with puzzle *tables*, blind boxes with a NASCAR plush and a
+  college mascot (both called a "Plush Figure"), squishies with a blanket hoodie called a
+  Mochi Bunny. Demote rather than exclude: a puzzle board on the puzzle page is useful, just
+  not first.
+- **`maxPerVendor`** — the gift-guide cap of 3 is wrong for a theme one shop legitimately
+  owns. jigsawdepot is 80% of every puzzle in the catalogue; capping it at three leaves the
+  page unable to fill a section from the stock that exists.
+
+**Ties break on a hash, not on id.** On a specialist page nearly every product scores the
+same, and an alphabetical id tiebreak is what the visitor sees: the jigsaw page opened
+"1000 Piece…", "1500 Piece…", "2000 Piece…", which reads like a database dump because it is
+one. `tiebreak()` is FNV-1a over the id — it must be a hash and not `Math.random()`, because
+these pages prerender and a random order is a hydration mismatch.
+
+### The six themes were chosen on tracking, not on taste
+
+Measured against the live catalogue before any were written. **Four obvious-looking themes
+were rejected and are listed in `boards.ts` so nobody re-proposes them**: cute socks (472
+products, **1% tracked**), stickers (242, 7%), stationery (348, 23%) and pastel/fairy-kei
+(305, 28%). They are the most pinnable categories here and the least profitable, because
+sugarhai, Kawaii Babe and the two sock vendors carry them and none has a tracking value.
+
+That is the general rule: **check what share of a theme actually earns before building a page
+for it.** 61% of the catalogue is untracked (§4c), and it is not spread evenly.
+
 ---
 
 ## 5. Environment variables

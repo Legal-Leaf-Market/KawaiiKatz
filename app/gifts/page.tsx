@@ -38,6 +38,18 @@ export default async function GiftGuidesPage() {
       inSeason: boardInSeason(b, month),
     }
   })
+  const groups: { heading: string; blurb: string; cards: typeof cards }[] = [
+    {
+      heading: 'By the season',
+      blurb: 'Tied to a date, and worth looking at early — seasonal search runs about three months ahead of the season itself.',
+      cards: cards.filter((c) => c.board.kind === 'season'),
+    },
+    {
+      heading: 'By what you are after',
+      blurb: 'Standing shortlists that do not go out of date. Each one spans every shop we carry, so you can compare rather than browse one catalogue at a time.',
+      cards: cards.filter((c) => c.board.kind === 'theme'),
+    },
+  ].filter((g) => g.cards.length > 0)
 
   return (
     <ProductPageChrome>
@@ -62,8 +74,12 @@ export default async function GiftGuidesPage() {
           </p>
         </header>
 
+        {groups.map((g) => (
+        <section key={g.heading} className="mb-9">
+        <h2 className="font-display font-extrabold text-[22px] text-[#4f4550] leading-tight">{g.heading}</h2>
+        <p className="text-[13.5px] text-[#9a8fa3] font-semibold mt-0.5 mb-4 max-w-[68ch]">{g.blurb}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cards.map(({ board: b, cover, count, inSeason }) => (
+          {g.cards.map(({ board: b, cover, count, inSeason }) => (
             <Link
               key={b.slug}
               href={`/gifts/${b.slug}`}
@@ -92,14 +108,18 @@ export default async function GiftGuidesPage() {
                 </h2>
                 <p className="text-[13.5px] text-[#6f6675] leading-snug">{b.tagline}</p>
                 <p className="text-[12px] font-bold text-[#9a8fa3] mt-auto pt-1.5">
-                  {inSeason
-                    ? '🔥 In season now'
-                    : `Peaks from ${MONTHS[b.season[0]]} — worth pinning early`}
+                  {b.kind === 'theme'
+                    ? 'Always on — refreshed from the live catalogue'
+                    : inSeason
+                      ? '🔥 In season now'
+                      : `Peaks from ${MONTHS[b.season[0]]} — worth pinning early`}
                 </p>
               </div>
             </Link>
           ))}
         </div>
+        </section>
+        ))}
       </main>
     </ProductPageChrome>
   )
