@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { getCatalog } from '@/lib/catalog-source'
+import { unproxied } from '@/lib/catalog-shared'
 import { catName, money, type Product } from '@/lib/data'
 import { rankSimilar } from '@/lib/similar'
 import { SITE_URL } from '@/lib/site'
 import ProductPageActions from '@/components/ProductPageActions'
+import ProductPageChrome from '@/components/ProductPageChrome'
 import ProductImage from '@/components/ProductImage'
 
 /**
@@ -47,6 +49,13 @@ import ProductImage from '@/components/ProductImage'
 // fails the build with "Invalid segment configuration export".
 export const revalidate = 21600
 
+/** Absolute, un-proxied image URL for social scrapers — or null if we have none. */
+function ogImage(p: Product): string | null {
+  const raw = unproxied(p.image || '')
+  if (/^https?:\/\//i.test(raw)) return raw
+  return null
+}
+
 async function findProduct(id: string): Promise<Product | null> {
   const { products } = await getCatalog()
   return products.find((p) => p.id === id) ?? null
@@ -75,9 +84,16 @@ export async function generateMetadata({
       description,
       url: `${SITE_URL}/p/${p.id}`,
       type: 'website',
-      // Pinterest and every other scraper read this. It must be absolute and
-      // must not be the /api/img proxy path, which they cannot resolve.
-      images: p.image ? [{ url: p.image.startsWith('/') ? `${SITE_URL}${p.image}` : p.image }] : undefined,
+      /**
+       * `unproxied`, and this is the same bug the pin button already hit once:
+       * "Parameter 'image_url' with the value 'https:/api/img?u=…' is not a
+       * valid URL format". Every Product.image is the /api/img proxy path,
+       * because that is what the cards render — but a social scraper cannot
+       * resolve it, and robots.txt disallows /api/ outright, so it would not
+       * even be allowed to try. Unwrapping gives it the vendor's CDN URL, which
+       * is what pinItUrl() has always sent.
+       */
+      images: ogImage(p) ? [{ url: ogImage(p) as string }] : undefined,
     },
   }
 }
@@ -91,6 +107,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const similar = rankSimilar(p, products.filter((x) => x.image), 6)
 
   return (
+    <ProductPageChrome>
     <main className="max-w-[1080px] mx-auto px-4 py-6">
       <nav className="text-[13px] font-bold text-[#9a8fa3] mb-4">
         <Link href="/" className="hover:underline">Kawaii Katz</Link>
@@ -183,5 +200,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         </section>
       )}
     </main>
+    </ProductPageChrome>
   )
 }
