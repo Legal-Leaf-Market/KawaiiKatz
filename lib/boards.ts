@@ -431,7 +431,7 @@ export const BOARDS: Board[] = [
     tagline: 'Soft things, from pocket-sized to alarmingly large',
     intro:
       'The biggest shelf we have. Cats, bunnies, frogs, axolotls, a startling number of ' +
-      'hedgehogs — sorted by price so you can find the £10 one for a stocking and the ' +
+      'hedgehogs — sorted by price so you can find the $10 one for a stocking and the ' +
       'enormous one for a birthday without scrolling past each other.',
     hashtag: 'KawaiiPlushies',
     season: [],

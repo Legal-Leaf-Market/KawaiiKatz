@@ -1,5 +1,5 @@
 'use client'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useStore } from '@/lib/store'
 import { usePicks } from '@/hooks/usePicks'
 import { CatMark, PandaMark } from '@/components/BrandMark'
@@ -22,7 +22,7 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
   // in localStorage, which meant Ada curated the rail for herself and nobody
   // else — see the note on hooks/usePicks.
   const { picks: adaPicks, removePick, strandedLocalPicks, publishLocalPicks } = usePicks()
-  const { ref, canPrev, canNext, prev, next } = useCarousel<HTMLDivElement>()
+  const { ref, canPrev, canNext, prev, next, update } = useCarousel<HTMLDivElement>()
 
   // Resolve each pick against the live catalog so images/prices stay fresh.
   // For shoppers, drop any pick that has been excluded from the store so a
@@ -42,6 +42,23 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
         }
       })
   }, [adaPicks, products, adaMode, excludedIds])
+
+  /**
+   * Re-measure when the picks arrive.
+   *
+   * useCarousel measures once on mount. This rail does not exist on mount: the
+   * picks come from /api/picks, so the first render is the empty branch and the
+   * scroll container — the thing the ref points at — is not in the DOM yet. By
+   * the time it is, the effect has already run against a null ref and will not
+   * run again, so canPrev and canNext stay false for good.
+   *
+   * That is why this rail appeared to have no arrows at all. It was true of the
+   * plain chevron it used to have as well: the affordance was never the arrows,
+   * it was the scrollbar, which is exactly the thing we just removed.
+   */
+  useEffect(() => {
+    update()
+  }, [resolved.length, update])
 
   function addToCart(id: string) {
     dispatch({ type: 'ADD_TO_CART', productId: id, variantIndex: 0 })
@@ -212,10 +229,10 @@ function MascotArrow({
       title={isPrev ? 'Back' : 'More picks'}
       className={[
         'absolute top-1/2 -translate-y-1/2 z-30 flex items-center gap-0.5',
-        'bg-white border-[3px] border-[#b79cff] rounded-full py-1 cursor-pointer',
-        'shadow-[0_6px_16px_rgba(183,156,255,.42)] transition-all',
-        'hover:bg-[#b79cff] hover:scale-105 group',
-        isPrev ? 'left-0 -translate-x-1/4 pl-1.5 pr-2' : 'right-0 translate-x-1/4 pl-2 pr-1.5',
+        'bg-white border-[3px] border-[#b79cff] rounded-full py-1.5 cursor-pointer',
+        'shadow-[0_8px_22px_rgba(183,156,255,.55)] transition-all',
+        'hover:bg-[#b79cff] hover:scale-110 group',
+        isPrev ? 'left-0 -translate-x-1/4 pl-2 pr-2.5' : 'right-0 translate-x-1/4 pl-2.5 pr-2',
         /**
          * Dimmed when it cannot scroll that way, never hidden — and that is the
          * whole point of the control.
@@ -226,19 +243,19 @@ function MascotArrow({
          * existed. A pair of mascots that is always there, one of them greyed,
          * says "this moves, and you are at the start" in a single glance.
          */
-        enabled ? 'opacity-100' : 'opacity-40 pointer-events-none',
+        enabled ? 'opacity-100' : 'opacity-50 grayscale pointer-events-none',
       ].join(' ')}
       aria-disabled={!enabled}
       tabIndex={enabled ? 0 : -1}
     >
       {isPrev && (
-        <span className="text-[22px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-0.5">‹</span>
+        <span className="text-[26px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-1">‹</span>
       )}
-      <span className="block w-[34px] h-[34px]" aria-hidden="true">
-        {isPrev ? <CatMark size={34} /> : <PandaMark size={34} />}
+      <span className="block w-[42px] h-[42px]" aria-hidden="true">
+        {isPrev ? <CatMark size={42} /> : <PandaMark size={42} />}
       </span>
       {!isPrev && (
-        <span className="text-[22px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-0.5">›</span>
+        <span className="text-[26px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-1">›</span>
       )}
     </button>
   )
