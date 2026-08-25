@@ -381,6 +381,17 @@ export const BOARDS: Board[] = [
     cats: ['learning'],
     words: ['wooden', 'montessori', 'stacking', 'sorting', 'busy board', 'sensory'],
     notCats: ['puzzle'],
+    /**
+     * `wooden` is the theme's best search word and its worst filter. It also
+     * describes furniture, and the RSS feed for this page went out carrying
+     * three storage shelves, a desktop organiser, a silicone spatula, a dustpan
+     * and a $99.99 felt pet portrait — every one captioned "a kawaii wooden toy
+     * pick". None of them is a toy.
+     *
+     * Word-anchored, which is what keeps Montessori & Me's genuine "Montessori
+     * Bookshelf" in: `shelf` does not match inside BOOKSHELF.
+     */
+    notWords: ['shelf', 'shelves', 'shelving', 'spatula', 'dustpan', 'organiser', 'organizer', 'hoop art'],
     maxPerVendor: 6,
     sections: themeSections('The ones we would buy first, across every shop.'),
   },

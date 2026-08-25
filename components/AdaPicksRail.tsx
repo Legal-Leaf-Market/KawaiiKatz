@@ -2,7 +2,8 @@
 import { useEffect, useMemo } from 'react'
 import { useStore } from '@/lib/store'
 import { usePicks } from '@/hooks/usePicks'
-import { CatMark, PandaMark } from '@/components/BrandMark'
+import { CatMark } from '@/components/BrandMark'
+import MascotArrow, { wrapScroll } from '@/components/MascotArrow'
 import { catEmoji, money, type Product, type AdaPick } from '@/lib/data'
 import { openPin } from '@/lib/pinterest'
 import { useCarousel } from '@/hooks/useCarousel'
@@ -42,6 +43,8 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
         }
       })
   }, [adaPicks, products, adaMode, excludedIds])
+
+  const { goPrev, goNext } = wrapScroll(ref.current, prev, next)
 
   /**
    * Re-measure when the picks arrive.
@@ -116,7 +119,9 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
           </p>
         ) : (
           <div className="relative">
-            {(canPrev || canNext) && <MascotArrow direction="prev" enabled={canPrev} onClick={prev} />}
+            {(canPrev || canNext) && (
+              <MascotArrow direction="prev" mascot="cat" accent="#b79cff" label="picks" onClick={goPrev} />
+            )}
             <div
               ref={ref}
               className="flex gap-4 overflow-x-auto pb-3.5 pt-1.5 ap-rail-bare scroll-smooth"
@@ -191,72 +196,12 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
                 )
               })}
             </div>
-            {(canPrev || canNext) && <MascotArrow direction="next" enabled={canNext} onClick={next} />}
+            {(canPrev || canNext) && (
+              <MascotArrow direction="next" mascot="panda" accent="#b79cff" label="picks" onClick={goNext} />
+            )}
           </div>
         )}
       </div>
     </section>
-  )
-}
-
-/**
- * The carousel control for Ada's Picks: our own mascots, holding an arrow.
- *
- * It replaced a plain circular chevron, and the reason is that the rail had a
- * scrollbar doing the work of saying "there is more over here" — which is a
- * thin, grey, easily-missed thing on a page that is neither. The cat leads on
- * the left and the panda on the right, in the same order they sit in the logo,
- * with the arrow on the outside of each so the direction reads outward.
- *
- * Bigger than the chevron on purpose: this is the affordance now, so it has to
- * be visible at a glance and comfortable on a thumb.
- */
-function MascotArrow({
-  direction,
-  enabled,
-  onClick,
-}: {
-  direction: 'prev' | 'next'
-  /** Can the rail still scroll this way? Dims the control; never hides it. */
-  enabled: boolean
-  onClick: () => void
-}) {
-  const isPrev = direction === 'prev'
-  return (
-    <button
-      onClick={onClick}
-      aria-label={isPrev ? 'Scroll picks left' : 'Scroll picks right'}
-      title={isPrev ? 'Back' : 'More picks'}
-      className={[
-        'absolute top-1/2 -translate-y-1/2 z-30 flex items-center gap-0.5',
-        'bg-white border-[3px] border-[#b79cff] rounded-full py-1.5 cursor-pointer',
-        'shadow-[0_8px_22px_rgba(183,156,255,.55)] transition-all',
-        'hover:bg-[#b79cff] hover:scale-110 group',
-        isPrev ? 'left-0 -translate-x-1/4 pl-2 pr-2.5' : 'right-0 translate-x-1/4 pl-2.5 pr-2',
-        /**
-         * Dimmed when it cannot scroll that way, never hidden — and that is the
-         * whole point of the control.
-         *
-         * The chevron this replaced faded to opacity-0 at the end of its
-         * travel, which meant the left one was invisible until you had already
-         * scrolled: the affordance only appeared once you had worked out it
-         * existed. A pair of mascots that is always there, one of them greyed,
-         * says "this moves, and you are at the start" in a single glance.
-         */
-        enabled ? 'opacity-100' : 'opacity-50 grayscale pointer-events-none',
-      ].join(' ')}
-      aria-disabled={!enabled}
-      tabIndex={enabled ? 0 : -1}
-    >
-      {isPrev && (
-        <span className="text-[26px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-1">‹</span>
-      )}
-      <span className="block w-[42px] h-[42px]" aria-hidden="true">
-        {isPrev ? <CatMark size={42} /> : <PandaMark size={42} />}
-      </span>
-      {!isPrev && (
-        <span className="text-[26px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-1">›</span>
-      )}
-    </button>
   )
 }
