@@ -251,6 +251,26 @@ account `549770649417`. Three things about it are deliberate:
   installed, dedupes against it. Both sides must use the SAME id or every
   conversion is counted twice.
 
+Two signals are honoured, and deliberately not as one. Global Privacy Control is
+a CCPA/CPRA "do not sell or share" request, so it sets `opt_out` **and**
+`custom_data.opt_out_type: 'LDP'`. Do Not Track is a browser preference with no
+legal force: it sets `opt_out` alone, because claiming LDP off the back of it
+would assert a legal basis nobody gave.
+
+`POST /api/pinterest-event?test=1` forwards Pinterest's `?test=true` — payload
+validated, real response returned, nothing recorded. It needs the curator
+cookie, because Pinterest's docs warn to be certain test mode is off before a
+real request, and an unauthenticated switch that silently voids live conversions
+is a foot-gun left where anyone can reach it.
+
+**Do not copy Pinterest's published sample payload.** It sets `num_items: 2`
+against `contents` holding quantities 5 and 3. The field description is
+unambiguous — "total number of products of the event… the total number of items
+purchased" — so the sample is wrong and the sum is right. It also sends `np`,
+which the same docs say is "for Pinterest internal use only… do not use this
+unless specifically guided", and `partner_name`, which is for third parties
+sending on an advertiser's behalf. We are first-party; both stay out.
+
 **Policy, before scaling any of this.** Pinterest's community guidelines
 prohibit affiliate Pins "repetitively or in large volumes" and unapproved
 automation, and the merchant guidelines say merchants **must not be affiliate

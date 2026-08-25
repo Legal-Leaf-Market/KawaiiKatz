@@ -73,8 +73,21 @@ export type ConversionEvent = {
   /** Seconds, not milliseconds. Pinterest silently drops millisecond stamps. */
   event_time?: number
   custom_data?: Record<string, unknown>
-  /** True when the visitor has opted out of tracking. */
+  /**
+   * Top-level `opt_out` — "whether the user has opted out of tracking for web
+   * conversion events". The right flag for a browser preference like DNT.
+   */
   opt_out?: boolean
+  /**
+   * `custom_data.opt_out_type` — a different thing, and the one that matters
+   * legally: "flags for different privacy rights laws to opt out users of
+   * sharing personal information". Global Privacy Control is a CCPA/CPRA
+   * "do not sell or share" signal, not merely a preference, so it earns `LDP`
+   * (Limited Data Processing) as well as the flag above. DNT alone does not —
+   * it carries no legal weight and overclaiming it would be its own kind of
+   * dishonesty.
+   */
+  opt_out_type?: string
 }
 
 type SendResult =
@@ -123,7 +136,9 @@ export async function sendConversionEvents(
       ...(e.event_source_url ? { event_source_url: e.event_source_url } : {}),
       ...(e.opt_out ? { opt_out: true } : {}),
       user_data,
-      ...(e.custom_data ? { custom_data: e.custom_data } : {}),
+      ...(e.custom_data || e.opt_out_type
+        ? { custom_data: { ...(e.custom_data ?? {}), ...(e.opt_out_type ? { opt_out_type: e.opt_out_type } : {}) } }
+        : {}),
     })),
   }
 
