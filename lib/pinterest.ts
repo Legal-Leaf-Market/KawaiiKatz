@@ -118,11 +118,42 @@ export function pinCaption(o: Pinnable): string {
   return pinDescription(o)
 }
 
+/**
+ * The singular noun a caption uses for each category.
+ *
+ * Derived from catName() for years, by lowercasing, cutting at " & " and
+ * stripping a trailing "s" — which works for "Plushies" and breaks on the two
+ * that do not pluralise that way. "Blind Boxes & Collectibles" became
+ * "blind boxe" and "Accessories" became "accessorie", so 993 of 4,426 products
+ * carried a typo into every Pin caption and every RSS description.
+ *
+ * Spelled out rather than fixed with a cleverer regex: there are twelve of
+ * them, they change about once a year, and a written list cannot be wrong in a
+ * new way when someone adds the thirteenth.
+ */
+const CAT_LEAD: Record<string, string> = {
+  plush: 'plushie',
+  collect: 'blind box',
+  stationery: 'stationery',
+  apparel: 'apparel',
+  accessories: 'accessory',
+  home: 'home decor',
+  kitchen: 'kitchen',
+  puzzle: 'puzzle',
+  learning: 'wooden toy',
+  tech: 'tech',
+  food: 'snack',
+  charms: 'charm',
+  other: 'gift',
+}
+
 function pinDescription(o: Pinnable): string {
   const name = (o.name || '').trim()
   const vendor = (o.vendor || '').trim()
   const cName = catName(o.cat || 'other')
-  const cLead = cName.toLowerCase().replace(/ & .*/, '').replace(/s$/, '')
+  const cLead =
+    CAT_LEAD[o.cat || 'other'] ??
+    cName.toLowerCase().replace(/ & .*/, '').replace(/s$/, '')
   const tags = pinHashtags(o)
   const priceTxt = Number(o.price) > 0 ? ` Just ${money(o.price)}.` : ''
   const body = `${name} — a kawaii ${cLead} pick from ${vendor}.${priceTxt} Cute, clever & kind finds curated on Kawaii Katz.`
