@@ -152,7 +152,17 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
                           {live ? 'Add 🎀' : 'Unavailable'}
                         </button>
                         <button
-                          onClick={() => openPin({ id: pick.id, name, vendor: pick.vendor, cat: pick.cat, price, image, url: live?.url || pick.url, domain: live?.domain })}
+                          /* Pins our own product page when the pick still
+                             resolves to a live product, and only falls back to
+                             the merchant link when it does not — /p/<id> would
+                             404 for a pick whose product has left the feed, and
+                             a pin to a 404 is worse than an affiliate pin. */
+                          onClick={() => openPin({
+                            id: pick.id, name, vendor: pick.vendor, cat: pick.cat, price, image,
+                            url: live?.url || pick.url,
+                            domain: live?.domain,
+                            pinUrl: live ? `${window.location.origin}/p/${live.id}` : undefined,
+                          })}
                           className="flex-none border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl w-9 cursor-pointer text-[14px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                           aria-label={`Pin ${name} to Pinterest`}
                           title="Share this to Pinterest"

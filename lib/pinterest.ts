@@ -135,19 +135,19 @@ export function openPin(o: Pinnable): void {
   }
 }
 
-/** Convenience wrapper for a full Product. Pins the affiliate deep link. */
-export function pinProduct(p: Product): void {
-  openPin({
-    id: p.id,
-    name: p.name,
-    vendor: p.vendor,
-    cat: p.cat,
-    price: p.price,
-    image: p.image,
-    url: p.url || p.domain,
-    domain: p.domain,
-  })
-}
+/**
+ * NOTE: there is deliberately no wrapper that pins the affiliate deep link.
+ *
+ * There used to be — `pinProduct` — and every pin button in the app called it,
+ * which made every pin this site produced an affiliate pin. Pinterest's
+ * community guidelines limit those "repetitively or in large volumes", and a
+ * shop with 4,400 products and a pin button on each one is exactly the shape
+ * that limit is aimed at.
+ *
+ * Keeping both would have been worse than removing one: two functions that
+ * differ only in destination, with nothing to stop the wrong one being picked
+ * next time. See pinProductPage below — it is now the only way to pin.
+ */
 
 /**
  * Pins the Kawaii Katz product page instead of the merchant deep link.

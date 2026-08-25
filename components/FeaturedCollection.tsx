@@ -1,7 +1,7 @@
 'use client'
 import { useState, useMemo, useEffect } from 'react'
 import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
-import { pinProduct } from '@/lib/pinterest'
+import { pinProductPage } from '@/lib/pinterest'
 import { useStore } from '@/lib/store'
 import { useCarousel } from '@/hooks/useCarousel'
 import ProductImage from './ProductImage'
@@ -138,7 +138,7 @@ export default function FeaturedCollection({ products, excludedIds }: Props) {
                         Add 🛒
                       </button>
                       <button
-                        onClick={() => pinProduct(p)}
+                        onClick={() => pinProductPage(p)}
                         className="flex-none border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl w-9 cursor-pointer text-[14px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                         aria-label={`Pin ${p.name} to Pinterest`}
                         title="Share this to Pinterest"
