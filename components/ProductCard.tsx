@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, isNewItem, type Product } from '@/lib/data'
 import { pinProductPage } from '@/lib/pinterest'
@@ -33,9 +35,33 @@ type Props = {
 
 export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, isPicked, isExcluded, isAdaMode, onTogglePick, onToggleExclude, priority = false, similarPool = [] }: Props) {
   const { state, dispatch } = useStore()
+  const router = useRouter()
   const [selVariant, setSelVariant] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [flipped, setFlipped] = useState(false)
+
+  /**
+   * The card's own product page, and the whole lower half of the card as the
+   * way to it.
+   *
+   * A real <Link> on the title and on the View item button carries the keyboard,
+   * middle-click and open-in-new-tab cases; this handler is the mouse
+   * convenience on top, which is why the body is a plain div and not an anchor.
+   * Wrapping it in one would nest a <select>, three <button>s and the blurb's
+   * more/less toggle inside an <a> — invalid, and it breaks the variant picker
+   * outright.
+   *
+   * Two things are deliberately not a navigation:
+   *   - a click that landed on any control inside the body, and
+   *   - a click that ends a text selection, which is someone reading the blurb
+   *     rather than asking to leave the page.
+   */
+  const productHref = `/p/${p.id}`
+  function openProduct(e: React.MouseEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('a, button, select, input, label, [role="button"]')) return
+    if ((window.getSelection()?.toString() ?? '').length > 0) return
+    router.push(productHref)
+  }
   const [addedBoth, setAddedBoth] = useState(false)
   const { taste, record } = useTaste()
 
@@ -261,10 +287,20 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
             </div>
           </div>
 
-          {/* Body */}
-          <div className="p-3 sm:px-3.5 sm:pb-3.5 flex flex-col gap-1.5 flex-1 min-w-0">
+          {/* Body — the whole of it is the way to the product page. */}
+          <div
+            className="kk-body-link p-3 sm:px-3.5 sm:pb-3.5 flex flex-col gap-1.5 flex-1 min-w-0"
+            onClick={openProduct}
+          >
             <div className="text-[10px] font-extrabold uppercase tracking-[.7px] text-[#b79cff]">{p.vendor}</div>
-            <h3 className="font-display text-[16.5px] sm:text-[16.5px] text-[14.5px] text-[#4f4550] leading-tight">{p.name}</h3>
+            <h3 className="font-display text-[16.5px] sm:text-[16.5px] text-[14.5px] text-[#4f4550] leading-tight">
+              {/* prefetch={false}: a grid holds forty of these and Next would
+                  prefetch every one that scrolls into view, turning a page of
+                  thumbnails into forty RSC requests for pages nobody opened. */}
+              <Link href={productHref} prefetch={false} className="hover:text-[#6495ED] transition-colors">
+                {p.name}
+              </Link>
+            </h3>
 
             {p.blurb && (
               <div className="text-[12.5px] text-[#9a8fa3] leading-relaxed">
@@ -324,11 +360,23 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
               {p.character && <span className="text-[10px] font-extrabold px-2 py-[3px] rounded-full text-white" style={{ background: '#b79cff' }}>{p.character}</span>}
             </div>
 
+            {/* View item — the primary action, and the only route from a card
+                to the product page. mt-auto moves here from Add to Cart so the
+                pair still sits flush to the bottom of a stretched card. */}
+            <Link
+              href={productHref}
+              prefetch={false}
+              className="kk-view-pulse mt-auto border-[2.5px] border-[#3f6fd8] bg-[#6495ED] text-white font-display font-extrabold px-2.5 py-2.5 rounded-[14px] cursor-pointer text-sm text-center hover:bg-[#3f6fd8] transition-colors active:translate-y-0.5"
+              aria-label={`View ${p.name}`}
+            >
+              View Item 👀
+            </Link>
+
             {/* Add to cart */}
             <button
               type="button"
               onClick={addToCart}
-              className="mt-auto border-[2.5px] border-[#ff8a65] bg-[#ffb199] text-[#4f4550] font-display font-extrabold px-2.5 py-2.5 rounded-[14px] cursor-pointer text-sm text-center hover:bg-[#ff8a65] hover:text-white transition-colors active:translate-y-0.5"
+              className="border-[2.5px] border-[#ff8a65] bg-[#ffb199] text-[#4f4550] font-display font-extrabold px-2.5 py-2.5 rounded-[14px] cursor-pointer text-sm text-center hover:bg-[#ff8a65] hover:text-white transition-colors active:translate-y-0.5"
               aria-label={`Add ${p.name} to cart`}
             >
               Add to Cart 🛒

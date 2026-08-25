@@ -181,3 +181,46 @@ a { color: inherit; text-decoration: none; }
     .kk-card:hover .kk-zoom { transform: scale(1.02); }
   }
 }
+
+/* ---------------------------------------------------------------------------
+   "View item" — the card's route to its own product page.
+
+   The card had no link to /p/<id> at all: the product page, its comment thread
+   and the FTC disclosure that sits above the outbound link were reachable only
+   from a collection page or from another product page's "More like this". This
+   button is the way in, so it is the loudest thing on the card — cornflower
+   blue against the peach Add to Cart, which keeps the two CTAs telling apart at
+   a glance rather than competing as a matched pair.
+
+   The pulse is a spreading ring, and it deliberately animates NOTHING that moves
+   the button.
+
+   The first version scaled the element. It looked fine and it was wrong: a
+   primary CTA that never stops moving is a target the user is aiming at while
+   it drifts, and Playwright refused to click it at all — "element is not
+   stable", retried for thirty seconds, gave up. That is an automated tool
+   reporting a real hit-target problem, not a test artefact. box-shadow paints
+   outside the border box and does not participate in layout or hit-testing, so
+   this version breathes just as visibly while the button stays exactly still.
+
+   Kept small for the other reason too: it runs forever on every card in a grid
+   of forty, and anything louder reads as a page that will not sit still.
+   --------------------------------------------------------------------------- */
+@keyframes kkViewPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(100, 149, 237, .55), 0 2px 6px rgba(100, 149, 237, .30); }
+  70%      { box-shadow: 0 0 0 9px rgba(100, 149, 237, 0),  0 3px 10px rgba(100, 149, 237, .40); }
+}
+.kk-view-pulse { animation: kkViewPulse 2.4s ease-in-out infinite; }
+/* Stop breathing while it is being pointed at or focused: the hover state is
+   its own feedback and the two together read as a wobble. */
+.kk-view-pulse:hover,
+.kk-view-pulse:focus-visible { animation: none; }
+
+/* The clickable body. Cursor only where the click actually navigates — the
+   guard in onClick skips anything interactive, so the controls inside keep
+   their own cursors and do not inherit a lie. */
+.kk-body-link { cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kk-view-pulse { animation: none !important; }
+}
