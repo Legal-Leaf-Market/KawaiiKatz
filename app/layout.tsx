@@ -45,6 +45,23 @@ export const metadata: Metadata = {
     images: ['/icon.png'],
   },
   /**
+   * Pinterest domain verification (claimed 2026-08-24).
+   *
+   * `verification.other` is the escape hatch for a provider Next has no named
+   * field for: each key/value becomes `<meta name="<key>" content="<value>">`
+   * verbatim, which is exactly the tag Pinterest hands you. Written here rather
+   * than as a raw <meta> in the layout body so it stays with the rest of the
+   * head and cannot be dropped by a future metadata refactor.
+   *
+   * Not a secret — it is served in the HTML of every page by design; the whole
+   * point is that Pinterest's crawler can read it.
+   */
+  verification: {
+    other: {
+      'p:domain_verify': '501c2dc6d005954dc9ebb8b7e962a365',
+    },
+  },
+  /**
    * Declared explicitly rather than left to Next's app/icon.png convention.
    *
    * That convention gives the browser one image and lets it downscale, and a
