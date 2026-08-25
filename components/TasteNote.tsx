@@ -59,7 +59,9 @@ export default function TasteNote({ variant }: Props) {
   if (variant === 'footer') {
     return (
       <p className="mt-0.5">
-        Your 👍 and 👎 stay in this browser — no account, nothing sent to us.{' '}
+        Your 👍 and 👎 stay in this browser — no account, never sent to us.{' '}
+        We report page visits and clicks to Pinterest for ad measurement (IP and
+        browser only); Do Not Track and Global Privacy Control are honoured.{' '}
         {button}
       </p>
     )

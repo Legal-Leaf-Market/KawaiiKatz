@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { useStore, cartTotal, groupCartByVendor, checkoutUrlForVendor } from '@/lib/store'
+import { useStore, cartTotal, groupCartByVendor, checkoutUrlForVendor, type CartItem } from '@/lib/store'
+import { track } from '@/lib/pinterest-track'
 import { catEmoji, money, type Product } from '@/lib/data'
 
 type Props = {
@@ -38,6 +39,36 @@ export default function CartDrawer({ open, onClose, products }: Props) {
     const url = checkoutUrlForVendor(groups[vendor] ?? [])
     if (!url || url === '#') return
     setOpened((o) => ({ ...o, [vendor]: true }))
+
+    /**
+     * The click out to the merchant — the strongest signal this business model
+     * produces, and the last thing we can observe. It goes as `custom`, never
+     * as `checkout`: the sale happens on the vendor's domain under the vendor's
+     * analytics, and we never learn whether it completed. `keepalive` on the
+     * request is what lets it survive the navigation on the line below.
+     */
+    const lines = groups[vendor] ?? []
+    const priceOf = (l: { product: Product; item: CartItem }) =>
+      l.product.variants[l.item.variantIndex]?.price ?? l.product.price
+    track({
+      event_name: 'custom',
+      custom_data: {
+        event_label: 'outbound_merchant_click',
+        currency: 'USD',
+        value: lines.reduce((n, l) => n + priceOf(l) * l.item.qty, 0).toFixed(2),
+        content_brand: vendor,
+        content_ids: lines.map((l) => l.product.id),
+        num_items: lines.reduce((n, l) => n + l.item.qty, 0),
+        contents: lines.map((l) => ({
+          id: l.product.id,
+          quantity: l.item.qty,
+          item_price: String(priceOf(l)),
+          item_name: l.product.name,
+          item_category: l.product.cat,
+          item_brand: vendor,
+        })),
+      },
+    })
     const win = window.open(url, '_blank', 'noopener,noreferrer')
     if (!win) {
       try {

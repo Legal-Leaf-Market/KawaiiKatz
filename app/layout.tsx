@@ -5,6 +5,7 @@ import { StoreProvider } from '@/lib/store'
 import { SISTER_SITES, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_TITLE, SITE_URL } from '@/lib/site'
 import { SITE_NODES } from '@/lib/schema'
 import JsonLd from '@/components/JsonLd'
+import PinterestPageVisit from '@/components/PinterestPageVisit'
 import { Analytics } from '@vercel/analytics/next'
 
 const _baloo = Baloo_2({
@@ -128,6 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             CollectionPage — see lib/schema.ts. */}
         <JsonLd nodes={SITE_NODES} />
         <StoreProvider>{children}</StoreProvider>
+        <PinterestPageVisit />
         <Analytics />
       </body>
     </html>

@@ -1,7 +1,8 @@
 'use client'
-import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
 import type { Product } from './data'
 import { affiliateUrl, couponWrapUrl } from './data'
+import { track } from './pinterest-track'
 
 export type CartItem = {
   productId: string
@@ -74,7 +75,27 @@ const defaultState: State = { cart: [], wish: [], adaMode: false, adaAuthorized:
 const StoreCtx = createContext<{ state: State; dispatch: React.Dispatch<Action> }>({ state: defaultState, dispatch: () => {} })
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, defaultState)
+  const [state, rawDispatch] = useReducer(reducer, defaultState)
+
+  /**
+   * Conversion reporting sits HERE rather than at the eight components that add
+   * to a cart, because eight copies of an analytics call is eight chances for
+   * the ninth to be forgotten. Every ADD_TO_CART in the app passes through this
+   * function; nothing has to remember to opt in.
+   *
+   * It sends `content_ids` and nothing else. The store holds product IDS, not
+   * prices — resolving a value here would mean threading the catalogue into the
+   * store for the sake of a number, and inventing one is worse than omitting it
+   * for the same reason `checkout` is refused outright (see lib/pinterest-capi).
+   * CartDrawer sends the priced event at the click-out, where it has the
+   * products in hand and the intent is real.
+   */
+  const dispatch = useCallback((action: Action) => {
+    if (action.type === 'ADD_TO_CART') {
+      track({ event_name: 'add_to_cart', custom_data: { content_ids: [action.productId], num_items: 1 } })
+    }
+    rawDispatch(action)
+  }, [])
 
   // Load from localStorage on mount
   useEffect(() => {
