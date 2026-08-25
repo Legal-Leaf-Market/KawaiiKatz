@@ -1,11 +1,12 @@
 'use client'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { PRICE_BUCKETS, isNewItem, type Product } from '@/lib/data'
 import { useStore } from '@/lib/store'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
 import { usePicks } from '@/hooks/usePicks'
+import { track } from '@/lib/pinterest-track'
 import Header from '@/components/Header'
 import FilterToolbar, { type Filters } from '@/components/FilterToolbar'
 import ProductCard from '@/components/ProductCard'
@@ -177,6 +178,35 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
   const shownItems = arranged.slice(0, page * PAGE_SIZE)
   const hasMore = shownItems.length < arranged.length
   const shownProductCount = shownItems.reduce((n, it) => n + (it.kind === 'product' ? 1 : 0), 0)
+
+  /**
+   * `view_category` and `search` — two of the five event types Pinterest's
+   * Events overview breaks out, and the two this site can report honestly.
+   * (`checkout` is the third and we never send it; see lib/pinterest-capi.)
+   *
+   * The category fires on the filter changing, because that is a click. Search
+   * cannot: `handleSearch` runs on every keystroke, and an event per keystroke
+   * would burn the ad account's rate limit to report the letters of one word.
+   * So it waits for typing to stop.
+   */
+  const searchedFor = useRef('')
+  useEffect(() => {
+    const q = search.trim()
+    // Two characters is the shortest thing worth calling a search, and the
+    // curator code must never leave the browser.
+    if (q.length < 2 || q.toLowerCase() === ADA_SECRET_CODE) return
+    if (q === searchedFor.current) return
+    const t = setTimeout(() => {
+      searchedFor.current = q
+      track({ event_name: 'search', custom_data: { search_string: q } })
+    }, 900)
+    return () => clearTimeout(t)
+  }, [search])
+
+  useEffect(() => {
+    if (!filters.cat) return
+    track({ event_name: 'view_category', custom_data: { content_category: filters.cat } })
+  }, [filters.cat])
 
   function handleSearch(q: string) {
     // Detect ada mode activation code
