@@ -140,7 +140,7 @@ async function scrapeVendor(vendorName: string): Promise<{ products: Product[]; 
  * like it silently did nothing. v1 -> v2 on 2026-08-22 for the UA change and
  * the include/exclude filtering below.
  */
-const fetchVendorCatalog = unstable_cache(scrapeVendor, ['vendor-catalog-v6'], {
+const fetchVendorCatalog = unstable_cache(scrapeVendor, ['vendor-catalog-v7'], {
   revalidate: CATALOG_REVALIDATE_SECONDS,
   tags: ['catalog'],
 })

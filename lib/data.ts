@@ -149,7 +149,16 @@ export const VENDORS: VendorConfig[] = [
   { vendor: 'Hello Kitty Camp', domain: 'https://hellokittycamp.com', prefix: 'hkc', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: 'JACOBKENNEDY', couponPct: 10 },
   { vendor: 'Squishy Bottle', domain: 'https://stopshop9.myshopify.com', prefix: 'sqb', affiliateParam: 'ref=kawaiikatz', commissionPct: 25, couponCode: 'JACOBKENNEDY', couponPct: 15 },
   { vendor: 'Autoplush', domain: 'https://autoplush.com', prefix: 'auto', affiliateParam: 'ref=kawaiikatz', commissionPct: 20, couponCode: '', couponPct: 0 },
-  { vendor: 'Montessori & Me', domain: 'https://montessoriandme.us', prefix: 'mont', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0 },
+  // forceCat for the reason spelled out under jigsawdepot below: the vendor is
+  // what disambiguates when a word cannot. Every one of these 23 products is a
+  // Montessori learning toy or the nursery furniture that goes with one, and
+  // the shared rules keep finding other words in them — "Rainbow Color Sorting
+  // Balls in Cups" was on the kitchen shelf because of `cup`, and a "Large
+  // Weaning Chair" reached learning only through the age word `toddler`, which
+  // no longer decides a category (see the note on the baby rule in
+  // catalog-shared). Rather than defend one 23-product vendor with a term list,
+  // say what the shop is.
+  { vendor: 'Montessori & Me', domain: 'https://montessoriandme.us', prefix: 'mont', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0, forceCat: 'learning' },
   { vendor: 'Mintie Lunchboxes', domain: 'https://mintielunchboxes.co.uk', prefix: 'mint', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: '', couponPct: 0 },
   // forceCat because 21 of jigsawdepot's 41 products were NOT in Puzzles & Games:
   // 15 in Learning & Wooden Toys and 6 in Kitchen & Lunch. Every one of the 41 is
