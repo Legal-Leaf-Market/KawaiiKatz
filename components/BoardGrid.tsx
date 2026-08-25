@@ -5,8 +5,8 @@ import { useStore } from '@/lib/store'
 import { useExclusions } from '@/hooks/useExclusions'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useTaste } from '@/hooks/useTaste'
-import { board, fillBoardPages } from '@/lib/boards'
-import { tasteBonus } from '@/lib/taste'
+import { board, dealPages, fillBoardPages, vendorCap } from '@/lib/boards'
+import { tasteBonus, totalSignals } from '@/lib/taste'
 import { money, type Product } from '@/lib/data'
 import { pinProductPage, pinGuide } from '@/lib/pinterest'
 import { track } from '@/lib/pinterest-track'
@@ -56,15 +56,26 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
   const { state, dispatch } = useStore()
   const { excludedIds } = useExclusions()
   const { allProducts, live } = useLiveCatalog()
-  const { taste, record } = useTaste()
+  const { taste, record, showHidden } = useTaste()
 
   const [added, setAdded] = useState<string | null>(null)
   const [page, setPage] = useState<Record<string, number>>({})
-  const [hidden, setHidden] = useState<Set<string>>(() => new Set())
   const [liked, setLiked] = useState<Set<string>>(() => new Set())
   const [query, setQuery] = useState('')
+  const [kidOnly, setKidOnly] = useState(false)
+  const [range, setRange] = useState<[number, number] | null>(null)
+  const [surprise, setSurprise] = useState<Product | null>(null)
 
   const b = board(slug)
+
+  /**
+   * Hidden lives in the taste profile now, so it survives a reload.
+   *
+   * Read through useSyncExternalStore rather than local state: a thumbs-down
+   * on this page and one in the Gift Finder write the same store, and two
+   * copies of the truth would disagree the moment a visitor used both.
+   */
+  const hidden = useMemo(() => new Set(taste.hidden), [taste.hidden])
 
   /** Every page of every section, once the catalogue is here. */
   const paged = useMemo(() => {
@@ -84,14 +95,40 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
     return paged.flatMap((s) => s.pages.flat())
   }, [paged, sections])
 
+  /** The collection's real price span, so the slider fits the shelf it is on. */
+  const bounds = useMemo((): [number, number] => {
+    if (!corpus.length) return [0, 100]
+    const prices = corpus.map((p) => p.price)
+    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
+  }, [corpus])
+
+  const priceActive = !!range && (range[0] > bounds[0] || range[1] < bounds[1])
+
+  /**
+   * Kid-safe and price, applied everywhere — sections, search and Surprise Me.
+   *
+   * `kidSafe` is the positive-evidence flag set at scrape time (lib/kid-safe),
+   * not the inverse of the adult filter. An item with no evidence either way is
+   * not kid-safe, which is the right way round for a toggle a parent trusts.
+   */
+  const passes = useCallback(
+    (p: Product) => {
+      if (kidOnly && p.kidSafe !== true) return false
+      if (range && (p.price < range[0] || p.price > range[1])) return false
+      return true
+    },
+    [kidOnly, range]
+  )
+
   const q = query.trim().toLowerCase()
   const results = useMemo(() => {
     if (!q) return null
     const hit = corpus.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
+        passes(p) &&
+        (p.name.toLowerCase().includes(q) ||
         p.vendor.toLowerCase().includes(q) ||
-        (p.character || '').toLowerCase().includes(q)
+        (p.character || '').toLowerCase().includes(q))
     )
     // Taste applies to the ORDER of results, never to which ones match. A
     // search that hides what you asked for because we guessed your taste is a
@@ -100,25 +137,49 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
       .slice()
       .sort((x, y) => tasteBonus(taste, y) - tasteBonus(taste, x))
       .slice(0, 48)
-  }, [q, corpus, taste])
+  }, [q, corpus, taste, passes])
 
   const visible = useCallback(
-    (list: Product[]) => list.filter((p) => !excludedIds.has(p.id) && !hidden.has(p.id)),
-    [excludedIds, hidden]
+    (list: Product[]) => list.filter((p) => !excludedIds.has(p.id) && !hidden.has(p.id) && passes(p)),
+    [excludedIds, hidden, passes]
   )
 
   /**
    * What each section shows right now: its current page, backfilled from the
    * pages behind it so a thumbs-down leaves a gap for no longer than a frame.
    */
+  const learned = totalSignals(taste) >= 3
+
   const shown = useMemo(() => {
+    const cap = b ? vendorCap(b) : 3
     const src =
-      paged?.map((s) => ({
-        key: s.section.key,
-        title: s.section.title,
-        blurb: s.section.blurb,
-        pages: s.pages,
-      })) ??
+      paged?.map((s) => {
+        /**
+         * Once a visitor has told us something, shuffle stops being a walk
+         * through a fixed running order and becomes a re-rank.
+         *
+         * The pool is re-ordered by tasteBonus and dealt again — through
+         * dealPages, so the per-vendor cap travels with it. Taste ordering
+         * makes a one-shop page MORE likely, not less: someone who liked one
+         * thing from a shop ranks that shop's whole shelf.
+         *
+         * Below the threshold the sort is a no-op (every bonus is 0) and the
+         * server's running order is preserved exactly, which is what keeps the
+         * first paint and the first client render identical.
+         */
+        if (!learned) return { key: s.section.key, title: s.section.title, blurb: s.section.blurb, pages: s.pages }
+        const size = s.pages[0].length
+        const pool = s.pages
+          .flat()
+          .slice()
+          .sort((x, y) => tasteBonus(taste, y) - tasteBonus(taste, x))
+        return {
+          key: s.section.key,
+          title: s.section.title,
+          blurb: s.section.blurb,
+          pages: dealPages(pool, size, cap, s.pages.length),
+        }
+      }) ??
       sections.map((s) => ({ key: s.key, title: s.title, blurb: s.blurb, pages: [s.products] }))
 
     return src
@@ -139,7 +200,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
         }
       })
       .filter((s) => s.items.length > 0)
-  }, [paged, sections, page, visible])
+  }, [paged, sections, page, visible, learned, taste, b])
 
   const cover = shown[0]?.items[0]
   const total = corpus.length
@@ -160,8 +221,9 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
    * and the taste profile learns from it for the shuffle after this one.
    */
   function thumbDown(p: Product) {
+    // record() folds the id into taste.hidden and persists it, so there is no
+    // second piece of state to keep in step.
     record(p, 'down')
-    setHidden((prev) => new Set(prev).add(p.id))
     setLiked((prev) => {
       if (!prev.has(p.id)) return prev
       const next = new Set(prev)
@@ -173,6 +235,23 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
   function thumbUp(p: Product) {
     record(p, 'up')
     setLiked((prev) => new Set(prev).add(p.id))
+  }
+
+  /**
+   * One product, at random, from everything the current filters allow.
+   *
+   * Math.random() is safe here in a way it is not in the ranking: this runs on
+   * a click, long after hydration, and starts as null so the server and the
+   * first client render agree. The ranking cannot use it — those pages
+   * prerender, and a random order there is a hydration mismatch.
+   */
+  function surpriseMe() {
+    const pool = visible(corpus)
+    if (!pool.length) return
+    const pick = pool[Math.floor(Math.random() * pool.length)]
+    setSurprise(pick)
+    record(pick, 'skip') // shown and not yet chosen; a nudge, not a verdict
+    track({ event_name: 'view_category', custom_data: { product_category: `${slug}/surprise` } })
   }
 
   function shuffle(key: string, pageCount: number) {
@@ -220,10 +299,141 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
         </div>
       </div>
 
+      {/* Filters. Only rendered once the catalogue is here — a price slider
+          over the forty products the server sent would be lying about range. */}
+      {live && corpus.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 mb-4 p-3 rounded-[18px] bg-[#fffaf0] border-2 border-[#ffe6d9]">
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={kidOnly}
+              onChange={(e) => setKidOnly(e.target.checked)}
+              className="w-[18px] h-[18px] accent-[#7fc4d4] cursor-pointer"
+            />
+            <span className="font-display font-extrabold text-[13.5px] text-[#4f4550]">
+              🧒 Kid-safe only
+            </span>
+          </label>
+
+          <div className="flex items-center gap-2.5 flex-1 min-w-[260px]">
+            <span className="font-display font-extrabold text-[13.5px] text-[#4f4550] whitespace-nowrap">
+              {money(range?.[0] ?? bounds[0])} – {money(range?.[1] ?? bounds[1])}
+            </span>
+            <div className="flex-1 flex flex-col gap-0.5 min-w-[120px]">
+              <input
+                type="range"
+                min={bounds[0]}
+                max={bounds[1]}
+                value={range?.[0] ?? bounds[0]}
+                onChange={(e) => {
+                  const lo = Number(e.target.value)
+                  // A destructuring default would not cover this: `range` is
+                  // null until first touched, and defaults only fill undefined.
+                  setRange((prev) => {
+                    const [, hi] = prev ?? bounds
+                    return [Math.min(lo, hi), hi]
+                  })
+                }}
+                className="w-full accent-[#ff8a65] cursor-pointer"
+                aria-label="Minimum price"
+              />
+              <input
+                type="range"
+                min={bounds[0]}
+                max={bounds[1]}
+                value={range?.[1] ?? bounds[1]}
+                onChange={(e) => {
+                  const hi = Number(e.target.value)
+                  setRange((prev) => {
+                    const [lo] = prev ?? bounds
+                    return [lo, Math.max(hi, lo)]
+                  })
+                }}
+                className="w-full accent-[#ff8a65] cursor-pointer"
+                aria-label="Maximum price"
+              />
+            </div>
+            {priceActive && (
+              <button
+                onClick={() => setRange(null)}
+                className="text-[12px] font-bold text-[#9a8fa3] underline hover:text-[#ff8a65] whitespace-nowrap"
+              >
+                any price
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={surpriseMe}
+            className="border-[2.5px] border-[#7fc4d4] bg-white text-[#4f4550] font-display font-extrabold px-3.5 py-2 rounded-full cursor-pointer text-[13px] hover:bg-[#bfe3ea] transition-colors whitespace-nowrap"
+          >
+            🎲 Surprise me
+          </button>
+        </div>
+      )}
+
+      {surprise && (
+        <div className="mb-6 flex gap-4 items-center flex-wrap sm:flex-nowrap p-3 rounded-[22px] border-[3px] border-[#7fc4d4] bg-white shadow-[0_4px_12px_rgba(127,196,212,.22)]">
+          <Link href={`/p/${surprise.id}`} className="relative block w-[120px] h-[150px] flex-none rounded-[16px] overflow-hidden bg-gradient-to-br from-[#ffb199] to-[#bfe3ea]">
+            <ProductImage
+              src={surprise.image}
+              alt={surprise.name}
+              fallback="🎲"
+              className="w-full h-full object-cover"
+              fallbackClassName="absolute inset-0 flex items-center justify-center text-[40px]"
+              width={240}
+            />
+          </Link>
+          <div className="flex-1 min-w-[200px] flex flex-col gap-1.5">
+            <div className="text-[10.5px] font-extrabold uppercase tracking-[.7px] text-[#7fc4d4]">
+              🎲 How about this
+            </div>
+            <Link href={`/p/${surprise.id}`} className="font-display font-extrabold text-[17px] leading-tight hover:underline">
+              {surprise.name}
+            </Link>
+            <div className="font-display text-[19px] text-[#ff8a65]">{money(surprise.price)}</div>
+            <div className="flex gap-2 flex-wrap mt-1">
+              <button
+                onClick={() => addToCart(surprise)}
+                className="border-2 border-[#ff8a65] bg-[#ffb199] text-[#4f4550] font-display font-extrabold rounded-xl px-3.5 py-2 cursor-pointer text-[13px] hover:bg-[#ff8a65] hover:text-white transition-colors"
+              >
+                {added === surprise.id ? 'Added ✓' : 'Add 🎀'}
+              </button>
+              <button
+                onClick={() => pinProductPage(surprise, { tag: hashtag })}
+                className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl px-3 py-2 cursor-pointer text-[13px] hover:bg-[#e60023] hover:text-white transition-colors"
+              >
+                📌 Pin
+              </button>
+              <button
+                onClick={surpriseMe}
+                className="border-2 border-[#7fc4d4] bg-white text-[#4f4550] font-display font-extrabold rounded-xl px-3.5 py-2 cursor-pointer text-[13px] hover:bg-[#bfe3ea] transition-colors"
+              >
+                🎲 Again
+              </button>
+              <button
+                onClick={() => { thumbDown(surprise); setSurprise(null) }}
+                className="border-2 border-[#ffd6de] bg-white text-[#ff5a7a] rounded-xl px-3 py-2 cursor-pointer text-[13px] hover:bg-[#ffd6de] transition-colors"
+                title="Not for me — hide it and show fewer like it"
+              >
+                👎
+              </button>
+              <button
+                onClick={() => setSurprise(null)}
+                className="text-[12.5px] font-bold text-[#9a8fa3] underline hover:text-[#ff8a65] px-1"
+              >
+                close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {hidden.size > 0 && (
         <p className="text-[12.5px] font-bold text-[#9a8fa3] mb-5">
-          {hidden.size} hidden ·{' '}
-          <button onClick={() => setHidden(new Set())} className="underline hover:text-[#ff8a65]">
+          {hidden.size} hidden{learned ? ' · shuffle is using what you told us' : ''} ·{' '}
+          <button onClick={() => showHidden()} className="underline hover:text-[#ff8a65]">
             show them again
           </button>
         </p>
@@ -235,7 +445,8 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
             {results.length} match{results.length === 1 ? '' : 'es'} for “{query}”
           </h2>
           <p className="text-[14px] text-[#9a8fa3] font-semibold mt-0.5 mb-4">
-            Searching all {total} products in this collection, not just the ones on show.
+            Searching all {total} products in this collection, not just the ones on show
+            {kidOnly || priceActive ? ', within your filters' : ''}.
           </p>
           <Grid
             items={visible(results)}
@@ -249,6 +460,29 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
             onWish={(p) => dispatch({ type: 'TOGGLE_WISH', productId: p.id })}
           />
         </section>
+      ) : shown.length === 0 ? (
+        /* Filters can empty every section at once — kid-safe on a shelf with
+           little kid-safe stock, or a narrow price window. A blank page with no
+           explanation reads as broken, so say what happened and offer the way
+           back. */
+        <p className="text-[#9a8fa3] font-bold py-6">
+          Nothing matches those filters.{' '}
+          <button
+            onClick={() => { setKidOnly(false); setRange(null) }}
+            className="underline hover:text-[#ff8a65]"
+          >
+            Clear them
+          </button>
+          {hidden.size > 0 && (
+            <>
+              {' '}or{' '}
+              <button onClick={() => showHidden()} className="underline hover:text-[#ff8a65]">
+                unhide the {hidden.size} you hid
+              </button>
+            </>
+          )}
+          .
+        </p>
       ) : (
         shown.map((s) => (
           <section key={s.key} id={s.key} className="mb-10 scroll-mt-24">

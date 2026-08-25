@@ -52,11 +52,30 @@ export type TasteProfile = {
   character: Record<string, number>
   band: Record<string, number>
   counts: Record<TasteSignal, number>
+  /**
+   * Product ids the visitor has thumbed down, kept so they stay gone.
+   *
+   * It lives here rather than in a store of its own because it is the same
+   * gesture: a thumbs-down on a collection tile means both "fewer like this"
+   * and "not that one again", and one store means the existing reset button
+   * clears both. Starting over should start over.
+   *
+   * Bounded — see HIDDEN_LIMIT. An unbounded list in localStorage is a slow
+   * leak that only shows up on the devices of the people who use the site most.
+   */
+  hidden: string[]
 }
+
+/**
+ * How many hidden ids to keep, newest first. Comfortably more than anyone
+ * dismisses in a session, small enough that the stored profile stays a few KB.
+ */
+export const HIDDEN_LIMIT = 400
 
 export const EMPTY_TASTE: TasteProfile = {
   cat: {}, vendor: {}, character: {}, band: {},
   counts: { up: 0, down: 0, skip: 0, cart: 0 },
+  hidden: [],
 }
 
 export function priceBand(price: number): string {
@@ -79,6 +98,12 @@ export function applySignal(profile: TasteProfile, product: Product, signal: Tas
     character: { ...profile.character },
     band: { ...profile.band },
     counts: { ...profile.counts, [signal]: (profile.counts[signal] ?? 0) + 1 },
+    // A thumbs-down is a hide as well as an opinion. Newest first, deduped,
+    // and bounded so the stored profile cannot grow without limit.
+    hidden:
+      signal === 'down'
+        ? [product.id, ...profile.hidden.filter((id) => id !== product.id)].slice(0, HIDDEN_LIMIT)
+        : profile.hidden,
   }
   bump(next.cat, product.cat, d * ATTR_WEIGHT.cat)
   bump(next.vendor, product.vendor, d * ATTR_WEIGHT.vendor)
@@ -96,6 +121,23 @@ export function tasteBonus(profile: TasteProfile | null | undefined, p: Product)
   if (p.character) n += (profile.character[p.character] ?? 0) * 0.5
   n += (profile.band[priceBand(p.price)] ?? 0) * 0.4
   return Math.max(-MAX_BONUS, Math.min(MAX_BONUS, n))
+}
+
+/**
+ * Puts a hidden product back.
+ *
+ * Only the id is dropped; the attribute weights the thumbs-down produced are
+ * left alone. Un-hiding one plushie is "actually, show me that one", not "I was
+ * wrong about plushies" — and we no longer hold the product, only its id, so
+ * there is nothing to reverse the bump with even if we wanted to.
+ */
+export function unhide(profile: TasteProfile, id: string): TasteProfile {
+  if (!profile.hidden.includes(id)) return profile
+  return { ...profile, hidden: profile.hidden.filter((x) => x !== id) }
+}
+
+export function clearHidden(profile: TasteProfile): TasteProfile {
+  return profile.hidden.length ? { ...profile, hidden: [] } : profile
 }
 
 export function totalSignals(profile: TasteProfile): number {

@@ -366,6 +366,30 @@ backfills, and `useTaste` learns from it. Two controls would be two things to ex
 Shuffling records a `skip` on everything it replaces, so a visitor who keeps shuffling past
 the same sort of thing stops being shown it.
 
+**Hidden products live in the taste profile**, not in component state, so they survive a
+reload and so a thumbs-down here and one in the Gift Finder are the same fact. `HIDDEN_LIMIT`
+bounds the list at 400 — an unbounded array in localStorage is a slow leak that only shows up
+on the devices of the people who use the site most. The existing taste reset clears it, which
+is right: starting over should start over. `unhide()` drops the id and deliberately leaves the
+attribute weights alone — un-hiding one plushie is "show me that one", not "I was wrong about
+plushies".
+
+**Shuffle re-ranks once there are three signals**, and walks the fixed order before that. The
+re-rank goes through `dealPages()` so the per-vendor cap travels with it — taste ordering makes
+a one-shop page MORE likely, not less, because someone who liked one thing from a shop ranks
+that shop's whole shelf. Below the threshold every bonus is 0, the sort is a no-op and the
+server's order is preserved exactly, which is what keeps the first client render identical to
+the HTML.
+
+**`Math.random()` is allowed in Surprise Me and nowhere else on these pages.** It runs on a
+click, long after hydration, and starts as `null` so the server and first client render agree.
+The ranking cannot use it — these pages prerender, and a random order there is a hydration
+mismatch. That is the same rule `lib/similar.ts` follows.
+
+**The kid-safe toggle reads the scrape-time `kidSafe` flag** (§4, `lib/kid-safe.ts`), which is
+positive evidence rather than the inverse of the adult filter. An item with no evidence either
+way is not kid-safe — the right way round for a toggle a parent is trusting.
+
 **Search orders by taste but never filters by it.** A search that hides what you asked for
 because we guessed your taste is a broken search.
 
