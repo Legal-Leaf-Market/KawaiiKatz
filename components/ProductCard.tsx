@@ -214,16 +214,16 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                   type="button"
                   onClick={() => { prime(); setFlipped(true) }}
                   className="kk-flip-wash absolute inset-0 z-10 items-center justify-center text-center px-3 cursor-pointer"
-                  aria-label={`Flip ${p.name} over for similar options`}
+                  aria-label={`Flip ${p.name} over for more gift options`}
                 >
-                  Flip for more details
+                  Flip for more gift options
                 </button>
                 {/* Touch devices have no hover, so the affordance is always on. */}
                 <button
                   type="button"
                   onClick={() => { prime(); setFlipped(true) }}
                   className="kk-flip-pill absolute bottom-2 left-2 z-10 items-center gap-1 bg-[rgba(100,149,237,.94)] text-white font-display font-extrabold text-[10px] leading-none px-2.5 py-[7px] rounded-full border-2 border-white shadow-[0_3px_10px_rgba(100,149,237,.45)]"
-                  aria-label={`Flip ${p.name} over for similar options`}
+                  aria-label={`Flip ${p.name} over for more gift options`}
                 >
                   ↻ flip
                 </button>
