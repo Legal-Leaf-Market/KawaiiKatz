@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 
+import { BOARDS } from '@/lib/boards'
 import { liveLinkShowcases, showcaseVendors } from '@/lib/data'
 import { SITE_URL } from '@/lib/site'
 
@@ -19,6 +20,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 1,
     },
+    // Gift guides. These ARE listed, and they are the only listing here that
+    // holds products — a guide is our own editorial page, so it competes with
+    // no vendor for their own product URL. The /p/<id> pages it links to stay
+    // out, and stay noindex.
+    {
+      url: `${SITE_URL}/gifts`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    ...BOARDS.map((b) => ({
+      url: `${SITE_URL}/gifts/${b.slug}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    })),
     ...showcaseVendors().map((v) => ({
       url: `${SITE_URL}/${v.showcase!.slug}`,
       changeFrequency: 'daily' as const,
