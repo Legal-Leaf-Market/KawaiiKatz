@@ -31,6 +31,8 @@ export default function ComicStudio() {
   const [strip, setStrip] = useState<Strip>(() => emptyStrip(4))
   const [note, setNote] = useState<{ text: string; bad?: boolean } | null>(null)
   const [ready, setReady] = useState(false)
+  const [premise, setPremise] = useState('')
+  const [writing, setWriting] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // After mount, never during render: localStorage is undefined on the server
@@ -101,6 +103,56 @@ export default function ComicStudio() {
     }
   }
 
+  /**
+   * Ask the writer for a strip.
+   *
+   * Panel IMAGES survive: someone who has already dropped art into panel 2 and
+   * is rewriting the words around it should not lose the picture. The dialogue,
+   * the art direction and the art notes are all replaced — that is the point of
+   * pressing the button.
+   */
+  async function write() {
+    if (!premise.trim() || writing) return
+    setWriting(true)
+    setNote({ text: 'Writing…' })
+    try {
+      const r = await fetch('/api/comic-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ premise, panels: strip.panels.length }),
+      })
+      const j = await r.json()
+      if (!r.ok) {
+        setNote({ text: j.error ?? 'Could not write that strip.', bad: true })
+        return
+      }
+      setStrip((s) => ({
+        title: j.title || s.title,
+        caption: j.caption || s.caption,
+        hashtags: Array.isArray(j.hashtags) && j.hashtags.length ? j.hashtags : s.hashtags,
+        panels: (j.panels as Panel[]).map((p, i) => {
+          const had = s.panels[i]
+          return had?.image
+            ? { ...p, art: 'upload' as const, image: had.image }
+            : p
+        }),
+      }))
+      setNote({ text: 'Strip written. Each panel now has an art note to paste into your image tool.' })
+    } catch {
+      setNote({ text: 'Network error talking to the writer.', bad: true })
+    } finally {
+      setWriting(false)
+    }
+  }
+
+  function copyArtNotes() {
+    const text = strip.panels
+      .map((p, i) => `Panel ${i + 1}: ${p.artNote ?? '(no art note)'}`)
+      .join('\n\n')
+    void navigator.clipboard.writeText(text)
+    setNote({ text: 'All art notes copied — paste them into your image tool.' })
+  }
+
   async function download() {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -129,6 +181,42 @@ export default function ComicStudio() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_440px] gap-6 items-start">
       <div className="flex flex-col gap-4">
+        {/* The writer. Premise in, dialogue and art notes out. */}
+        <div className="bg-[#f4efff] border-[3px] border-[#b79cff] rounded-[22px] p-4 flex flex-col gap-2.5">
+          <label className="font-display font-extrabold text-[15px] text-[#4f4550]">
+            ✍️ Write it for me
+          </label>
+          <p className="text-[12.5px] text-[#6f6675] leading-relaxed">
+            Give the premise — what happens, and roughly where. The cat and the panda are already
+            written; you are setting the scene, not casting it.
+          </p>
+          <textarea
+            value={premise}
+            onChange={(e) => setPremise(e.target.value)}
+            rows={2}
+            maxLength={600}
+            placeholder="the cat and the panda go to the park and have a picnic"
+            className="border-2 border-[#d9caff] focus:border-[#7fc4d4] bg-white rounded-[14px] px-3 py-2 text-[13.5px] outline-none resize-y"
+          />
+          <div className="flex gap-2 items-center flex-wrap">
+            <button
+              onClick={write}
+              disabled={writing || !premise.trim()}
+              className="border-[3px] border-[#b79cff] bg-[#b79cff] text-white font-display font-extrabold px-4 py-2 rounded-full text-[14px] hover:bg-[#9a7ae8] transition-colors disabled:opacity-40"
+            >
+              {writing ? 'Writing…' : `Write ${strip.panels.length} panels`}
+            </button>
+            {strip.panels.some((p) => p.artNote) && (
+              <button
+                onClick={copyArtNotes}
+                className="border-[2.5px] border-[#7fc4d4] bg-white text-[#4f4550] font-display font-extrabold px-3.5 py-2 rounded-full text-[13px] hover:bg-[#bfe3ea] transition-colors"
+              >
+                Copy all art notes
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="bg-white border-[3px] border-[#ffb199] rounded-[22px] p-4 flex flex-col gap-3">
           <input
             value={strip.title}
@@ -234,6 +322,33 @@ export default function ComicStudio() {
               placeholder="right bubble — the panda"
               className="border-2 border-[#ffe6d9] focus:border-[#7fc4d4] rounded-xl px-3 py-1.5 text-[13.5px] outline-none"
             />
+
+            {/* The handoff. Editable, because the first thing anyone does with a
+                generated image prompt is tweak it. */}
+            {p.artNote !== undefined && (
+              <div className="bg-[#f4efff] border-2 border-dashed border-[#b79cff] rounded-[12px] p-2.5 flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-display font-extrabold text-[11px] uppercase tracking-[.6px] text-[#7a5fd0]">
+                    🎨 draw this
+                  </span>
+                  <button
+                    onClick={() => {
+                      void navigator.clipboard.writeText(p.artNote ?? '')
+                      setNote({ text: `Panel ${i + 1} art note copied.` })
+                    }}
+                    className="text-[11.5px] font-extrabold text-[#7a5fd0] underline hover:text-[#ff8a65]"
+                  >
+                    copy
+                  </button>
+                </div>
+                <textarea
+                  value={p.artNote}
+                  onChange={(e) => setPanel(i, { artNote: e.target.value })}
+                  rows={3}
+                  className="bg-white border-2 border-[#d9caff] focus:border-[#7fc4d4] rounded-[10px] px-2.5 py-1.5 text-[12.5px] leading-relaxed outline-none resize-y"
+                />
+              </div>
+            )}
           </div>
         ))}
 

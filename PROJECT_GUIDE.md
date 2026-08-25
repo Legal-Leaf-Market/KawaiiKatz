@@ -553,12 +553,47 @@ connect two or three at a time rather than all of them at once.
 
 ---
 
+## 4g. IG Studio — the writer, and where the gate went
+
+`/studio` + `lib/comic.ts` (types, grid) + `lib/comic-render.ts` (canvas) +
+`lib/comic-script.ts` (**server-only** — prompt and cast) + `/api/comic-script`.
+
+The workflow is three steps and the studio owns the first and third:
+**premise → dialogue + an art note per panel → pictures made elsewhere → back into the
+panels → export 1080×1350.** It does not generate images and is not going to.
+
+**The page has no gate and the writer does.** The earlier comment in `app/studio/page.tsx`
+argued the studio needed no login because it "holds nothing, reads nothing, and calls
+nothing", and named the one thing that would change that — "a server-side generator
+spending money per request". That generator now exists, so the curator cookie went where
+the cost is. Laying out, dropping in pictures and exporting are still browser-only and
+still need no login; a login there would protect a drawing program. Asking Claude to write
+a strip bills our account, so `/api/comic-script` checks the cookie and fails closed.
+
+**`artNote` is the product, not a nicety.** Each one is read by an image tool in a fresh
+context with no sight of the other panels, so it repeats the full character description and
+the setting *every time*. An art note that says "same as panel 2" produces a blank stare.
+
+**The cast description must match `public/brand-*.png`.** The first version of the bible
+described "a small round cream-and-peach cat"; the actual mark is a fluffy **black** cat
+with violet eyes, and the panda's eyes are magenta. Nothing failed — the strips would just
+have come back from the image tool as a different cat, which defeats the only reason to
+have a recurring cast. It was caught by rendering a strip and looking at it, not by reading
+the code. Both marks are **head-only**, so bodies are not established art: the prompt asks
+for a simple round chibi body, phrased the same way every time.
+
+**The response is a forced tool call**, not "reply in JSON" — the shape is validated at the
+tool-call layer so a malformed strip is the model's retry rather than this route parsing
+prose. `toPanels()` still coerces every field afterwards, because an enum outside the
+renderer's unions draws nothing and fails silently.
+
 ## 5. Environment variables
 
 | Name | Required | Purpose |
 |---|---|---|
 | `ADA_PIN` | for curator mode | Gates `/api/ada-login`; unset ⇒ 503 |
 | `DATABASE_URL` | for write persistence | Neon Postgres, `store_exclusions` table |
+| `ANTHROPIC_API_KEY` | for the strip writer | Claude API key for `/api/comic-script` (§4g). **Unset ⇒ 503 and nothing is called.** Never reaches the browser: `lib/comic-script.ts` imports `server-only` so a drift into a `'use client'` tree is a build error, not a leak. |
 | `PINTEREST_CONVERSION_TOKEN` | for ad measurement | Bearer token for the Conversions API. **Unset ⇒ nothing is sent to Pinterest at all** — that is the opt-in, so the site collects nothing for advertising until there are ads to measure. Regenerate it in Ads Manager if it is ever pasted anywhere; Pinterest does not store it either. |
 
 The storefront runs without either: `GET /api/exclusions` catches DB errors and returns an
@@ -605,5 +640,7 @@ There is no test suite, so verify by hand:
   `pnpm probe` and its affiliate tracking value is real (§4). Both halves, not one.
 - Do NOT loosen `CUT_PHRASES` in `lib/adult-apparel.ts` to make a vendor's product count go
   up. A genuine false positive gets a narrow `KID_SAFE` entry instead (§4).
+- Do NOT remove the curator gate from `/api/comic-script`, or import `lib/comic-script.ts`
+  from a client component — it is one import from the API key (§4g).
 - Do NOT import `lib/partners.ts` from a client component — it is our commission paperwork
   and every byte a client component imports is served to every visitor (§4c).

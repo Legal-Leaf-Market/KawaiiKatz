@@ -57,6 +57,16 @@ export type Panel = {
   panda?: string
   /** Narration across the top — the caption-box voice, not a bubble. */
   caption?: string
+  /**
+   * The picture description for this panel, written to be pasted into an image
+   * tool. Never drawn — it is the handoff to whoever makes the art.
+   *
+   * Optional because a hand-built strip has no use for one, and because drafts
+   * saved before the writer existed must still load: JSON.parse of an old draft
+   * yields panels without this field, and a required field would have made
+   * every one of them a type lie.
+   */
+  artNote?: string
 }
 
 export type Strip = {
