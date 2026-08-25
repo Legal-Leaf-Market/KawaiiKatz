@@ -46,6 +46,17 @@ export type Board = {
   slug: string
   emoji: string
   title: string
+  /**
+   * `season` guides are tied to a date — Christmas, Valentine's. `theme` guides
+   * are not: they answer a standing question ("wooden toys for a two-year-old")
+   * and are worth pinning in any month.
+   *
+   * The distinction earns its keep in three places: the index groups by it,
+   * only a season carries a peak-months note, and only a season screens out
+   * other holidays — a Halloween plush belongs on the plushies page and does
+   * not belong in a Christmas price band.
+   */
+  kind: 'season' | 'theme'
   /** One line, used as the page's meta description lead and the card subtitle. */
   tagline: string
   intro: string
@@ -57,8 +68,51 @@ export type Board = {
    * which is exactly when the guide is most worth pinning.
    */
   hashtag: string
-  /** Months (0-indexed) when this guide is at peak search. Display only. */
+  /** Months (0-indexed) when a season guide peaks. Display only; empty for a theme. */
   season: number[]
+  /**
+   * What belongs on this page at all. A season takes the whole catalogue and
+   * lets its sections sort it out; a theme is narrower than that, so `cats` and
+   * `words` decide membership and a product matching NEITHER never appears.
+   *
+   * Leaving both empty means "everything", which is what a season wants.
+   */
+  cats?: string[]
+  words?: string[]
+  /**
+   * Categories that can never appear here, whatever else matches.
+   *
+   * Needed because `words` is a broad net and neighbouring themes overlap. The
+   * wooden-toys page was leading with jigsawdepot's wooden puzzle BOARDS and
+   * sorting trays — real matches for `wooden` and `sorting`, and not Montessori
+   * toys; they have their own page. Squishies was leading with a silicone
+   * coffee cup called "Squishy". Both are one excluded category.
+   */
+  notCats?: string[]
+  /**
+   * Words that, in the NAME, push a product down rather than out.
+   *
+   * A theme's word list is a net, and the things it catches are not all equally
+   * the theme. Every one of these was a real lead tile before it was added:
+   * the jigsaw page opened with puzzle TABLES and sorting trays rather than
+   * puzzles; blind boxes opened with a NASCAR plush and a college mascot,
+   * because both are called a "Plush Figure"; squishies opened with a blanket
+   * hoodie called a Mochi Bunny.
+   *
+   * Demote and not exclude, because a puzzle board on the puzzle page is
+   * genuinely useful — just not the first thing a visitor should see.
+   */
+  demote?: string[]
+  /**
+   * Tiles from one shop per section. Three is right for a gift guide, where a
+   * band that is ten tiles of one shop reads as an advert.
+   *
+   * It is WRONG for a theme a single shop legitimately owns: jigsawdepot is 80%
+   * of every puzzle in the catalogue, and capping it at three would leave the
+   * puzzle page unable to fill a section from the stock that exists. Those
+   * pages raise it — the honest cap on a specialist page is a high one.
+   */
+  maxPerVendor?: number
   sections: BoardSection[]
 }
 
@@ -129,12 +183,60 @@ export function offSeason(p: Product): boolean {
 const MAX_PER_VENDOR_PER_SECTION = 3
 
 /**
+ * A stable pseudo-random order for products that score identically.
+ *
+ * Ties used to break on id, alphabetically, and on a specialist page where
+ * every product scores the same that is what the visitor sees: the jigsaw page
+ * opened "1000 Piece...", "1500 Piece...", "2000 Piece...", which reads like a
+ * database dump because it is one. FNV-1a over the id scatters them instead.
+ *
+ * It must be a hash and not Math.random(): these pages prerender, and a random
+ * order would differ between the server's HTML and the client's first render,
+ * which React reports as a hydration mismatch.
+ */
+function tiebreak(id: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return h >>> 0
+}
+
+/** Does this product belong on this page at all? */
+function belongs(b: Board, p: Product): boolean {
+  if (b.notCats?.length && b.notCats.includes(p.cat)) return false
+  const byCat = b.cats?.length ? b.cats.includes(p.cat) : false
+  const byWord = b.words?.length ? hasWord(haystack(p), b.words) : false
+  if (!b.cats?.length && !b.words?.length) return true
+  return byCat || byWord
+}
+
+/**
+ * Extra score, per kind.
+ *
+ * A season ranks on how seasonal a product is. A theme ranks on whether the
+ * theme's own words are in the NAME rather than only the blurb — "Wooden
+ * Stacking Rainbow" is a wooden toy, while a plush whose blurb mentions a
+ * wooden shelf is not, and both match the same word list. Without this the
+ * lead section of a theme fills with things that merely mention it.
+ */
+function relevance(b: Board, p: Product): number {
+  const name = String(p.name || '').toLowerCase()
+  let r = 0
+  if (b.kind === 'season') r = festiveScore(p)
+  else if (b.words?.length && hasWord(name, b.words)) r = 3
+  if (b.demote?.length && hasWord(name, b.demote)) r -= 4
+  return r
+}
+
+/**
  * Deterministic, and it has to be: this runs during a prerender, so a
  * `Math.random()` tie-break would give the server and the client different
  * grids and React would throw a hydration mismatch. Ties break on id.
  */
-function score(p: Product, festive: number): number {
-  let s = festive
+function score(p: Product, rel: number): number {
+  let s = rel
   if (GIFTY_CATS.has(p.cat)) s += 1
   if (p.kidSafe) s += 0.5
   if (p.onSale) s += 0.5
@@ -146,10 +248,29 @@ function score(p: Product, festive: number): number {
   return s
 }
 
+/**
+ * The section layout every theme page uses: a curated lead, then price.
+ *
+ * Deliberately no kid-safe section, which the Christmas guide does have. There
+ * the audience is mixed and the split is the useful one. On a theme that is
+ * already kid-native — wooden toys, jigsaws — a kid-safe section would match
+ * nearly everything, and because sections fill in order and a product is used
+ * once, it would swallow the page and leave the price bands empty.
+ */
+function themeSections(lead: string): BoardSection[] {
+  return [
+    { key: 'pick', title: 'The pick of them', blurb: lead, max: 8, match: () => true },
+    { key: 'under20', title: 'Under $20', blurb: 'Easy to say yes to.', max: 12, match: (p) => p.price > 0 && p.price <= 20 },
+    { key: 'mid', title: '$20 to $50', blurb: 'The proper-present range.', max: 12, match: (p) => p.price > 20 && p.price <= 50 },
+    { key: 'over50', title: 'Over $50', blurb: 'The ones worth planning for.', max: 8, match: (p) => p.price > 50 },
+  ]
+}
+
 export const BOARDS: Board[] = [
   {
     slug: 'christmas',
     emoji: '🎄',
+    kind: 'season',
     title: 'Kawaii Christmas Gift Guide',
     tagline: 'Cute, clever and kind presents, sorted by what you want to spend',
     intro:
@@ -197,6 +318,136 @@ export const BOARDS: Board[] = [
       },
     ],
   },
+
+  /**
+   * The themes. Six, and the six were chosen from the catalogue rather than
+   * from taste — each was measured before it was written, for how much stock it
+   * actually has and how much of that stock is tracked.
+   *
+   * Four obvious-looking themes were rejected on the second number and are
+   * worth naming so nobody re-proposes them: cute socks (472 products, 1%
+   * tracked), stickers (242, 7%), stationery (348, 23%) and pastel/fairy-kei
+   * (305, 28%). They are the most pinnable categories here and the least
+   * profitable, because sugarhai, Kawaii Babe and the two sock vendors carry
+   * them and none of the four has a tracking value. Build them when they do.
+   */
+  {
+    slug: 'wooden-montessori-toys',
+    emoji: '🪵',
+    kind: 'theme',
+    title: 'Wooden & Montessori Toys',
+    tagline: 'Open-ended wooden toys that survive a toddler and look good in the room',
+    intro:
+      'Wooden toys do not need batteries, do not make a noise at 6am, and tend to outlive ' +
+      'the child they were bought for. These are the stacking, sorting and pretend-play ' +
+      'kind — pulled from every shop we carry rather than just one, so you can compare ' +
+      'before you buy.',
+    hashtag: 'MontessoriToys',
+    season: [],
+    cats: ['learning'],
+    words: ['wooden', 'montessori', 'stacking', 'sorting', 'busy board', 'sensory'],
+    notCats: ['puzzle'],
+    maxPerVendor: 6,
+    sections: themeSections('The ones we would buy first, across every shop.'),
+  },
+  {
+    slug: 'jigsaw-puzzles',
+    emoji: '🧩',
+    kind: 'theme',
+    title: 'Jigsaw Puzzles',
+    tagline: 'Puzzles worth clearing the table for, from 500 pieces up',
+    intro:
+      'A jigsaw is the rare gift that is also an evening. These run from kid-sized to the ' +
+      'kind that lives on a board under the sofa for a fortnight, plus the mats and sorting ' +
+      'trays that make the big ones bearable.',
+    hashtag: 'JigsawPuzzle',
+    season: [],
+    cats: ['puzzle'],
+    words: ['jigsaw', 'puzzle'],
+    demote: ['board', 'table', 'mat', 'storage', 'tray', 'drawer', 'frame', 'caddy', 'cover', 'roll up'],
+    // jigsawdepot is 80% of every puzzle in the catalogue. A cap of three would
+    // leave this page unable to fill a section from the stock that exists.
+    maxPerVendor: 10,
+    sections: themeSections('Where to start, if you are buying one.'),
+  },
+  {
+    slug: 'blind-boxes',
+    emoji: '🎁',
+    kind: 'theme',
+    title: 'Blind Boxes & Collectible Figures',
+    tagline: 'The unboxing kind — series figures, art toys and mystery boxes',
+    intro:
+      'Half the fun is not knowing. Blind boxes come as a sealed series where you get one ' +
+      'of a set at random, and the good ones are properly designed objects rather than ' +
+      'landfill. Chase figures, full sets and the single-box way in.',
+    hashtag: 'BlindBoxUnboxing',
+    season: [],
+    cats: ['collect'],
+    words: ['blind box', 'blindbox', 'mystery box', 'art toy'],
+    demote: ['plush', 'plushie', 'snugible'],
+    maxPerVendor: 8,
+    sections: themeSections('The series we would open first.'),
+  },
+  {
+    slug: 'plushies',
+    emoji: '🧸',
+    kind: 'theme',
+    title: 'Kawaii Plushies',
+    tagline: 'Soft things, from pocket-sized to alarmingly large',
+    intro:
+      'The biggest shelf we have. Cats, bunnies, frogs, axolotls, a startling number of ' +
+      'hedgehogs — sorted by price so you can find the £10 one for a stocking and the ' +
+      'enormous one for a birthday without scrolling past each other.',
+    hashtag: 'KawaiiPlushies',
+    season: [],
+    cats: ['plush'],
+    words: ['plush', 'plushie', 'stuffed animal', 'soft toy'],
+    // Plushible carries college-mascot and NASCAR licences. Real products, and
+    // nobody arrives at a kawaii plushie page hoping for Bucky Badger.
+    demote: ['nascar', 'university', 'ncaa', 'collegiate', 'racing', 'mascot'],
+    maxPerVendor: 5,
+    sections: themeSections('The ones that keep getting picked up.'),
+  },
+  {
+    slug: 'squishies-and-fidgets',
+    emoji: '🫧',
+    kind: 'theme',
+    title: 'Squishies & Fidget Toys',
+    tagline: 'Squeezable, slow-rising, quietly useful in a meeting',
+    intro:
+      'Squishies, mochi toys and fidgets — bought for children, kept by adults. Small, ' +
+      'cheap, and the easiest thing on this site to buy several of.',
+    hashtag: 'SquishyToy',
+    season: [],
+    cats: [],
+    words: ['squishy', 'squishies', 'squish', 'fidget', 'mochi', 'stress ball', 'slow rising'],
+    // Squishy Bottle's collapsible silicone cups are called "Squishy" and are
+    // drinkware, not fidget toys. They belong on the lunch page, and are there.
+    notCats: ['kitchen'],
+    demote: ['snugible', 'blanket', 'hoodie'],
+    maxPerVendor: 6,
+    sections: themeSections('Start here.'),
+  },
+  {
+    slug: 'bento-and-lunch',
+    emoji: '🍱',
+    kind: 'theme',
+    title: 'Bento Boxes & Cute Lunches',
+    tagline: 'Lunchboxes, bento gear and the small tools that make a packed lunch fun',
+    intro:
+      'A packed lunch is a daily obligation or a small pleasure, and the difference is ' +
+      'mostly the box. Compartment bento boxes, insulated bags, picks, cutters and the ' +
+      'bottles that go with them.',
+    hashtag: 'CuteLunchBox',
+    season: [],
+    cats: ['kitchen'],
+    // Bottles stay eligible through `cats`, but are deliberately NOT in `words`:
+    // a word hit in the NAME is what boosts a product into the lead section, and
+    // the lead was opening with a "Collapsible Military Water Bottle Canteen".
+    words: ['bento', 'lunch box', 'lunchbox', 'lunch bag', 'snack box'],
+    maxPerVendor: 6,
+    sections: themeSections('The ones that actually survive a school bag.'),
+  },
 ]
 
 export function board(slug: string): Board | undefined {
@@ -219,24 +470,28 @@ export type BoardPick = { section: BoardSection; products: Product[] }
  * five times.
  */
 export function fillBoard(b: Board, products: Product[]): BoardPick[] {
+  const cap = b.maxPerVendor ?? MAX_PER_VENDOR_PER_SECTION
   const pool = products
     .filter((p) => p && p.id && p.name && p.price > 0 && String(p.image || '').trim())
-    .filter((p) => !offSeason(p))
-    .map((p) => ({ p, festive: festiveScore(p) }))
-    .map((x) => ({ ...x, s: score(x.p, x.festive) }))
-    .sort((a, b2) => b2.s - a.s || (a.p.id < b2.p.id ? -1 : 1))
+    // Only a season screens out other holidays. A Halloween plush belongs on
+    // the plushies page; it does not belong in a Christmas price band.
+    .filter((p) => b.kind !== 'season' || !offSeason(p))
+    .filter((p) => belongs(b, p))
+    .map((p) => ({ p, rel: relevance(b, p) }))
+    .map((x) => ({ ...x, s: score(x.p, x.rel) }))
+    .sort((a, b2) => b2.s - a.s || tiebreak(a.p.id) - tiebreak(b2.p.id))
 
   const used = new Set<string>()
   const out: BoardPick[] = []
   for (const section of b.sections) {
     const chosen: Product[] = []
     const perVendor = new Map<string, number>()
-    for (const { p, festive } of pool) {
+    for (const { p, rel } of pool) {
       if (chosen.length >= section.max) break
       if (used.has(p.id)) continue
-      if (!section.match(p, festive)) continue
+      if (!section.match(p, rel)) continue
       const n = perVendor.get(p.vendor) ?? 0
-      if (n >= MAX_PER_VENDOR_PER_SECTION) continue
+      if (n >= cap) continue
       perVendor.set(p.vendor, n + 1)
       used.add(p.id)
       chosen.push(p)
@@ -244,4 +499,9 @@ export function fillBoard(b: Board, products: Product[]): BoardPick[] {
     if (chosen.length) out.push({ section, products: chosen })
   }
   return out
+}
+
+/** Guides of one kind, in declaration order. Used by the index and the sitemap. */
+export function boardsOfKind(kind: Board['kind']): Board[] {
+  return BOARDS.filter((b) => b.kind === kind)
 }

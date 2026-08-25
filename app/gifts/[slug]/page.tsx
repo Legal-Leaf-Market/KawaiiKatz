@@ -83,7 +83,11 @@ export default async function GiftGuidePage({ params }: { params: Promise<{ slug
   // Rendered on the server, so it is the build month, not the visitor's. That
   // is fine for a "peak season" note — it is never more than six hours stale,
   // and it does not risk a hydration mismatch the way a client Date would.
-  const inSeason = boardInSeason(b, new Date().getMonth())
+  //
+  // A theme has no season, so it is never out of one. Without this guard the
+  // plushies page would tell visitors we build it early for a season it does
+  // not have.
+  const offPeak = b.kind === 'season' && !boardInSeason(b, new Date().getMonth())
 
   return (
     <ProductPageChrome>
@@ -111,7 +115,7 @@ export default async function GiftGuidePage({ params }: { params: Promise<{ slug
           <p className="text-[14.5px] text-[#6f6675] leading-relaxed mt-3 max-w-[68ch]">{b.intro}</p>
           <p className="text-[12.5px] text-[#9a8fa3] font-bold mt-3">
             {count} picks from {new Set(picks.flatMap((s) => s.products.map((p) => p.vendor))).size} shops
-            {!inSeason && ' · we build these early, because Pinterest searches a season about three months ahead'}
+            {offPeak && ' · we build these early, because Pinterest searches a season about three months ahead'}
           </p>
         </header>
 
