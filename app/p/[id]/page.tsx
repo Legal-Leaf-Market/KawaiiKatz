@@ -9,6 +9,7 @@ import { rankSimilar } from '@/lib/similar'
 import { SITE_URL } from '@/lib/site'
 import ProductPageActions from '@/components/ProductPageActions'
 import ProductPageChrome from '@/components/ProductPageChrome'
+import ProductComments from '@/components/ProductComments'
 import ProductImage from '@/components/ProductImage'
 
 /**
@@ -186,6 +187,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
+
+      {/* Client-fetched: this page is cached for 6h, so a server-rendered
+          thread would be up to six hours stale and a fresh comment would look
+          like it had been eaten. */}
+      <ProductComments productId={p.id} />
 
       {similar.length > 0 && (
         <section className="mt-10">
