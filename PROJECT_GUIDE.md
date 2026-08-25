@@ -117,6 +117,39 @@ Clearing the flag needs both halves: a feed you have read, **and** a real tracki
 `affiliateParam` / `awinMerchantId`. A vendor shipped without one is free traffic for the
 merchant and nothing will say so.
 
+### Age words are not categories
+
+MamaRaya arrived with its 53 products scattered across seven categories — 19 in
+`learning`, which sells no toys. The cause was one term: **`newborn`**, in the first rule
+`categorize()` runs, matched as a substring against a haystack that includes the blurb. A shop
+that sells baby gifts writes "newborn" in the copy of everything it stocks, so a diaper caddy,
+four sweater-and-socks sets, a name blanket and three baskets were all Learning & Wooden Toys.
+`toddler`, lower down, did the same to the backpacks — and to a "Toddler T-Shirt" years
+earlier, which the comment above that rule already recorded.
+
+**`newborn`, `infant` and `toddler` now decide nothing.** They say who a gift is for; the noun
+beside them says what it is. The rule keeps only terms that name an object — `teether`,
+`baby rattle`, `tummy time` — and is word-anchored.
+
+Two smaller things came out of the same pass. `onesie` moved to apparel, where it belongs;
+it had been filing adult kigurumi pyjamas as learning toys across three other vendors.
+`swaddle` deliberately did NOT move with it — a swaddle is a blanket, and putting it in
+apparel sent a "Baby Name Blanket" to the clothing shelf.
+
+**The kitchen rule now asks what a thing IS, not what it contains.** Four of MamaRaya's seven
+kitchen rows were backpack sets, and narrowing `lunch` would not have helped: they all say
+"lunch bag" truthfully, because a lunch bag is one of the three pieces. A word-anchored guard
+on bag nouns fixes it; vendors whose whole shelf is lunch gear are unaffected because
+`forceCat` is decided before `categorize()` is reached.
+
+Result: `learning` 19 → 3, `kitchen` 7 → 2, and **18 of 4,426 products change catalogue-wide
+(0.4%)** — twelve of those eighteen being kigurumi pyjamas and plush comforters leaving
+`learning` for somewhere better.
+
+Montessori & Me gained `forceCat: 'learning'` in the same pass, for the reason already written
+under jigsawdepot: the vendor is what disambiguates when a word cannot. It also fixed
+"Rainbow Color Sorting Balls in Cups", which was on the kitchen shelf because of `cup`.
+
 `unstable_cache` keys are versioned (`vendor-catalog-v2`). Bump the version in the same
 commit as any change to what a cached entry contains — UA, mapping, classifier — or a warm
 6h entry serves old-code results after the deploy and the change looks like it did nothing.

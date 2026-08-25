@@ -200,7 +200,26 @@ const BRAND_FORM_NOUNS = FOOD_FORM_NOUNS.filter((n) => !PACKAGING_NOUNS.has(n))
 
 export function categorize(hay: string): string {
   hay = (hay || '').toLowerCase()
-  if (hasAny(hay, ['infant', 'newborn', 'swaddle', 'onesie', 'pacifier', 'teether', 'teething', 'bassinet', 'baby rattle', 'baby gym', 'tummy time', 'baby mobile', 'baby carrier', 'montessori baby'])) return 'learning'
+  /**
+   * Baby TOYS, and only toys.
+   *
+   * This rule used to carry 'infant', 'newborn' and 'toddler' as well, and
+   * because it is the first rule in the function they beat every other signal.
+   * Those are not product types — they are who the gift is for, and a shop that
+   * sells baby gifts says them in the marketing copy of everything it stocks.
+   * `hay` includes the blurb, so on MamaRaya's 53 products the word 'newborn'
+   * alone filed 11 of them as Learning & Wooden Toys: a diaper caddy, four
+   * sweater-and-socks sets, a name blanket, three baskets and an organiser
+   * pouch. Nothing in that list is a toy and nothing teaches anything.
+   *
+   * The terms left are ones that name the object rather than the recipient. Age
+   * words now decide nothing, which is correct: "newborn" tells you the size,
+   * and the noun beside it tells you the category.
+   *
+   * Word-anchored, so 'baby gym' cannot be reached through "baby gymnastics"
+   * and 'teether' stays clear of 'teethering'-style typos in tags.
+   */
+  if (hasWord(hay, ['pacifier', 'teether', 'teething', 'baby rattle', 'baby gym', 'tummy time', 'baby mobile', 'montessori baby'])) return 'learning'
   // Grocery brands, high — above the rules that own 'bag' and 'bottle'. A bag of
   // Lay's was being filed as an accessory and a 500ml Fanta as kitchenware,
   // because a snack's packaging is described with the same nouns as the objects
@@ -291,8 +310,36 @@ export function categorize(hay: string): string {
   // and 'boots' (the loose rule below already has them, after the rules that
   // claim "boot tray" and similar). Moving those up buys nothing and costs the
   // rules underneath.
-  if (!hasAny(hay, PLUSH_TERMS) && /\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b|\bskirts?\b|\bleggings\b|\bjeans\b|\bblouses?\b|\bcardigans?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees\b|\boveralls\b|\bpants\b|\btrousers\b|\bp[yj]jamas\b/.test(hay)) return 'apparel'
-  if (hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])) return 'kitchen'
+  // 'onesie' moved here from the baby rule above: it is a garment, and it was
+  // only in that rule because that is where baby words lived — which is how an
+  // adult kigurumi pyjama came to be a learning toy.
+  //
+  // 'swaddle' deliberately did NOT come with it. A swaddle is a blanket, not a
+  // garment, and putting it here sent MamaRaya's "Personalized Baby Name
+  // Blanket" to apparel — the home rule below already claims it on 'blanket',
+  // which is the noun that actually names the thing.
+  if (!hasAny(hay, PLUSH_TERMS) && /\bt-?shirts?\b|\btees?\b|\bhoodies?\b|\bsweatshirts?\b|\bsweaters?\b|\bsocks\b|\bskirts?\b|\bleggings\b|\bjeans\b|\bblouses?\b|\bcardigans?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees\b|\boveralls\b|\bpants\b|\btrousers\b|\bp[yj]jamas\b|\bonesies?\b/.test(hay)) return 'apparel'
+  /**
+   * Kitchen, unless the thing is plainly a bag.
+   *
+   * `lunch` and even `lunch bag` are not enough on their own. MamaRaya's
+   * "3-Piece School Bag Set" and "Kids Backpack Set" both say "lunch bag" in
+   * the copy — truthfully, because a lunch bag is one of the three pieces — and
+   * were filed as kitchenware. Four of their seven kitchen rows were backpack
+   * sets.
+   *
+   * The guard asks what the product IS rather than what it contains. A rucksack
+   * with a lunch bag in it is a bag; a lunch box that happens to mention
+   * fitting in a rucksack keeps the noun that names it, because the guard is
+   * word-anchored to bag words and a lunch box is not one.
+   *
+   * Vendors whose whole shelf is lunch gear are unaffected: Mintie Lunchboxes
+   * carries forceCat, which is decided before this function is reached.
+   */
+  if (
+    !hasWord(hay, ['backpack', 'rucksack', 'school bag', 'bag set', 'backpack set', 'book bag']) &&
+    hasAny(hay, ['snack pot', 'spare lid', 'replacement seal', 'lunchbox spare lid', 'water bottle', 'stainless steel cup', 'stainless steel water bottle', 'stainless steel lunch box', 'bento', 'lunchbox', 'lunch box', 'lunch', 'mug', 'tumbler', 'bottle', 'cup', 'thermos', 'food jar', 'stainless', 'kitchen', 'plate', 'bowl', 'drinking straw', 'reusable straw', 'silicone straw', 'straw lid', 'straw cup', 'drinkware', 'cookie cutter', 'baking set', 'mold', 'apron'])
+  ) return 'kitchen'
   if (hasAny(hay, PLUSH_TERMS)) return 'plush'
   // Food comes AFTER plush, and behind a guard, because in a kawaii catalogue
   // almost everything is *shaped* like something edible. Before both, the food
@@ -319,7 +366,11 @@ export function categorize(hay: string): string {
     if (hasWord(hay, ['soda', 'juice', 'cola'])) return 'food'
   }
 
-  if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'alphabet', 'toddler', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
+  // 'toddler' is gone for the same reason 'newborn' left the rule at the top:
+  // it says who the thing is for, not what it is, so it turned a "Toddler
+  // Backpack" into a learning toy. The comment above this rule already records
+  // that it once did the same to a "Toddler T-Shirt".
+  if (hasAny(hay, ['montessori', 'wooden', 'learning', 'educational', 'busy board', 'fine motor', 'activity board', 'weather board', 'alphabet', 'matching game', 'tower challenge', 'pretend play'])) return 'learning'
   if (hasWord(hay, ['counting', 'stacking', 'sorting', 'math', 'hape', 'rattle'])) return 'learning'
   if (hasAny(hay, ['puzzle', 'jigsaw', '500pc', '1000pc', 'pieces', 'tilting board', 'puzzle table', 'board game', 'yo-yo', 'kite', 'ring matching game'])) return 'puzzle'
   if (hasAny(hay, ['sticker', 'notebook', 'journal', 'planner', 'pen', 'pencil', 'washi', 'memo', 'stationery', 'eraser', 'marker', 'highlighter', 'stapler', 'desk clock'])) return 'stationery'
