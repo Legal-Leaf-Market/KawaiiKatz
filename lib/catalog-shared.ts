@@ -481,11 +481,29 @@ export function mapShopifyProducts(
     const img = proxied(p.images?.[0]?.src ?? p.image?.src ?? '')
     const prices = vars.map((v) => v.price).filter((n) => n > 0)
     const minP = prices.length ? Math.min(...prices) : 0
+    /**
+     * `<style>` and `<script>` bodies go FIRST, element and all.
+     *
+     * Stripping tags with /<[^>]*>/ removes `<style>` and `</style>` and leaves
+     * everything between them — which is CSS. MamaRaya ships a styled
+     * description block on most of its products, so 28 of its 52 rows had a
+     * blurb reading `.maw-tote { --maw-ink: #302f2d; … }`. That is what the
+     * cards showed, what categorize() classified on, and — since product pages
+     * exist — what a pin's landing page offered as its description and its
+     * <meta name="description">.
+     */
     let blurb = String(p.body_html || '')
+      .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
       .replace(/<[^>]*>/g, ' ')
       .replace(/&[a-z#0-9]+;/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim()
+    // Backstop for CSS that got through anyway — an unclosed <style>, which no
+    // regex can bound. A blurb reading `.a { color: red }` is worse than no
+    // blurb at all: it is shown on the card, used as a product page's
+    // description and its <meta name="description">, and fed to categorize().
+    // Nothing is a legitimate outcome here; gibberish never is.
+    if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
     if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
 
     const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ') : String(p.tags || '')
