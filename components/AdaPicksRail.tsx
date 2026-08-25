@@ -99,7 +99,7 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
           </p>
         ) : (
           <div className="relative">
-            <MascotArrow direction="prev" show={canPrev} onClick={prev} />
+            {(canPrev || canNext) && <MascotArrow direction="prev" enabled={canPrev} onClick={prev} />}
             <div
               ref={ref}
               className="flex gap-4 overflow-x-auto pb-3.5 pt-1.5 ap-rail-bare scroll-smooth"
@@ -174,7 +174,7 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
                 )
               })}
             </div>
-            <MascotArrow direction="next" show={canNext} onClick={next} />
+            {(canPrev || canNext) && <MascotArrow direction="next" enabled={canNext} onClick={next} />}
           </div>
         )}
       </div>
@@ -196,11 +196,12 @@ export default function AdaPicksRail({ products, excludedIds }: Props) {
  */
 function MascotArrow({
   direction,
-  show,
+  enabled,
   onClick,
 }: {
   direction: 'prev' | 'next'
-  show: boolean
+  /** Can the rail still scroll this way? Dims the control; never hides it. */
+  enabled: boolean
   onClick: () => void
 }) {
   const isPrev = direction === 'prev'
@@ -215,8 +216,20 @@ function MascotArrow({
         'shadow-[0_6px_16px_rgba(183,156,255,.42)] transition-all',
         'hover:bg-[#b79cff] hover:scale-105 group',
         isPrev ? 'left-0 -translate-x-1/4 pl-1.5 pr-2' : 'right-0 translate-x-1/4 pl-2 pr-1.5',
-        show ? 'opacity-100' : 'opacity-0 pointer-events-none',
+        /**
+         * Dimmed when it cannot scroll that way, never hidden — and that is the
+         * whole point of the control.
+         *
+         * The chevron this replaced faded to opacity-0 at the end of its
+         * travel, which meant the left one was invisible until you had already
+         * scrolled: the affordance only appeared once you had worked out it
+         * existed. A pair of mascots that is always there, one of them greyed,
+         * says "this moves, and you are at the start" in a single glance.
+         */
+        enabled ? 'opacity-100' : 'opacity-40 pointer-events-none',
       ].join(' ')}
+      aria-disabled={!enabled}
+      tabIndex={enabled ? 0 : -1}
     >
       {isPrev && (
         <span className="text-[22px] leading-none font-black text-[#b79cff] group-hover:text-white -mt-0.5">‹</span>
