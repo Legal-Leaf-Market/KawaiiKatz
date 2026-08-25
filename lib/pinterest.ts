@@ -16,6 +16,8 @@ type Pinnable = {
   image: string
   url: string
   domain?: string
+  /** Overrides the pin's destination. See pinProductPage(). */
+  pinUrl?: string
 }
 
 const PIN_TAGS_BY_CAT: Record<string, string[]> = {
@@ -108,7 +110,7 @@ export function pinItUrl(o: Pinnable): string {
   // says so: "Parameter 'image_url' … is not a valid URL format". Unwrap it
   // back to the vendor's CDN URL; see the note on unproxied().
   const img = unproxied(o.image || '')
-  const url = pinCartUrl(o)
+  const url = o.pinUrl || pinCartUrl(o)
   const desc = pinDescription(o)
   // Omit `media` entirely rather than sending something Pinterest will reject.
   // Without it the composer lets the pinner choose an image off the destination
@@ -133,7 +135,7 @@ export function openPin(o: Pinnable): void {
   }
 }
 
-/** Convenience wrapper for a full Product. */
+/** Convenience wrapper for a full Product. Pins the affiliate deep link. */
 export function pinProduct(p: Product): void {
   openPin({
     id: p.id,
@@ -144,5 +146,33 @@ export function pinProduct(p: Product): void {
     image: p.image,
     url: p.url || p.domain,
     domain: p.domain,
+  })
+}
+
+/**
+ * Pins the Kawaii Katz product page instead of the merchant deep link.
+ *
+ * The difference is not cosmetic. A pin at the vendor's affiliate URL IS an
+ * affiliate pin, and Pinterest's community guidelines limit those "repetitively
+ * or in large volumes". A pin at /p/<id> is a link to our own page on our own
+ * domain — the affiliate hop happens after the visitor arrives and chooses to
+ * leave. It also lands them somewhere the Gift Finder and the taste profile can
+ * work, rather than bouncing them straight off the site.
+ *
+ * `pinUrl` overrides the destination; everything else — the image, the caption,
+ * the hashtags — is unchanged, because all of that was already right.
+ */
+export function pinProductPage(p: Product, origin?: string): void {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  openPin({
+    id: p.id,
+    name: p.name,
+    vendor: p.vendor,
+    cat: p.cat,
+    price: p.price,
+    image: p.image,
+    url: p.url || p.domain,
+    domain: p.domain,
+    pinUrl: `${base}/p/${p.id}`,
   })
 }
