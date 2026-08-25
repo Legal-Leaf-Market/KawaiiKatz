@@ -536,12 +536,20 @@ button uses, so a Pin Pinterest creates reads exactly like one a person made, `#
 It is passed `Board.hashtag`, not the month-based `seasonalTag()`: a feed is read whenever
 Pinterest gets to it, which may be a different month from the one it was written in.
 
-**Untested, and test it before wiring up all seven.** `/p/<id>` is `noindex, follow`.
-Pinterest builds the Pin from the feed rather than by crawling, so this *should* be
-irrelevant — but it crawls the destination for rich metadata, and nobody here has confirmed
-how it treats a noindex page. Point one board at one feed, wait 48h, and look. If Pins do not
-appear, the noindex on `/p/<id>` is the first thing to suspect, and §7's rule about not
-competing with vendors is what has to be weighed against changing it.
+**Tested, and it works.** The open question was whether Pinterest would refuse a feed whose
+items point at `noindex` pages. It does not: the plushies feed was connected on 2026-08-25 and
+produced **40 Pins within hours**. So `/p/<id>` stays `noindex, follow` and §7's rule about
+not competing with vendors is not in tension with any of this.
+
+**Read a feed before you connect it.** Both feeds that have been read line by line contained
+something that should not be pinned — the plushies feed shipped "Ohio State Brutus", and the
+wooden-toys feed shipped three storage shelves, a desktop organiser, a silicone spatula and a
+dustpan, each captioned "a kawaii wooden toy pick". Neither was visible from the collection
+page, because a page shows the top of a section and a feed carries all of it. A Pin is durable
+and public; ten minutes reading the XML is cheaper than deleting Pins later.
+
+Pinterest caps at 200 Pins/day across the account, and the seven feeds are ~280 items, so
+connect two or three at a time rather than all of them at once.
 
 ---
 
