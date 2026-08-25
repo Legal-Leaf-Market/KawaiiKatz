@@ -105,6 +105,19 @@ function pinCartUrl(o: Pinnable): string {
   return couponWrapUrl(affiliateUrl(base, o.vendor), o.vendor)
 }
 
+/**
+ * The caption a Pin carries. Exported because the RSS feeds build the same
+ * caption server-side — a Pin that Pinterest creates from a feed should read
+ * exactly like one a person made with the button, `#ad` included. Two callers,
+ * one function; a second copy would drift and the drifting half would be the
+ * one nobody reads, because nobody reads their own RSS.
+ *
+ * Pure: no window, no Date beyond seasonalTag(), safe in a route handler.
+ */
+export function pinCaption(o: Pinnable): string {
+  return pinDescription(o)
+}
+
 function pinDescription(o: Pinnable): string {
   const name = (o.name || '').trim()
   const vendor = (o.vendor || '').trim()
