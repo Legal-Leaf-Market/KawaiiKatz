@@ -148,10 +148,19 @@ The vendor fetches are now explicitly `cache: 'no-store'` because they can never
 **If a vendor grows past ~2MB mapped**, its entry silently stops caching and builds get slow
 again with no error. The tell is `Failed to set Next.js data cache` in `pnpm build` output.
 
-`staticPageGenerationTimeout: 240` in `next.config.mjs` exists because on a cold build all
-three routes prerender in parallel workers, each paying a full scrape plus the coco-ssd scan
-before any cache exists. That does not fit the 60s default. It is still validated by Next's
-config schema despite having fallen out of the published docs.
+`staticPageGenerationTimeout: 240` in `next.config.mjs` exists because on a cold build every
+catalogue-backed route prerenders in parallel workers, each paying a full scrape plus the
+coco-ssd scan before any cache exists. That does not fit the 60s default. It is still
+validated by Next's config schema despite having fallen out of the published docs.
+
+**The count of those routes is the thing to watch, and it grows.** It was three (`/`,
+`/brkox`, `/api/catalog`); the gift guides (§4e) made it five. Measured on the production
+deploy of `f3d9757`, 2026-08-25: **121s wall-clock**, against 62s for the deploy immediately
+before it. Half the 240s budget, from one guide. Each further `BOARDS` entry adds another
+prerendered route paying another catalogue pass, so three or four more guides put the budget
+in real question. The fix, when it comes to that, is cheap and should not be pre-empted: one
+route rendering every guide, or dropping `/gifts` back to a static list that never calls
+`getCatalog()`.
 
 **Pages are a server shell + client component** (`page.tsx` → `HomeClient.tsx` /
 `BrkoxClient.tsx`). The shell inlines a real slice of the catalogue as first-paint data;
@@ -204,9 +213,9 @@ Two things that only showed up under real data:
 - **Two vendors are truncated.** Kore Kawaii and Kawaii Babe both return a full page at
   `MAX_PAGES`, so part of each catalogue has never been ingested — and for Kawaii Babe that
   is the decora stock Ada asked for, so it is worth fixing. Raising `MAX_PAGES` costs build
-  time on every vendor; a per-vendor cap is the better answer. Page generation currently
-  takes 105s against the 240s `staticPageGenerationTimeout`, so there is headroom, but not
-  a lot.
+  time on every vendor; a per-vendor cap is the better answer. Build headroom is the
+  constraint — see §4b for the current measurement, which is no longer the 105s this note
+  was first written against.
 - **The safety filter reads the product NAME only.** sugarhai sells bikinis named
   "Kawaii Maneki Neko" — the garment is only in `product_type`, so `adultApparelHit()`
   scored the feed 0/447. Any merchant that names by design rather than by garment is
