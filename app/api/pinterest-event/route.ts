@@ -4,6 +4,7 @@ import {
   sendConversionEvents,
   type ConversionEvent,
 } from '@/lib/pinterest-capi'
+import { ADA_COOKIE, verifyToken } from '@/lib/ada-auth'
 
 /**
  * The only door between the browser and the Conversions API.
@@ -74,18 +75,64 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'no valid events' }, { status: 400 })
   }
 
-  // Honour Do Not Track / Global Privacy Control. Pinterest's `opt_out` flag
-  // exists for exactly this, and it is cheaper to respect than to explain.
-  const dnt = req.headers.get('dnt') === '1' || req.headers.get('sec-gpc') === '1'
-  if (dnt) for (const e of events) e.opt_out = true
+  // Two signals, deliberately not treated as one.
+  //
+  // Global Privacy Control is a CCPA/CPRA "do not sell or share my personal
+  // information" signal — a legal request, which is why it also sets
+  // `opt_out_type: LDP` (Limited Data Processing) in custom_data.
+  //
+  // Do Not Track is a browser preference with no legal force. We honour it with
+  // the top-level `opt_out` flag, but claiming LDP on the back of it would be
+  // asserting a legal basis that was never given.
+  const gpc = req.headers.get('sec-gpc') === '1'
+  const dnt = req.headers.get('dnt') === '1'
+  if (gpc || dnt) {
+    for (const e of events) {
+      e.opt_out = true
+      if (gpc) e.opt_out_type = 'LDP'
+    }
+  }
+
+  /**
+   * `?test=1` forwards Pinterest's own `?test=true`: the payload is validated
+   * and the real response messages come back, but nothing is recorded. It is
+   * how you confirm the events are constructed correctly before any of it
+   * counts, and it pairs with the Test events tool in Ads Manager.
+   *
+   * Behind the curator cookie, for two reasons. Pinterest's docs warn to be
+   * certain test mode is off before sending a legitimate request — an
+   * unauthenticated switch that silently voids real conversions is a foot-gun
+   * left where anyone can reach it. And an open test endpoint is free traffic
+   * against the ad account's rate limit.
+   *
+   * It also returns the API's response instead of swallowing it, because the
+   * whole point of a test is seeing what Pinterest said.
+   */
+  let test = false
+  if (req.nextUrl.searchParams.get('test') === '1') {
+    let authorized = false
+    try {
+      authorized = verifyToken(req.cookies.get(ADA_COOKIE)?.value)
+    } catch {
+      authorized = false // ADA_PIN unset: fail closed, same as everywhere else
+    }
+    if (!authorized) {
+      return NextResponse.json({ ok: false, error: 'test mode requires curator auth' }, { status: 401 })
+    }
+    test = true
+  }
 
   const result = await sendConversionEvents(events, {
     client_ip_address: clientIp(req),
     client_user_agent: req.headers.get('user-agent') ?? undefined,
     click_id: clickId(req),
-  })
+  }, test)
 
-  // Always 200 to the browser. A failure here is an analytics problem, not the
-  // visitor's, and a non-2xx would show up as a console error on a working page.
+  // A test run wants the detail; an ordinary visitor's page does not.
+  if (test) return NextResponse.json({ ok: true, test: true, result })
+
+  // Always 200 to the browser otherwise. A failure here is an analytics
+  // problem, not the visitor's, and a non-2xx would surface as a console error
+  // on a page that is working perfectly well.
   return NextResponse.json({ ok: result.status !== 'failed', status: result.status })
 }
