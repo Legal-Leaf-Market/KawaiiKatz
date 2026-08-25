@@ -397,6 +397,54 @@ for it.** 61% of the catalogue is untracked (§4c), and it is not spread evenly.
 
 ---
 
+## 4f. RSS feeds — how Pinterest publishes without us
+
+`app/feeds/[slug]/route.ts`. One feed per `BOARDS` entry, at `/feeds/<slug>.xml`, prerendered
+on the catalogue's 6h cadence.
+
+Pinterest can watch an RSS feed on a **claimed domain** and create Pins from it automatically,
+each feed publishing to a board of its own. That is the only bulk route open to us — the
+catalogue and Product Pin tools are closed because their merchant guidelines say a merchant
+"must not be an affiliate marketer" (§4e). The domain was claimed on 2026-08-25 (§4d).
+
+Reported limits, at the time of writing: **200 Pins/day**, content appears within **24–48h**,
+oldest item first, unlimited feeds as long as each matches the claimed domain.
+
+**Not under `/api/`.** robots.txt disallows that prefix outright, so a feed served from there
+would be one Pinterest is not permitted to fetch. This is the same reason `/p/<id>` exists at
+the root rather than behind the API.
+
+**Every `<link>` is `/p/<id>`, never the merchant deep link.** That is what stops a
+feed-generated Pin being an affiliate Pin — the category the community guidelines limit
+"repetitively or in large volumes". The affiliate hop happens after the visitor arrives.
+
+**Ordered oldest-first by `added`, deliberately not by rank.** Pinterest publishes the oldest
+item first and re-reads the feed as it changes; the collections re-rank every six hours as
+stock moves. A feed in rank order would reshuffle underneath Pinterest and risk the same
+product being seen as new twice. Sorting on the date we first saw a product means new stock
+appends to the end and nothing already published moves.
+
+**The image is declared three ways** — an `<img>` in the description, `<enclosure>`, and
+`media:content` — because readers disagree on which they honour, and an imageless Pin is a
+dead Pin. All three carry the **un-proxied** CDN URL: `Product.image` is an `/api/img` path,
+which robots.txt disallows. That is the third time this trap has been hit (the Pin button,
+then `og:image`, now here); if you are writing a URL for something outside this site to
+fetch, call `unproxied()`.
+
+The caption comes from `pinCaption()` in `lib/pinterest.ts` — the same function the Pin
+button uses, so a Pin Pinterest creates reads exactly like one a person made, `#ad` included.
+It is passed `Board.hashtag`, not the month-based `seasonalTag()`: a feed is read whenever
+Pinterest gets to it, which may be a different month from the one it was written in.
+
+**Untested, and test it before wiring up all seven.** `/p/<id>` is `noindex, follow`.
+Pinterest builds the Pin from the feed rather than by crawling, so this *should* be
+irrelevant — but it crawls the destination for rich metadata, and nobody here has confirmed
+how it treats a noindex page. Point one board at one feed, wait 48h, and look. If Pins do not
+appear, the noindex on `/p/<id>` is the first thing to suspect, and §7's rule about not
+competing with vendors is what has to be weighed against changing it.
+
+---
+
 ## 5. Environment variables
 
 | Name | Required | Purpose |

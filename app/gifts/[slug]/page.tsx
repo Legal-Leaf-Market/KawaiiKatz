@@ -58,7 +58,17 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/gifts/${b.slug}` },
+    alternates: {
+      canonical: `${SITE_URL}/gifts/${b.slug}`,
+      // Declares the collection's RSS feed on the page itself. Pinterest's
+      // auto-publish is pointed at the URL by hand, but a declared feed is how
+      // every other reader finds one, and it costs a line.
+      types: {
+        'application/rss+xml': [
+          { url: `${SITE_URL}/feeds/${b.slug}.xml`, title: `${b.title} — Kawaii Katz` },
+        ],
+      },
+    },
     openGraph: {
       title,
       description: b.tagline,
