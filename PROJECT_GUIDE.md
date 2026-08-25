@@ -159,6 +159,26 @@ config schema despite having fallen out of the published docs.
 the document and trade a fast background fetch for a slow first byte. `SEED_PRODUCTS` is now
 a last-resort fallback, not what visitors see.
 
+**`revalidate` alone does not cache a dynamic route.** `/p/[id]` shipped with
+`export const revalidate = 21600` and no `generateStaticParams`, on the assumption that Next
+would render each product page on demand and then cache it. It does not. Without a
+`generateStaticParams` — *even one returning `[]`* — the segment is fully dynamic,
+`revalidate` is ignored, and every request re-renders and answers `no-store`, so the CDN
+never keeps a copy. Next's own docs say so in as many words
+(`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-static-params.md`,
+"All paths at runtime").
+
+Two tells, and neither is visible in the source:
+
+- `pnpm build`'s route table prints `ƒ /p/[id]` (Dynamic) instead of `● /p/[id]` (SSG). The
+  Revalidate column is blank for both, so read the sigil, not the column.
+- A warm page on production answers `cache-control: private, no-cache, no-store` and
+  `x-vercel-cache: MISS` that never becomes `HIT`.
+
+Check the sigil after touching segment config on any `[param]` route. Nothing fails, nothing
+warns, and the page keeps rendering correctly — it just quietly costs a function invocation
+per view.
+
 ---
 
 ### Measured vendor state, 2026-08-22

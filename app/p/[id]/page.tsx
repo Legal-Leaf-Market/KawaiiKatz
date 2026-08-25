@@ -34,13 +34,27 @@ import ProductImage from '@/components/ProductImage'
  * profile can do something with it, instead of bouncing straight to a merchant.
  *
  * -----------------------------------------------------------------------------
- * WHY IT IS NOT PRERENDERED
+ * WHY IT IS NOT PRERENDERED AT BUILD TIME — AND WHY generateStaticParams IS
+ * STILL HERE, RETURNING NOTHING
  *
- * There are ~4,400 products. `generateStaticParams` over all of them would add
- * 4,400 pages to a build that already takes minutes and pays a full scrape plus
- * a coco-ssd pass before any cache exists (§4b). So there is no
- * generateStaticParams: Next renders each page on demand and caches it for the
- * same 6h the catalogue itself is cached. A product nobody pins costs nothing.
+ * There are ~4,400 products. Listing them all in `generateStaticParams` would
+ * add 4,400 pages to a build that already takes minutes and pays a full scrape
+ * plus a coco-ssd pass before any cache exists (§4b). So none are built ahead
+ * of time; each is rendered the first time somebody follows a pin.
+ *
+ * But omitting `generateStaticParams` altogether is NOT how you say that. It
+ * makes the route fully dynamic, and `revalidate` below is then ignored —
+ * every single request re-renders and Vercel sends `no-store`, so the CDN
+ * never holds a copy. That is what shipped, and it was measured on production
+ * before it was believed: `x-vercel-cache: MISS` on a warm page, and
+ * `ƒ /p/[id]` (Dynamic) rather than `● /p/[id]` in the build's route table.
+ *
+ * The empty array is the documented way to ask for "render on demand, then
+ * cache": next/dist/docs/.../generate-static-params.md, "All paths at
+ * runtime" — "You must always return an array from generateStaticParams, even
+ * if it's empty. Otherwise, the route will be dynamically rendered."
+ *
+ * Do not delete it as dead code. It looks like a no-op and is not one.
  */
 
 // 6 hours, matching the catalogue's own cache — must stay statically
@@ -48,6 +62,11 @@ import ProductImage from '@/components/ProductImage'
 // reads segment config without evaluating the module, and an imported constant
 // fails the build with "Invalid segment configuration export".
 export const revalidate = 21600
+
+/** See the note above: empty, but load-bearing. Without it, `revalidate` is dead. */
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return []
+}
 
 /** Absolute, un-proxied image URL for social scrapers — or null if we have none. */
 function ogImage(p: Product): string | null {
