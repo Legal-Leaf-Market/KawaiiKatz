@@ -341,6 +341,34 @@ class that put 47 of 87 `learning` products in the wrong category via `hape` ⊂
 `hasWord` is exported from `lib/catalog-shared.ts` for exactly this — do not write a second
 copy, it will drift.
 
+### Shuffle, search and taste on a collection
+
+`fillBoardPages()` deals every eligible product into pages of `section.max`; `fillBoard()` is
+its first round. **Paging is repeated rounds of the same pass, not a bigger version of it** —
+the first attempt let each section claim `max * maxPages` up front, which starved the sections
+below it and cut the jigsaw page from 36 tiles to 11 because "The pick of them" had already
+claimed 48 puzzles. Rounds make round 0 identical to the un-paged output by construction, and
+that is asserted against the live catalogue rather than assumed.
+
+Shuffle reaches 240 plushies where the page shows 40, with no duplicates.
+
+**The grid recomputes client-side and it costs nothing.** These pages already fetch the whole
+catalogue for the cart and Gift Finder (`ProductPageChrome` → `useLiveCatalog`, SWR dedupes on
+the key), and `lib/boards.ts` is pure — no server-only imports — so the identical selection
+rules run in the browser. Until that request lands, `live` is false and the server's sections
+render, which is also what keeps hydration honest.
+
+Use **`allProducts`, not `products`**: the hook holds showcase vendors out of `products`
+because they have their own page, and BRKOX is 43% of the blind-box shelf.
+
+**Thumbs-down is also "hide it".** One press, one intention: the tile goes, the next candidate
+backfills, and `useTaste` learns from it. Two controls would be two things to explain.
+Shuffling records a `skip` on everything it replaces, so a visitor who keeps shuffling past
+the same sort of thing stops being shown it.
+
+**Search orders by taste but never filters by it.** A search that hides what you asked for
+because we guessed your taste is a broken search.
+
 **Sections fill in order and a product is used once.** That is what makes the page read as
 curation rather than five filters over one shelf: genuinely festive things go in the festive
 section even when they are also under $15, and the price bands get variety.

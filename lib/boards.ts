@@ -495,6 +495,9 @@ export function boardInSeason(b: Board, month: number): boolean {
 
 export type BoardPick = { section: BoardSection; products: Product[] }
 
+/** A section, dealt into pages of `section.max` so the grid can shuffle. */
+export type BoardPaged = { section: BoardSection; pages: Product[][] }
+
 /**
  * Fills a guide's sections from the live catalogue.
  *
@@ -504,7 +507,21 @@ export type BoardPick = { section: BoardSection; products: Product[] }
  * under $15, and the price bands below get variety instead of the same plush
  * five times.
  */
-export function fillBoard(b: Board, products: Product[]): BoardPick[] {
+/**
+ * Every eligible product for each section, dealt into pages.
+ *
+ * A section shows twelve; the plushies shelf has 567. `fillBoard` picked the
+ * top twelve and threw the rest away, which made the page a fixed shortlist
+ * rather than a way into the catalogue — so this returns the whole eligible
+ * run, in pages, and the grid shuffles between them.
+ *
+ * The vendor cap applies WITHIN each page rather than across the section. A
+ * product the cap defers is not dropped: it waits for the next page. Otherwise
+ * shuffling past page one would mean shuffling through the shops we happen to
+ * carry most of, which is the advert problem the cap exists to prevent, just
+ * spread over time.
+ */
+export function fillBoardPages(b: Board, products: Product[], maxPages = 6): BoardPaged[] {
   const cap = b.maxPerVendor ?? MAX_PER_VENDOR_PER_SECTION
   const pool = products
     .filter((p) => p && p.id && p.name && p.price > 0 && String(p.image || '').trim())
@@ -516,24 +533,71 @@ export function fillBoard(b: Board, products: Product[]): BoardPick[] {
     .map((x) => ({ ...x, s: score(x.p, x.rel) }))
     .sort((a, b2) => b2.s - a.s || tiebreak(a.p.id) - tiebreak(b2.p.id))
 
-  const used = new Set<string>()
-  const out: BoardPick[] = []
-  for (const section of b.sections) {
-    const chosen: Product[] = []
-    const perVendor = new Map<string, number>()
-    for (const { p, rel } of pool) {
-      if (chosen.length >= section.max) break
-      if (used.has(p.id)) continue
-      if (!section.match(p, rel)) continue
-      const n = perVendor.get(p.vendor) ?? 0
-      if (n >= cap) continue
-      perVendor.set(p.vendor, n + 1)
-      used.add(p.id)
-      chosen.push(p)
-    }
-    if (chosen.length) out.push({ section, products: chosen })
+  /**
+   * One full pass over every section, exactly as the page has always been
+   * built: sections fill in order, a product is used once, the vendor cap
+   * applies within the section.
+   *
+   * Paging is rounds of THIS, not a bigger version of it, and that is the whole
+   * design. The first attempt let each section claim `max * maxPages` products
+   * up front, which starved the sections below it — the jigsaw page fell from
+   * 36 tiles to 11 because "The pick of them" had claimed 48 puzzles before the
+   * price bands got a look. Running the same pass repeatedly over what is left
+   * makes round 0 identical to the un-paged output by construction.
+   */
+  function round(used: Set<string>): BoardPick[] {
+    return b.sections.map((section) => {
+      const chosen: Product[] = []
+      const perVendor = new Map<string, number>()
+      for (const { p, rel } of pool) {
+        if (chosen.length >= section.max) break
+        if (used.has(p.id)) continue
+        if (!section.match(p, rel)) continue
+        const n = perVendor.get(p.vendor) ?? 0
+        if (n >= cap) continue
+        perVendor.set(p.vendor, n + 1)
+        used.add(p.id)
+        chosen.push(p)
+      }
+      return { section, products: chosen }
+    })
   }
-  return out
+
+  const used = new Set<string>()
+  const rounds: BoardPick[][] = []
+  for (let r = 0; r < maxPages; r++) {
+    const got = round(used)
+    if (!got.some((x) => x.products.length)) break
+    rounds.push(got)
+  }
+
+  // Transpose rounds into per-section pages, dropping sections that never
+  // filled and trailing empty pages for sections that ran dry early.
+  return b.sections
+    .map((section, i) => ({
+      section,
+      pages: rounds.map((r) => r[i].products).filter((page) => page.length > 0),
+    }))
+    .filter((x) => x.pages.length > 0)
+}
+
+/**
+ * The first page of each section — what the server renders.
+ *
+ * Identical to what this function returned before paging existed, which is the
+ * point: the prerendered HTML does not change, and shuffling is something the
+ * grid does afterwards with a catalogue it already has.
+ */
+export function fillBoard(b: Board, products: Product[]): BoardPick[] {
+  // Deliberately NOT fillBoardPages(b, products, 1). With one page to deal
+  // into, a product the vendor cap defers has nowhere to wait and is simply
+  // lost — which silently cut the Christmas guide from 56 tiles to 36 and the
+  // plushies page from 40 to 24 the first time this was written that way. The
+  // deferred products have to have a later page to land on for page one to
+  // fill from the whole eligible run, exactly as it did before paging existed.
+  return fillBoardPages(b, products)
+    .map(({ section, pages }) => ({ section, products: pages[0] ?? [] }))
+    .filter((x) => x.products.length > 0)
 }
 
 /** Guides of one kind, in declaration order. Used by the index and the sitemap. */
