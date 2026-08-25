@@ -120,7 +120,7 @@ function hasAny(hay: string, terms: string[]): boolean {
  * cannot (still the majority) stay on hasAny, which is cheaper.
  */
 const WORD_RX = new Map<string, RegExp>()
-function hasWord(hay: string, terms: string[]): boolean {
+export function hasWord(hay: string, terms: string[]): boolean {
   for (const t of terms) {
     let rx = WORD_RX.get(t)
     if (!rx) {

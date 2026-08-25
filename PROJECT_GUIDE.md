@@ -298,6 +298,56 @@ marketers** — which closes catalogues, Product Pins and shopping tags to this
 site entirely. The per-product Pin button is user-initiated and fine. An
 auto-poster is not. Read policy.pinterest.com before building one.
 
+## 4e. Gift guides — the Pinterest surface that is actually allowed
+
+`lib/boards.ts` + `/gifts` + `/gifts/[slug]`. Christmas is the first one.
+
+**We cannot push the catalogue to Pinterest, and this is the alternative.** Their merchant
+guidelines say a merchant "must not be an affiliate marketer", which closes catalogues,
+Product Pins and shopping tags to this site outright; the community guidelines limit
+affiliate Pins "repetitively or in large volumes". A script pinning 4,400 products would be
+both at once. A guide is one URL that holds dozens of products, ranks for a seasonal query,
+and lasts a whole season — which is what Pinterest search actually rewards.
+
+**These pages are indexable and in the sitemap, and that is not a contradiction of §7.** The
+rule is "do not compete with a vendor for their own product page". A guide competes with
+nobody's — no vendor has one. It is the only original editorial content here. The `/p/<id>`
+pages it links to stay `noindex`.
+
+Three things that only showed up under real data (4,426 products, 2026-08-25):
+
+- **Off-season stock leaks in.** The first run put a "Halloween Ghost Ceramic Mug" and
+  "Halloween Creepy Cutie Keychains" in the Christmas price bands. Nothing was wrong with the
+  scoring — they are cute, well-priced, tracked. `OFF_SEASON_TERMS` drops them. A guide that
+  shows another holiday's stock reads as an automated dump, which is the exact impression
+  curation exists to avoid.
+- **One vendor will take a whole section.** sugarhai alone is 37 of the catalogue's 76
+  festive products. `MAX_PER_VENDOR_PER_SECTION = 3` stops a band becoming an advert.
+- **Only 76 of 4,426 products are festive at all**, and that is honest — it is August and
+  the shops have not put Christmas stock up. Re-check in October; the guide will fill itself.
+
+**Every term list here is word-anchored, and must stay that way.** `advent` ⊂ ADVENTURE,
+`tree` ⊂ STREET, `elf` ⊂ SHELF, `holly` ⊂ HOLLYWOOD, `witch` ⊂ SWITCH. This is the same bug
+class that put 47 of 87 `learning` products in the wrong category via `hape` ⊂ SHAPE (§4).
+`hasWord` is exported from `lib/catalog-shared.ts` for exactly this — do not write a second
+copy, it will drift.
+
+**Sections fill in order and a product is used once.** That is what makes the page read as
+curation rather than five filters over one shelf: genuinely festive things go in the festive
+section even when they are also under $15, and the price bands get variety.
+
+`seasonalTag()` in `lib/pinterest.ts` is month-based and returns `ChristmasGiftIdeas` only in
+November and December. That is right for a Pin taken off the shop floor and **wrong** for one
+taken off the Christmas guide in August — which, Pinterest running about three months ahead
+of every season, is when the guide is most worth pinning. `Board.hashtag` overrides it, and
+`pinProductPage(p, { tag })` carries it; when a tag is passed, `seasonalTag()` is skipped
+entirely so a Pin never carries two seasons.
+
+Adding a guide is a `BOARDS` entry and nothing else — `generateStaticParams`, the sitemap and
+the `/gifts` index all read from it.
+
+---
+
 ## 5. Environment variables
 
 | Name | Required | Purpose |

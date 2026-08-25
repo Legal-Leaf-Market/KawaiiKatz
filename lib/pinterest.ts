@@ -18,6 +18,15 @@ type Pinnable = {
   domain?: string
   /** Overrides the pin's destination. See pinProductPage(). */
   pinUrl?: string
+  /**
+   * A hashtag to place ahead of the automatic ones, overriding seasonalTag().
+   * Set by the gift guides: seasonalTag() is month-based and returns
+   * ChristmasGiftIdeas only in November and December, which is right for a Pin
+   * taken off the shop floor and wrong for one taken off the Christmas guide in
+   * August — when, Pinterest being three months ahead of every season, it is
+   * most worth pinning.
+   */
+  tag?: string
 }
 
 const PIN_TAGS_BY_CAT: Record<string, string[]> = {
@@ -75,12 +84,16 @@ function pinHashtags(o: Pinnable): string[] {
   }
   const cat = o.cat || 'other'
   const pool = PIN_TAGS_BY_CAT[cat] || PIN_TAGS_BY_CAT.other
+  // First, so it survives the slice(0, 5) below whatever else matches.
+  if (o.tag) add(o.tag)
   add(pool[0]); add(pool[1])
   const name = String(o.name || '')
   for (const [re, tag] of PIN_TAGS_KEYWORD) {
     if (re.test(name)) { add(tag); break }
   }
-  const seas = seasonalTag()
+  // Only when the caller has not named a season itself. #BackToSchool next to
+  // #ChristmasGiftIdeas on the same Pin is worse than either alone.
+  const seas = o.tag ? '' : seasonalTag()
   if (seas && ['plush', 'collect', 'home', 'stationery', 'kitchen'].includes(cat)) add(seas)
   add(PIN_TAGS_UNIVERSAL[0])
   for (let j = 2; j < pool.length && out.length < 5; j++) add(pool[j])
@@ -162,8 +175,8 @@ export function openPin(o: Pinnable): void {
  * `pinUrl` overrides the destination; everything else — the image, the caption,
  * the hashtags — is unchanged, because all of that was already right.
  */
-export function pinProductPage(p: Product, origin?: string): void {
-  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+export function pinProductPage(p: Product, opts?: { origin?: string; tag?: string }): void {
+  const base = opts?.origin || (typeof window !== 'undefined' ? window.location.origin : '')
   openPin({
     id: p.id,
     name: p.name,
@@ -174,5 +187,43 @@ export function pinProductPage(p: Product, origin?: string): void {
     url: p.url || p.domain,
     domain: p.domain,
     pinUrl: `${base}/p/${p.id}`,
+    tag: opts?.tag,
   })
+}
+
+/**
+ * Pins a gift guide itself rather than one product in it.
+ *
+ * This is the Pin that is actually worth making. A guide URL keeps working for
+ * a whole season, holds dozens of products behind one click, and is the shape
+ * of thing Pinterest search rewards — where a Pin per product, made in volume,
+ * is the shape its community guidelines limit.
+ *
+ * `cover` supplies the image and the price context; without a product there is
+ * nothing for the composer to show.
+ */
+export function pinGuide(o: {
+  slug: string
+  title: string
+  tagline: string
+  tag: string
+  cover: Product
+  origin?: string
+}): void {
+  const base = o.origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  const img = unproxied(o.cover.image || '')
+  const media = /^https?:\/\//i.test(img) ? '&media=' + encodeURIComponent(img) : ''
+  const tags = ['#ad', '#' + tagToken(o.tag), '#KawaiiGifts', '#KawaiiKatz', '#GiftGuide']
+  const desc = `${o.title} — ${o.tagline}. Curated on Kawaii Katz. ${tags.join(' ')}`.slice(0, 480)
+  const u =
+    'https://www.pinterest.com/pin/create/button/?url=' +
+    encodeURIComponent(`${base}/gifts/${o.slug}`) +
+    media +
+    '&description=' +
+    encodeURIComponent(desc)
+  try {
+    window.open(u, '_blank', 'noopener,width=760,height=680')
+  } catch {
+    window.location.href = u
+  }
 }
