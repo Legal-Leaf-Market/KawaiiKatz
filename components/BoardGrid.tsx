@@ -20,6 +20,8 @@ type Props = {
   title: string
   tagline: string
   hashtag: string
+  /** The caption noun for anything pinned from this board. See Board.catLead. */
+  catLead: string
   sections: Section[]
 }
 
@@ -53,7 +55,7 @@ type Props = {
  * collection is the opposite case: BRKOX is 43% of the blind-box shelf, and
  * dropping it on hydration would empty half the page the server just rendered.
  */
-export default function BoardGrid({ slug, title, tagline, hashtag, sections }: Props) {
+export default function BoardGrid({ slug, title, tagline, hashtag, catLead, sections }: Props) {
   const { state, dispatch } = useStore()
   const { excludedIds } = useExclusions()
   const { allProducts, live } = useLiveCatalog()
@@ -413,7 +415,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
                 {added === surprise.id ? 'Added ✓' : 'Add 🎀'}
               </button>
               <button
-                onClick={() => pinProductPage(surprise, { tag: hashtag })}
+                onClick={() => pinProductPage(surprise, { tag: hashtag, catLead })}
                 className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl px-3 py-2 cursor-pointer text-[13px] hover:bg-[#e60023] hover:text-white transition-colors"
               >
                 📌 Pin
@@ -466,6 +468,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
             added={added}
             wish={state.wish}
             hashtag={hashtag}
+            catLead={catLead}
             onAdd={addToCart}
             onUp={thumbUp}
             onDown={thumbDown}
@@ -523,6 +526,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
                 added={added}
                 wish={state.wish}
                 hashtag={hashtag}
+                catLead={catLead}
                 onAdd={addToCart}
                 onUp={thumbUp}
                 onDown={thumbDown}
@@ -537,13 +541,14 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
 }
 
 function Grid({
-  items, liked, added, wish, hashtag, onAdd, onUp, onDown, onWish,
+  items, liked, added, wish, hashtag, catLead, onAdd, onUp, onDown, onWish,
 }: {
   items: Product[]
   liked: Set<string>
   added: string | null
   wish: string[]
   hashtag: string
+  catLead: string
   onAdd: (p: Product) => void
   onUp: (p: Product) => void
   onDown: (p: Product) => void
@@ -636,7 +641,7 @@ function Grid({
                 </button>
                 <button
                   type="button"
-                  onClick={() => pinProductPage(p, { tag: hashtag })}
+                  onClick={() => pinProductPage(p, { tag: hashtag, catLead })}
                   className="flex-none border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl w-9 cursor-pointer text-[14px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                   aria-label={`Pin ${p.name} to Pinterest`}
                   title="Pin this"

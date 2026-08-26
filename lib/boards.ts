@@ -68,6 +68,18 @@ export type Board = {
    * which is exactly when the guide is most worth pinning.
    */
   hashtag: string
+  /**
+   * The noun a Pin caption uses for anything published from this board, e.g.
+   * "a kawaii plushie pick from Plushible".
+   *
+   * Overrides the product's own category, and it has to. The plushies feed
+   * shipped six Pins captioned "a kawaii blind box pick" and one "kitchen",
+   * because those products are genuinely categorised that way even though they
+   * were being pinned to a plushies board. A Pin whose caption disagrees with
+   * its board is a topic mismatch, and topic mismatch is one of the things that
+   * holds a Pin back.
+   */
+  catLead: string
   /** Months (0-indexed) when a season guide peaks. Display only; empty for a theme. */
   season: number[]
   /**
@@ -181,6 +193,17 @@ const OFF_SEASON_TERMS = [
 export const SPORTS_LICENCE_TERMS = [
   'nascar', 'ncaa', 'collegiate', 'university', 'buckeye', 'hoosier',
   'sooner', 'crimson tide', 'longhorn', 'wolverine', 'gator', 'aggie',
+  // School NAMES, not just mascot nicknames. The list above is all nicknames,
+  // and it let three products through into the live plushies feed because
+  // Plushible names those rows "<school> <mascot>": "Ohio State Brutus",
+  // "Georgia Tech Buzz Bee", "Virginia Tech Hokiebird". "Buckeye" is the Ohio
+  // State nickname and appears nowhere in the Ohio State row's own title.
+  //
+  // Measured against the live catalogue before adding: these three terms match
+  // 6 products, every one of them a college licence, and nothing else in 4,426.
+  // Narrow terms, no false positives, the same discipline the `racing` note
+  // below records.
+  'ohio state', 'georgia tech', 'virginia tech',
 ]
 // `racing` is deliberately absent, though every NASCAR row would match it.
 // It also caught BRKOX's "Wall Display Frame for LEGO Technic Oracle Red Bull
@@ -313,6 +336,7 @@ export const BOARDS: Board[] = [
       'sorted by price first. Everything here is in stock at one of our partner shops. You ' +
       'check out on their site, never ours.',
     hashtag: 'ChristmasGiftIdeas',
+    catLead: 'Christmas',
     season: [8, 9, 10, 11], // Sept–Dec; Pinterest searches Christmas from September
     sections: [
       {
@@ -377,6 +401,7 @@ export const BOARDS: Board[] = [
       'kind, pulled from every shop we carry rather than just one, so you can compare ' +
       'before you buy.',
     hashtag: 'MontessoriToys',
+    catLead: 'wooden toy',
     season: [],
     cats: ['learning'],
     words: ['wooden', 'montessori', 'stacking', 'sorting', 'busy board', 'sensory'],
@@ -406,6 +431,7 @@ export const BOARDS: Board[] = [
       'kind that lives on a board under the sofa for a fortnight, plus the mats and sorting ' +
       'trays that make the big ones bearable.',
     hashtag: 'JigsawPuzzle',
+    catLead: 'puzzle',
     season: [],
     cats: ['puzzle'],
     words: ['jigsaw', 'puzzle'],
@@ -426,6 +452,7 @@ export const BOARDS: Board[] = [
       'of a set at random, and the good ones are properly designed objects rather than ' +
       'landfill. Chase figures, full sets and the single-box way in.',
     hashtag: 'BlindBoxUnboxing',
+    catLead: 'blind box',
     season: [],
     cats: ['collect'],
     words: ['blind box', 'blindbox', 'mystery box', 'art toy'],
@@ -445,6 +472,7 @@ export const BOARDS: Board[] = [
       'hedgehogs, sorted by price so you can find the $10 one for a stocking and the ' +
       'enormous one for a birthday without scrolling past each other.',
     hashtag: 'KawaiiPlushies',
+    catLead: 'plushie',
     season: [],
     cats: ['plush'],
     words: ['plush', 'plushie', 'stuffed animal', 'soft toy'],
@@ -464,6 +492,7 @@ export const BOARDS: Board[] = [
       'Squishies, mochi toys and fidgets, bought for children and kept by adults. Small, ' +
       'cheap, and the easiest thing on this site to buy several of.',
     hashtag: 'SquishyToy',
+    catLead: 'squishy',
     season: [],
     cats: [],
     words: ['squishy', 'squishies', 'squish', 'fidget', 'mochi', 'stress ball', 'slow rising'],
@@ -485,6 +514,7 @@ export const BOARDS: Board[] = [
       'mostly the box. Compartment bento boxes, insulated bags, picks, cutters and the ' +
       'bottles that go with them.',
     hashtag: 'CuteLunchBox',
+    catLead: 'lunch',
     season: [],
     cats: ['kitchen'],
     // Bottles stay eligible through `cats`, but are deliberately NOT in `words`:

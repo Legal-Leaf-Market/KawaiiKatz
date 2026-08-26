@@ -27,6 +27,24 @@ type Pinnable = {
    * most worth pinning.
    */
   tag?: string
+  /**
+   * The category word the caption should use, overriding the product's own.
+   *
+   * Set by the RSS feeds and by anything else pinning FROM a collection. The
+   * caption used to read the product's `cat` unconditionally, which meant the
+   * plushies feed published six items captioned "a kawaii blind box pick" and
+   * one as "a kawaii kitchen pick": a Hello Kitty plush toy, three Astronaut
+   * plush figures, and the plushie water bottle covers. All correctly
+   * categorised as products, all wrong for the board they were being pinned to.
+   *
+   * That is not cosmetic. A Pin's first save should match its board's topic,
+   * and a plushies board full of Pins calling themselves blind boxes is a topic
+   * mismatch on every one of them.
+   *
+   * Same shape as `tag` above and for the same reason: the collection knows
+   * something about the context of this Pin that the product record cannot.
+   */
+  catLead?: string
 }
 
 const PIN_TAGS_BY_CAT: Record<string, string[]> = {
@@ -152,6 +170,7 @@ function pinDescription(o: Pinnable): string {
   const vendor = (o.vendor || '').trim()
   const cName = catName(o.cat || 'other')
   const cLead =
+    o.catLead ??
     CAT_LEAD[o.cat || 'other'] ??
     cName.toLowerCase().replace(/ & .*/, '').replace(/s$/, '')
   const tags = pinHashtags(o)
@@ -219,7 +238,10 @@ export function openPin(o: Pinnable): void {
  * `pinUrl` overrides the destination; everything else — the image, the caption,
  * the hashtags — is unchanged, because all of that was already right.
  */
-export function pinProductPage(p: Product, opts?: { origin?: string; tag?: string }): void {
+export function pinProductPage(
+  p: Product,
+  opts?: { origin?: string; tag?: string; catLead?: string }
+): void {
   const base = opts?.origin || (typeof window !== 'undefined' ? window.location.origin : '')
   openPin({
     id: p.id,
@@ -232,6 +254,7 @@ export function pinProductPage(p: Product, opts?: { origin?: string; tag?: strin
     domain: p.domain,
     pinUrl: `${base}/p/${p.id}`,
     tag: opts?.tag,
+    catLead: opts?.catLead,
   })
 }
 

@@ -134,6 +134,7 @@ export default async function GiftGuidePage({ params }: { params: Promise<{ slug
           title={b.title}
           tagline={b.tagline}
           hashtag={b.hashtag}
+          catLead={b.catLead}
           sections={picks.map((s) => ({
             key: s.section.key,
             title: s.section.title,
