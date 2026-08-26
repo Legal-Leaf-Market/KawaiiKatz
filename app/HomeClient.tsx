@@ -395,7 +395,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
             <p className="text-sm font-semibold opacity-80 mt-0.5">Kawaii, Clever &amp; Kind</p>
           </div>
           <div className="text-sm font-semibold opacity-80 text-center">
-            <p>Curated kawaii finds — affiliate links support this site.</p>
+            <p>Curated kawaii finds. Affiliate links support this site.</p>
             <p className="mt-0.5">
               <a href="mailto:hello@kawaiikatz.com" className="font-extrabold hover:underline">hello@kawaiikatz.com</a>
             </p>

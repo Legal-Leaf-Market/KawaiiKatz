@@ -160,7 +160,7 @@ export default function BrkoxClient({ initialProducts }: { initialProducts: Prod
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search BRKOX — try “X-Wing”, “Ferrari”, “minifigures”…"
+            placeholder="Search BRKOX: try “X-Wing”, “Ferrari”, “minifigures”…"
             aria-label="Search BRKOX products"
             className="w-full border-[3px] border-[#b79cff] bg-white rounded-[16px] pl-11 pr-4 py-3 font-sans font-bold text-[#4f4550] text-[14px] outline-none focus:border-[#ff8a65] placeholder:text-[#c4bccb] placeholder:font-semibold"
           />
@@ -227,7 +227,7 @@ export default function BrkoxClient({ initialProducts }: { initialProducts: Prod
 
         <p className="text-[12.5px] text-[#9a8fa3] text-center mt-10 leading-relaxed">
           LEGO® is a trademark of the LEGO Group, which does not sponsor, authorise or endorse
-          BRKOX or Kawaii Katz. Frames and cases are made to fit the sets listed — the sets
+          BRKOX or Kawaii Katz. Frames and cases are made to fit the sets listed. The sets
           themselves are sold separately.
         </p>
       </main>

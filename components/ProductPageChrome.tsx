@@ -58,7 +58,7 @@ export default function ProductPageChrome({ children }: { children: React.ReactN
             <p className="text-sm font-semibold opacity-80 mt-0.5">Kawaii, Clever &amp; Kind</p>
           </a>
           <div className="text-sm font-semibold opacity-80 text-center">
-            <p>Curated kawaii finds — affiliate links support this site.</p>
+            <p>Curated kawaii finds. Affiliate links support this site.</p>
             <TasteNote variant="footer" />
           </div>
         </div>

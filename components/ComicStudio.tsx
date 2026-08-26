@@ -52,7 +52,7 @@ export default function ComicStudio() {
     } catch {
       // Almost always QuotaExceededError from panel images. Say so, because the
       // alternative is a draft that silently stops saving.
-      setNote({ text: 'Too big to save as a draft — the strip still exports fine.', bad: true })
+      setNote({ text: 'Too big to save as a draft, but the strip still exports fine.', bad: true })
     }
   }, [strip, ready])
 
@@ -150,7 +150,7 @@ export default function ComicStudio() {
       .map((p, i) => `Panel ${i + 1}: ${p.artNote ?? '(no art note)'}`)
       .join('\n\n')
     void navigator.clipboard.writeText(text)
-    setNote({ text: 'All art notes copied — paste them into your image tool.' })
+    setNote({ text: 'All art notes copied. Paste them into your image tool.' })
   }
 
   async function download() {
@@ -187,7 +187,7 @@ export default function ComicStudio() {
             ✍️ Write it for me
           </label>
           <p className="text-[12.5px] text-[#6f6675] leading-relaxed">
-            Give the premise — what happens, and roughly where. The cat and the panda are already
+            Give the premise: what happens, and roughly where. The cat and the panda are already
             written; you are setting the scene, not casting it.
           </p>
           <textarea
@@ -313,13 +313,13 @@ export default function ComicStudio() {
             <input
               value={p.cat ?? ''}
               onChange={(e) => setPanel(i, { cat: e.target.value })}
-              placeholder="left bubble — the cat"
+              placeholder="left bubble: the cat"
               className="border-2 border-[#ffe6d9] focus:border-[#7fc4d4] rounded-xl px-3 py-1.5 text-[13.5px] outline-none"
             />
             <input
               value={p.panda ?? ''}
               onChange={(e) => setPanel(i, { panda: e.target.value })}
-              placeholder="right bubble — the panda"
+              placeholder="right bubble: the panda"
               className="border-2 border-[#ffe6d9] focus:border-[#7fc4d4] rounded-xl px-3 py-1.5 text-[13.5px] outline-none"
             />
 
@@ -403,7 +403,7 @@ export default function ComicStudio() {
           </button>
         </div>
         <p className="text-[12.5px] font-bold text-[#9a8fa3] text-center">
-          1080×1350 — Instagram&apos;s portrait slot.
+          1080×1350, Instagram&apos;s portrait slot.
         </p>
       </div>
     </div>

@@ -10,13 +10,13 @@ export const revalidate = 21600 // 6 hours — must stay statically analysable
 export const maxDuration = 60
 
 export const metadata: Metadata = {
-  title: '🧱 BRKOX — Display frames for LEGO® builds | Kawaii Katz',
+  title: '🧱 BRKOX: Display frames for LEGO® builds | Kawaii Katz',
   description:
-    'Wall frames, acrylic cases and LED kits made to fit specific LEGO® sets — Star Wars, F1, ' +
+    'Wall frames, acrylic cases and LED kits made to fit specific LEGO® sets: Star Wars, F1, ' +
     'Technic, Harry Potter and more. Live prices, curated by Kawaii Katz.',
   alternates: { canonical: '/brkox' },
   openGraph: {
-    title: '🧱 BRKOX — Display frames for LEGO® builds',
+    title: '🧱 BRKOX: Display frames for LEGO® builds',
     description: 'Wall frames, acrylic cases and LED kits made to fit specific LEGO® sets.',
     url: `${SITE_URL}/brkox`,
     type: 'website',
@@ -38,7 +38,7 @@ export default async function Page() {
         nodes={[
           pageNode({
             path: '/brkox',
-            name: 'BRKOX — Display frames for LEGO® builds',
+            name: 'BRKOX: Display frames for LEGO® builds',
             type: 'CollectionPage',
             description:
               'Wall frames, acrylic cases and LED kits made to fit specific LEGO® sets.',

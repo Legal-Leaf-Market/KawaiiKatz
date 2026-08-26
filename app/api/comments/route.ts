@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
         .from(productComments)
         .where(and(eq(productComments.ipHash, ipHash), gte(productComments.createdAt, hourAgo)))
       if (recent.length >= HOURLY_CAP) {
-        return noStore({ error: 'that is a lot of comments in an hour — try again later' }, 429)
+        return noStore({ error: 'that is a lot of comments in an hour, try again later' }, 429)
       }
     }
 

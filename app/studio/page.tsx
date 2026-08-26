@@ -41,13 +41,13 @@ export default function StudioPage() {
           🎬 IG Studio
         </h1>
         <p className="text-[14.5px] text-[#6f6675] leading-relaxed mt-2 max-w-[68ch]">
-          Give it a premise and it writes the strip — dialogue, shot sizes, and an art note per
+          Give it a premise and it writes the strip: dialogue, shot sizes, and an art note per
           panel to paste into your image tool. Bring the finished pictures back, drop them into the
           panels, and export at Instagram&apos;s 1080×1350. The cat and the panda are written the
           same way every time, so they stay the same two characters from post to post.
         </p>
         <p className="text-[13px] text-[#9a8fa3] font-semibold mt-2">
-          Writing needs curator sign-in — it calls the Claude API. Laying out, dropping in pictures
+          Writing needs curator sign-in, because it calls the Claude API. Laying out, dropping in pictures
           and exporting do not.
         </p>
       </header>

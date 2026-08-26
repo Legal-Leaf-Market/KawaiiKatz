@@ -39,7 +39,7 @@ export async function generateMetadata({
   const { brand } = await params
   const s = linkShowcase(brand)
   if (!s) return {}
-  const title = `${s.emoji} ${s.merchant} — ${s.tagline} | Kawaii Katz`
+  const title = `${s.emoji} ${s.merchant}: ${s.tagline} | Kawaii Katz`
   return {
     title,
     description: s.intro.slice(0, 155),
@@ -64,7 +64,7 @@ export default async function Page({ params }: { params: Promise<{ brand: string
       {/* WebPage, not CollectionPage: this page links out to the merchant's own
           categories and lists no products of its own. */}
       <JsonLd
-        nodes={[pageNode({ path: `/${s.slug}`, name: `${s.merchant} — ${s.tagline}`, description: s.intro })]}
+        nodes={[pageNode({ path: `/${s.slug}`, name: `${s.merchant}: ${s.tagline}`, description: s.intro })]}
       />
       <header className="border-b-[3px] border-[#e6dcff] bg-white/70">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-5">
@@ -142,7 +142,7 @@ export default async function Page({ params }: { params: Promise<{ brand: string
           {tracked
             ? `Links on this page are affiliate links: if you buy something at ${s.merchant} after clicking one, we may earn a commission at no extra cost to you. It is how Kawaii Katz stays free.`
             : `Links on this page go straight to ${s.merchant}. We are not currently earning a commission on them.`}{' '}
-          We are not {s.merchant} — prices, stock, delivery and returns are all theirs, and
+          We are not {s.merchant}. Prices, stock, delivery and returns are all theirs, and
           anything you buy is a purchase from them.
         </p>
       </main>

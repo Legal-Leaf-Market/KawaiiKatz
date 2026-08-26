@@ -250,7 +250,7 @@ export default function CartDrawer({ open, onClose, products }: Props) {
               <span className="text-[#ff8a65] text-[22px]">{money(total)}</span>
             </div>
             <p className="text-[11px] text-[#9a8fa3] font-semibold mb-2.5 leading-snug">
-              Each store runs its own checkout — tap “Check out” on a store above to open its cart with your items (and any coupon) ready. 🌸
+              Each store runs its own checkout. Tap “Check out” on a store above to open its cart with your items (and any coupon) ready. 🌸
             </p>
             <button
               onClick={clearCart}

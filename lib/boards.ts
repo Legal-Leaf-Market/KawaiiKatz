@@ -310,7 +310,7 @@ export const BOARDS: Board[] = [
     intro:
       'Every year the same problem: you want to give something with a bit of personality, ' +
       'and you want to know what it costs before you fall in love with it. So this guide is ' +
-      'sorted by price first. Everything here is in stock at one of our partner shops — you ' +
+      'sorted by price first. Everything here is in stock at one of our partner shops. You ' +
       'check out on their site, never ours.',
     hashtag: 'ChristmasGiftIdeas',
     season: [8, 9, 10, 11], // Sept–Dec; Pinterest searches Christmas from September
@@ -318,7 +318,7 @@ export const BOARDS: Board[] = [
       {
         key: 'festive',
         title: 'Actually Christmassy',
-        blurb: 'Santas, snowmen and advent calendars — the ones that only make sense in December.',
+        blurb: 'Santas, snowmen and advent calendars, the ones that only make sense in December.',
         max: 12,
         match: (_p, festive) => festive > 0,
       },
@@ -374,7 +374,7 @@ export const BOARDS: Board[] = [
     intro:
       'Wooden toys do not need batteries, do not make a noise at 6am, and tend to outlive ' +
       'the child they were bought for. These are the stacking, sorting and pretend-play ' +
-      'kind — pulled from every shop we carry rather than just one, so you can compare ' +
+      'kind, pulled from every shop we carry rather than just one, so you can compare ' +
       'before you buy.',
     hashtag: 'MontessoriToys',
     season: [],
@@ -420,7 +420,7 @@ export const BOARDS: Board[] = [
     emoji: '🎁',
     kind: 'theme',
     title: 'Blind Boxes & Collectible Figures',
-    tagline: 'The unboxing kind — series figures, art toys and mystery boxes',
+    tagline: 'The unboxing kind: series figures, art toys and mystery boxes',
     intro:
       'Half the fun is not knowing. Blind boxes come as a sealed series where you get one ' +
       'of a set at random, and the good ones are properly designed objects rather than ' +
@@ -442,7 +442,7 @@ export const BOARDS: Board[] = [
     tagline: 'Soft things, from pocket-sized to alarmingly large',
     intro:
       'The biggest shelf we have. Cats, bunnies, frogs, axolotls, a startling number of ' +
-      'hedgehogs — sorted by price so you can find the $10 one for a stocking and the ' +
+      'hedgehogs, sorted by price so you can find the $10 one for a stocking and the ' +
       'enormous one for a birthday without scrolling past each other.',
     hashtag: 'KawaiiPlushies',
     season: [],
@@ -461,7 +461,7 @@ export const BOARDS: Board[] = [
     title: 'Squishies & Fidget Toys',
     tagline: 'Squeezable, slow-rising, quietly useful in a meeting',
     intro:
-      'Squishies, mochi toys and fidgets — bought for children, kept by adults. Small, ' +
+      'Squishies, mochi toys and fidgets, bought for children and kept by adults. Small, ' +
       'cheap, and the easiest thing on this site to buy several of.',
     hashtag: 'SquishyToy',
     season: [],

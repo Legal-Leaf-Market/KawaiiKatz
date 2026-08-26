@@ -156,7 +156,7 @@ function pinDescription(o: Pinnable): string {
     cName.toLowerCase().replace(/ & .*/, '').replace(/s$/, '')
   const tags = pinHashtags(o)
   const priceTxt = Number(o.price) > 0 ? ` Just ${money(o.price)}.` : ''
-  const body = `${name} — a kawaii ${cLead} pick from ${vendor}.${priceTxt} Cute, clever & kind finds curated on Kawaii Katz.`
+  const body = `${name}: a kawaii ${cLead} pick from ${vendor}.${priceTxt} Cute, clever & kind finds curated on Kawaii Katz.`
   const hashline = ' #ad ' + tags.map((t) => '#' + t).join(' ')
   return (body.slice(0, 480 - hashline.length) + hashline).slice(0, 480)
 }
@@ -258,7 +258,7 @@ export function pinGuide(o: {
   const img = unproxied(o.cover.image || '')
   const media = /^https?:\/\//i.test(img) ? '&media=' + encodeURIComponent(img) : ''
   const tags = ['#ad', '#' + tagToken(o.tag), '#KawaiiGifts', '#KawaiiKatz', '#GiftGuide']
-  const desc = `${o.title} — ${o.tagline}. Curated on Kawaii Katz. ${tags.join(' ')}`.slice(0, 480)
+  const desc = `${o.title}: ${o.tagline}. Curated on Kawaii Katz. ${tags.join(' ')}`.slice(0, 480)
   const u =
     'https://www.pinterest.com/pin/create/button/?url=' +
     encodeURIComponent(`${base}/gifts/${o.slug}`) +

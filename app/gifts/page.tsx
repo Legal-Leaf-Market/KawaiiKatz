@@ -14,7 +14,7 @@ export const revalidate = 21600
 
 const TITLE = 'Kawaii Gift Guides | Kawaii Katz'
 const DESCRIPTION =
-  'Seasonal gift guides of cute, clever and kind finds — curated from eight kawaii shops and sorted by what you want to spend.'
+  'Seasonal gift guides of cute, clever and kind finds, curated from eight kawaii shops and sorted by what you want to spend.'
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -41,7 +41,7 @@ export default async function GiftGuidesPage() {
   const groups: { heading: string; blurb: string; cards: typeof cards }[] = [
     {
       heading: 'By the season',
-      blurb: 'Tied to a date, and worth looking at early — seasonal search runs about three months ahead of the season itself.',
+      blurb: 'Tied to a date, and worth looking at early. Seasonal search runs about three months ahead of the season itself.',
       cards: cards.filter((c) => c.board.kind === 'season'),
     },
     {
@@ -109,10 +109,10 @@ export default async function GiftGuidesPage() {
                 <p className="text-[13.5px] text-[#6f6675] leading-snug">{b.tagline}</p>
                 <p className="text-[12px] font-bold text-[#9a8fa3] mt-auto pt-1.5">
                   {b.kind === 'theme'
-                    ? 'Always on — refreshed from the live catalogue'
+                    ? 'Always on, refreshed from the live catalogue'
                     : inSeason
                       ? '🔥 In season now'
-                      : `Peaks from ${MONTHS[b.season[0]]} — worth pinning early`}
+                      : `Peaks from ${MONTHS[b.season[0]]} , worth pinning early`}
                 </p>
               </div>
             </Link>

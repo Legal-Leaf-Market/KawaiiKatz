@@ -117,6 +117,6 @@ export async function POST(req: NextRequest) {
     // shopper: "overloaded", "rate limited" and "bad key" need different
     // reactions and a generic failure hides which one happened.
     const detail = e instanceof Anthropic.APIError ? `${e.status}: ${e.message}` : (e as Error).message
-    return noStore({ error: `Could not write that strip — ${detail}` }, 502)
+    return noStore({ error: `Could not write that strip. ${detail}` }, 502)
   }
 }

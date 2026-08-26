@@ -165,7 +165,7 @@ export default function BrkoxCard({
                 >
                   {p.variants.map((v, i) => (
                     <option key={v.id} value={i}>
-                      {v.title || 'Standard'} — {money(v.price)}
+                      {v.title || 'Standard'} - {money(v.price)}
                     </option>
                   ))}
                 </select>

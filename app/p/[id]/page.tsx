@@ -90,7 +90,7 @@ export async function generateMetadata({
   const p = await findProduct(id)
   if (!p) return { title: 'Not found | Kawaii Katz' }
 
-  const title = `${p.name} — ${p.vendor} | Kawaii Katz`
+  const title = `${p.name} from ${p.vendor} | Kawaii Katz`
   const description = (p.blurb || `${p.name} from ${p.vendor}, ${money(p.price)}.`).slice(0, 155)
   return {
     title,
@@ -176,7 +176,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {/* Required by the FTC, and by Pinterest's own link-sharing rules. */}
           <p className="text-[12px] text-[#9a8fa3] leading-relaxed mt-1">
             We earn a commission if you buy through this link, at no extra cost to you.
-            You will check out on {p.vendor}&apos;s own site — Kawaii Katz never takes payment.
+            You will check out on {p.vendor}&apos;s own site. Kawaii Katz never takes payment.
           </p>
 
           <div className="flex gap-1.5 flex-wrap mt-1">

@@ -59,7 +59,7 @@ export default function TasteNote({ variant }: Props) {
   if (variant === 'footer') {
     return (
       <p className="mt-0.5">
-        Your 👍 and 👎 stay in this browser — no account, never sent to us.{' '}
+        Your 👍 and 👎 stay in this browser. No account, never sent to us.{' '}
         We report page visits and clicks to Pinterest for ad measurement (IP and
         browser only); Do Not Track and Global Privacy Control are honoured.{' '}
         {button}
@@ -70,7 +70,7 @@ export default function TasteNote({ variant }: Props) {
   return (
     <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11.5px] font-semibold text-[#9a8fa3] px-1">
       <span>
-        Your 👍 and 👎 stay on this device — no account, no cookie, nothing sent to us.
+        Your 👍 and 👎 stay on this device. No account, no cookie, nothing sent to us.
         They only shape what this browser sees.
       </span>
       {button}

@@ -164,7 +164,7 @@ export default function ProductComments({ productId }: { productId: string }) {
         Comments{comments.length > 0 && <span className="text-[#9a8fa3]"> · {comments.length}</span>}
       </h2>
       <p className="text-[12.5px] text-[#9a8fa3] font-semibold mb-4">
-        Say what you think of this one. No account needed — links aren&apos;t allowed, and the
+        Say what you think of this one. No account needed. Links aren&apos;t allowed, and the
         curator can remove anything.
       </p>
 
@@ -201,7 +201,7 @@ export default function ProductComments({ productId }: { productId: string }) {
       </form>
 
       {!loaded ? null : tops.length === 0 ? (
-        <p className="text-[13.5px] font-bold text-[#9a8fa3]">Nothing here yet — be the first.</p>
+        <p className="text-[13.5px] font-bold text-[#9a8fa3]">Nothing here yet. Be the first.</p>
       ) : (
         <div className="divide-y-2 divide-[#ffe6d9]">
           {tops.map((c) => (

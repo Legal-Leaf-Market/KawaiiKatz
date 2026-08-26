@@ -30,10 +30,10 @@ export const SITE_TAGLINE = 'Kawaii, Clever & Kind'
  * So the branding now lives where it can be controlled — favicon, og:image,
  * header mark — and the title is just words.
  */
-export const SITE_TITLE = `${SITE_NAME} — ${SITE_TAGLINE}`
+export const SITE_TITLE = `${SITE_NAME} | ${SITE_TAGLINE}`
 
 export const SITE_DESCRIPTION =
-  'Curated kawaii finds — plushies, stationery, kitchen, puzzles & more. ' +
+  'Curated kawaii finds: plushies, stationery, kitchen, puzzles & more. ' +
   'Kawaii Katz discovers the best cute & clever things for every budget.'
 
 /**

@@ -327,7 +327,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                 >
                   {p.variants.map((v, i) => (
                     <option key={v.id} value={i}>
-                      {v.title} — {money(v.price)}
+                      {v.title} - {money(v.price)}
                     </option>
                   ))}
                 </select>
@@ -421,7 +421,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
 
           {picks.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-center text-[12px] font-bold text-[#9a8fa3] px-2">
-              Nothing close enough to suggest yet — try the Gift Finder 🎁
+              Nothing close enough to suggest yet. Try the Gift Finder 🎁
             </div>
           ) : (
             <>
@@ -460,7 +460,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                   </button>
                   {shouldNudge(taste) ? (
                     <div className="text-center text-[9.5px] font-bold text-[#6495ED] leading-snug px-1">
-                      Not quite it? Keep telling us with 👍 and 👎 — we&apos;ll narrow it down.
+                      Not quite it? Keep telling us with 👍 and 👎 and we&apos;ll narrow it down.
                     </div>
                   ) : (
                     <div className="text-center text-[9.5px] font-bold text-[#c9bfd1] leading-none">
@@ -524,7 +524,7 @@ function MiniRow({ item, onVote, onAdd }: {
             onClick={() => onVote(item, 'down')}
             className="w-[26px] h-[26px] rounded-full border-2 border-white bg-[rgba(255,255,255,.9)] text-[12px] leading-none flex items-center justify-center cursor-pointer shadow-[0_2px_6px_rgba(79,69,80,.25)] hover:bg-white transition-colors"
             aria-label={`Fewer like ${item.name}`}
-            title="Not this — show me something else"
+            title="Not this, show me something else"
           >
             👎
           </button>

@@ -188,7 +188,7 @@ export default function GiftFinder({ open, onClose, products }: Props) {
             {shouldNudge(taste) ? (
               <>Don&apos;t quite see what you&apos;re looking for? Keep telling us what you like and what you don&apos;t with 👍 and 👎, and we&apos;ll help you find the perfect gift.</>
             ) : (
-              <>Learning what you like 🎀 — keep using 👍 and 👎 and these picks get sharper.</>
+              <>Learning what you like 🎀. Keep using 👍 and 👎 and these picks get sharper.</>
             )}
           </div>
         )}
@@ -209,7 +209,7 @@ export default function GiftFinder({ open, onClose, products }: Props) {
           {searched && picks.length === 0 && (
             <div className="flex items-center justify-center h-40 text-[#9a8fa3] font-bold text-center">
               <p>
-                No matches for that combo yet — try loosening a filter
+                No matches for that combo yet. Try loosening a filter
                 {kidsOnly ? ', or turn off “For a kid”' : ''}. 🌸
               </p>
             </div>
@@ -243,7 +243,7 @@ export default function GiftFinder({ open, onClose, products }: Props) {
                         onClick={() => vote(p, 'down')}
                         className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[rgba(255,255,255,.92)] text-[15px] leading-none flex items-center justify-center cursor-pointer shadow-[0_2px_8px_rgba(79,69,80,.28)] hover:bg-white transition-colors"
                         aria-label={`Fewer like ${p.name}`}
-                        title="Not this — show me something else"
+                        title="Not this, show me something else"
                       >
                         👎
                       </button>

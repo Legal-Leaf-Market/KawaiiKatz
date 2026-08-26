@@ -415,7 +415,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
               <button
                 onClick={() => { thumbDown(surprise); setSurprise(null) }}
                 className="border-2 border-[#ffd6de] bg-white text-[#ff5a7a] rounded-xl px-3 py-2 cursor-pointer text-[13px] hover:bg-[#ffd6de] transition-colors"
-                title="Not for me — hide it and show fewer like it"
+                title="Not for me, hide it and show fewer like it"
               >
                 👎
               </button>
@@ -498,7 +498,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
                   type="button"
                   onClick={() => shuffle(s.key, s.pageCount)}
                   className="border-[2.5px] border-[#b79cff] bg-white text-[#b79cff] font-display font-extrabold px-3.5 py-2 rounded-full cursor-pointer text-[13px] hover:bg-[#b79cff] hover:text-white transition-colors whitespace-nowrap"
-                  title={`${s.poolSize} in this section — show me different ones`}
+                  title={`${s.poolSize} in this section. Show me different ones`}
                 >
                   ↻ Shuffle <span className="opacity-70">{s.pageIndex + 1}/{s.pageCount}</span>
                 </button>
@@ -538,7 +538,7 @@ function Grid({
   onWish: (p: Product) => void
 }) {
   if (!items.length) {
-    return <p className="text-[#9a8fa3] font-bold py-4">Nothing left here — try shuffling or clearing what you hid.</p>
+    return <p className="text-[#9a8fa3] font-bold py-4">Nothing left here. Try shuffling or clearing what you hid.</p>
   }
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
@@ -596,7 +596,7 @@ function Grid({
                   onClick={() => onDown(p)}
                   className="flex-1 border-2 border-[#ffd6de] bg-white text-[#ff5a7a] rounded-xl py-1.5 cursor-pointer text-[13px] hover:bg-[#ffd6de] transition-colors"
                   aria-label={`Hide ${p.name} and show fewer like it`}
-                  title="Not for me — hide it and show fewer like it"
+                  title="Not for me, hide it and show fewer like it"
                 >
                   👎
                 </button>

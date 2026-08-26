@@ -117,7 +117,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">\n` +
     `<channel>\n` +
-    `<title>${esc(b.title)} — Kawaii Katz</title>\n` +
+    `<title>${esc(b.title)} | Kawaii Katz</title>\n` +
     `<link>${esc(pageUrl)}</link>\n` +
     `<description>${esc(b.tagline)}</description>\n` +
     `<language>en</language>\n` +

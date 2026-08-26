@@ -65,7 +65,7 @@ export async function generateMetadata({
       // every other reader finds one, and it costs a line.
       types: {
         'application/rss+xml': [
-          { url: `${SITE_URL}/feeds/${b.slug}.xml`, title: `${b.title} — Kawaii Katz` },
+          { url: `${SITE_URL}/feeds/${b.slug}.xml`, title: `${b.title} | Kawaii Katz` },
         ],
       },
     },
@@ -145,7 +145,7 @@ export default async function GiftGuidePage({ params }: { params: Promise<{ slug
         {/* Required by the FTC, and by Pinterest's own link-sharing rules. */}
         <p className="text-[12px] text-[#9a8fa3] leading-relaxed mt-2 max-w-[68ch]">
           We earn a commission if you buy through these links, at no extra cost to you. Every
-          item checks out on the shop&apos;s own site — Kawaii Katz never takes payment. Prices
+          item checks out on the shop&apos;s own site. Kawaii Katz never takes payment. Prices
           and stock are refreshed from each shop every few hours and can change.
         </p>
       </main>
