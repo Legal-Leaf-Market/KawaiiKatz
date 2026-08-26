@@ -416,8 +416,9 @@ and lasts a whole season — which is what Pinterest search actually rewards.
 
 **These pages are indexable and in the sitemap, and that is not a contradiction of §7.** The
 rule is "do not compete with a vendor for their own product page". A guide competes with
-nobody's — no vendor has one. It is the only original editorial content here. The `/p/<id>`
-pages it links to stay `noindex`.
+nobody's, because no vendor has one. It is the only original editorial content here. The
+`/p/<id>` pages it links to are indexable too as of 2026-08-26 (§4f), but stay out of the
+sitemap, which is what §7's rule actually says.
 
 Three things that only showed up under real data (4,426 products, 2026-08-25):
 
@@ -599,10 +600,30 @@ button uses, so a Pin Pinterest creates reads exactly like one a person made, `#
 It is passed `Board.hashtag`, not the month-based `seasonalTag()`: a feed is read whenever
 Pinterest gets to it, which may be a different month from the one it was written in.
 
-**Tested, and it works.** The open question was whether Pinterest would refuse a feed whose
-items point at `noindex` pages. It does not: the plushies feed was connected on 2026-08-25 and
-produced **40 Pins within hours**. So `/p/<id>` stays `noindex, follow` and §7's rule about
-not competing with vendors is not in tension with any of this.
+**Pin creation is not Pin distribution, and confusing the two cost the channel a day.**
+
+The open question was whether Pinterest would accept a feed pointing at `noindex` pages. The
+plushies feed was connected on 2026-08-25 and produced **40 Pins within hours**, and this guide
+recorded that as "tested, and it works". It was not a test of the thing that matters. Pinterest
+happily CREATES Pins from a noindex destination; what it will not do is DISTRIBUTE them.
+
+Twelve hours later those 40 Pins had **zero views**, while hand-made Pins from the same account
+were getting views as usual. The difference was the destination: the manual ones pointed at
+vendor product URLs, which are ordinary indexable pages, and the feed ones pointed at
+`/p/<id>`, which served `noindex`. Same account, same images, same day, one variable.
+
+**`/p/<id>` is indexable as of 2026-08-26.** The sitemap rule is untouched: `app/sitemap.ts`
+still lists no product URL, which is what §7 actually says, so we still never ask to rank beside
+a vendor for their own product. What changed is that we stopped telling Pinterest the
+destination was worthless.
+
+Pointing the feeds at merchant links instead is NOT the alternative, and the reason is two
+paragraphs up: every `<link>` stays on our domain so a feed-generated Pin is not an affiliate
+Pin. Thousands of affiliate Pins is the thing that gets an account actioned.
+
+**The general lesson, since this is the second time:** a channel test needs to measure the
+outcome you want, not the first observable step toward it. "The Pins exist" and "the Pins work"
+are different claims, and only one of them was checked.
 
 **Read a feed before you connect it.** Both feeds that have been read line by line contained
 something that should not be pinned — the plushies feed shipped "Ohio State Brutus", and the

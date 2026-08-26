@@ -22,10 +22,14 @@ import ProductImage from '@/components/ProductImage'
  * lives on the vendor's own site and we should not compete with them for it."
  * That rule is kept, and so is the reason behind it.
  *
- * The reason is competing with our own merchants in Google. These pages are
- * `noindex, follow`: they are not in the sitemap, they are not crawled into an
- * index, and they cannot outrank a vendor's own product page because they will
- * never appear beside it. What they can do is receive a click from a pin.
+ * The reason is competing with our own merchants in Google, and the sitemap is
+ * how that is honoured: app/sitemap.ts lists no product URL, so we never ASK to
+ * be ranked beside a vendor for their own product.
+ *
+ * These pages were also `noindex` until 2026-08-26 on the same reasoning, and
+ * that part was a mistake with a measured price. See the robots note in
+ * generateMetadata below: a noindex destination is why Pins built from our RSS
+ * feeds got created and then went nowhere.
  *
  * That distinction is the whole point. Pinterest's community guidelines limit
  * affiliate Pins "repetitively or in large volumes" — but a pin that links
@@ -95,9 +99,30 @@ export async function generateMetadata({
   return {
     title,
     description,
-    // See the note at the top: not indexed, but links are still followed so the
-    // vendor gets the signal from our outbound link rather than nothing.
-    robots: { index: false, follow: true },
+    /**
+     * Indexable, and NOT in the sitemap. Those are two different decisions and
+     * this page needs them to differ.
+     *
+     * These pages were noindex until 2026-08-26, on the §7 principle that we
+     * should not compete with a vendor for their own product page. The measured
+     * cost of that turned out to be the entire Pinterest channel: Pins created
+     * from our RSS feeds point here, and a destination marked noindex gets
+     * created but barely distributed. Forty feed Pins took twelve hours to reach
+     * zero views, while hand-made Pins pointing at vendor URLs got views the
+     * whole time. Same account, same images, same day, one variable.
+     *
+     * We cannot answer it by pointing the feeds at merchant links instead:
+     * §4f keeps every feed <link> on our own domain precisely so a
+     * feed-generated Pin is not an affiliate Pin, which is the category
+     * Pinterest limits "repetitively or in large volumes". Thousands of
+     * affiliate Pins is the thing that gets an account actioned.
+     *
+     * So the noindex goes and the sitemap rule stays. §7 as written is about the
+     * sitemap, and app/sitemap.ts still lists no product URL. These pages are
+     * also no longer thin: each carries the vendor blurb, "More like this", and
+     * a comment thread, which is original content a vendor page does not have.
+     */
+    robots: { index: true, follow: true },
     alternates: { canonical: `${SITE_URL}/p/${p.id}` },
     openGraph: {
       title,
