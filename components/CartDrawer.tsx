@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useStore, cartTotal, groupCartByVendor, checkoutUrlForVendor, type CartItem } from '@/lib/store'
 import { track } from '@/lib/pinterest-track'
+import { logEvent } from '@/lib/site-events'
 import { catEmoji, money, type Product } from '@/lib/data'
 
 type Props = {
@@ -48,6 +49,7 @@ export default function CartDrawer({ open, onClose, products }: Props) {
      * request is what lets it survive the navigation on the line below.
      */
     const lines = groups[vendor] ?? []
+    logEvent('checkout_click', { vendor, meta: String(lines.length) })
     const priceOf = (l: { product: Product; item: CartItem }) =>
       l.product.variants[l.item.variantIndex]?.price ?? l.product.price
     track({

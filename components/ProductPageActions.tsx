@@ -4,6 +4,7 @@ import { useStore } from '@/lib/store'
 import { affiliateUrl, couponWrapUrl, type Product } from '@/lib/data'
 import { pinProductPage } from '@/lib/pinterest'
 import { track } from '@/lib/pinterest-track'
+import { logEvent } from '@/lib/site-events'
 
 /**
  * The interactive strip on a product page. A small client island so the page
@@ -18,6 +19,7 @@ export default function ProductPageActions({ product: p }: { product: Product })
   const dest = couponWrapUrl(affiliateUrl(p.url || p.domain, p.vendor), p.vendor)
 
   function buy() {
+    logEvent('outbound_click', { productId: p.id, vendor: p.vendor, cat: p.cat })
     track({
       event_name: 'custom',
       custom_data: {
@@ -34,6 +36,7 @@ export default function ProductPageActions({ product: p }: { product: Product })
   }
 
   function addToCart() {
+    logEvent('add_to_cart', { productId: p.id, vendor: p.vendor, cat: p.cat })
     dispatch({ type: 'ADD_TO_CART', productId: p.id, variantIndex: 0 })
     setAdded(true)
     setTimeout(() => setAdded(false), 1600)
@@ -71,7 +74,7 @@ export default function ProductPageActions({ product: p }: { product: Product })
         {/* Pins THIS page, not the merchant link — see pinProductPage(). */}
         <button
           type="button"
-          onClick={() => pinProductPage(p)}
+          onClick={() => { logEvent('pin_click', { productId: p.id, vendor: p.vendor, cat: p.cat }); pinProductPage(p) }}
           className="border-[2.5px] border-[#e60023] bg-white text-[#e60023] rounded-[14px] w-[52px] cursor-pointer text-[19px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
           aria-label={`Pin ${p.name} to Pinterest`}
           title="Pin this"

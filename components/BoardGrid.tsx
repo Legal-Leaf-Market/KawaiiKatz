@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store'
 import { useExclusions } from '@/hooks/useExclusions'
@@ -10,6 +10,7 @@ import { tasteBonus, totalSignals } from '@/lib/taste'
 import { money, type Product } from '@/lib/data'
 import { pinProductPage, pinGuide } from '@/lib/pinterest'
 import { track } from '@/lib/pinterest-track'
+import { logEvent } from '@/lib/site-events'
 import ProductImage from '@/components/ProductImage'
 
 type Section = { key: string; title: string; blurb: string; products: Product[] }
@@ -57,6 +58,13 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
   const { excludedIds } = useExclusions()
   const { allProducts, live } = useLiveCatalog()
   const { taste, record, showHidden } = useTaste()
+
+  // Which collections people actually open. page_view already records the path;
+  // this carries the slug in `meta` so /admin can rank guides without parsing
+  // URLs, and so a renamed route does not orphan its own history.
+  useEffect(() => {
+    logEvent('collection_view', { meta: slug })
+  }, [slug])
 
   const [added, setAdded] = useState<string | null>(null)
   const [page, setPage] = useState<Record<string, number>>({})
@@ -221,6 +229,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
    * and the taste profile learns from it for the shuffle after this one.
    */
   function thumbDown(p: Product) {
+    logEvent('taste_down', { productId: p.id, vendor: p.vendor, cat: p.cat, meta: slug })
     // record() folds the id into taste.hidden and persists it, so there is no
     // second piece of state to keep in step.
     record(p, 'down')
@@ -233,6 +242,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
   }
 
   function thumbUp(p: Product) {
+    logEvent('taste_up', { productId: p.id, vendor: p.vendor, cat: p.cat, meta: slug })
     record(p, 'up')
     setLiked((prev) => new Set(prev).add(p.id))
   }
@@ -246,6 +256,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
    * prerender, and a random order there is a hydration mismatch.
    */
   function surpriseMe() {
+    logEvent('surprise_me', { meta: slug })
     const pool = visible(corpus)
     if (!pool.length) return
     const pick = pool[Math.floor(Math.random() * pool.length)]
@@ -255,6 +266,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, sections }: P
   }
 
   function shuffle(key: string, pageCount: number) {
+    logEvent('shuffle', { meta: `${slug}/${key}` })
     // Everything currently on screen in this section counts as "seen and not
     // chosen" — a weak negative, so a visitor who keeps shuffling past the same
     // sort of thing stops being shown it.

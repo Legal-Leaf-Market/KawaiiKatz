@@ -97,3 +97,61 @@ export const productComments = pgTable(
 )
 
 export type ProductComment = typeof productComments.$inferSelect
+
+/**
+ * Every interaction a visitor has with the site.
+ *
+ * -----------------------------------------------------------------------------
+ * RAW EVENTS, NOT COUNTERS, AND THAT IS THE WHOLE POINT
+ *
+ * Nicotia Market's api/track.js keeps Redis counters: one ZSET per rollup, item
+ * and brand and store, incremented on each click. It is cheap and it answers
+ * "what is popular" perfectly well.
+ *
+ * It cannot answer the question this table exists for. "Where do people give up"
+ * is a question about ORDER: the Gift Finder opened, then produced results, then
+ * nobody clicked one. A counter knows 400 opens and 12 clicks happened; it does
+ * not know they were the same 400 sessions, so it cannot tell a funnel from a
+ * coincidence. Rows with a session id and a timestamp can. That is worth the
+ * extra storage at this site's traffic, and the retention sweep below bounds it.
+ *
+ * -----------------------------------------------------------------------------
+ * WHAT IS DELIBERATELY NOT IN HERE
+ *
+ * No IP, no user agent, no cookie, no account, nothing that identifies a person.
+ * `sid` is a random value held in sessionStorage that dies when the tab closes,
+ * so it stitches one visit together and cannot follow anyone between visits or
+ * across devices. That is the least identifying thing that still supports a
+ * funnel, and it is a deliberate ceiling: this is a gift site, and the analytics
+ * should not know more about a visitor than the shop assistant would.
+ *
+ * The product denormalisation (vendor, cat) is the same trade store_exclusions
+ * makes. A vendor going quiet must not blank the history of what people clicked
+ * on while it was live.
+ */
+export const siteEvents = pgTable(
+  'site_events',
+  {
+    id: text('id').primaryKey(),
+    ts: timestamp('ts', { withTimezone: true }).notNull().defaultNow(),
+    /** Per-tab random id. Not a cookie, not stable across visits. */
+    sid: text('sid').notNull(),
+    /** Event name, e.g. outbound_click. See lib/site-events.ts for the list. */
+    name: text('name').notNull(),
+    /** Page the event happened on. */
+    path: text('path'),
+    productId: text('product_id'),
+    vendor: text('vendor'),
+    cat: text('cat'),
+    /** Small extras: a search term, a collection slug, a price band. */
+    meta: text('meta'),
+  },
+  (t) => [
+    index('site_events_ts_idx').on(t.ts),
+    index('site_events_name_ts_idx').on(t.name, t.ts),
+    index('site_events_product_idx').on(t.productId),
+    index('site_events_sid_idx').on(t.sid),
+  ]
+)
+
+export type SiteEvent = typeof siteEvents.$inferSelect

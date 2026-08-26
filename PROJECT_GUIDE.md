@@ -42,6 +42,33 @@ of scope, because no visitor reads a comment.
 
 ---
 
+## 0b. House style: articles are short
+
+Editorial on this site is succinct, direct, and gets to the point in the first
+sentence. Business communication, not an essay.
+
+Nicotia Market went the other way. The long pieces there were genuinely good and
+one of them was literally called a manifesto for a while before being renamed "the
+long version", which is the tell: it had to be renamed because nobody was going to
+read a manifesto about nicotine pouches. Whittling those down is what made them
+work.
+
+So, for anything in the article library:
+
+- **The answer is in the first two sentences.** No throat-clearing, no personal
+  anecdote, no history of the category. A reader who bounces after the opening
+  should still have got what they came for.
+- **Never the recipe-blog shape.** Nobody wants a novel before the recipe.
+- **Aim for something a person finishes in two or three minutes**, and that can be
+  screenshotted into a carousel without editing. If it cannot be pushed to social
+  in slides, it is too long or too unstructured.
+- **Scannable beats complete.** Short sections with real headings, lists where a
+  list is honest, a table when comparing.
+- Depth goes into being *specific*, not into being long. One concrete tell a
+  counterfeit has beats three paragraphs of context.
+
+---
+
 ## 1. What this is
 
 An affiliate storefront that aggregates kawaii products from eight Shopify vendors and

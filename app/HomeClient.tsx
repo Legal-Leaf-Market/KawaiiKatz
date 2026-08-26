@@ -7,6 +7,7 @@ import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
 import { usePicks } from '@/hooks/usePicks'
 import { track } from '@/lib/pinterest-track'
+import { logEvent } from '@/lib/site-events'
 import Header from '@/components/Header'
 import FilterToolbar, { type Filters } from '@/components/FilterToolbar'
 import ProductCard from '@/components/ProductCard'
@@ -198,6 +199,10 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
     if (q === searchedFor.current) return
     const t = setTimeout(() => {
       searchedFor.current = q
+      // Fired together so the zero-result list on /admin is always a strict
+      // subset of the search list, and the two can be compared directly.
+      logEvent('search', { meta: q })
+      if (filtered.length === 0) logEvent('search_zero', { meta: q })
       track({ event_name: 'search', custom_data: { search_string: q } })
     }, 900)
     return () => clearTimeout(t)
@@ -242,7 +247,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
       {/* Header */}
       <Header
         onSearch={handleSearch}
-        onOpenCart={() => setCartOpen(true)}
+        onOpenCart={() => { logEvent('cart_open'); setCartOpen(true) }}
         onOpenWish={() => setWishOpen(true)}
         onOpenGift={() => setGiftOpen(true)}
         wishCount={state.wish.length}

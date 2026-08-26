@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CATEGORIES, catEmoji, money, type Product } from '@/lib/data'
 import { isKidSafe } from '@/lib/kid-safe'
 import { useStore } from '@/lib/store'
+import { logEvent } from '@/lib/site-events'
 import { shouldNudge, tasteBonus, isLearning, type TasteProfile } from '@/lib/taste'
 import { useTaste } from '@/hooks/useTaste'
 import TasteNote from './TasteNote'
@@ -20,6 +21,12 @@ export default function GiftFinder({ open, onClose, products }: Props) {
   const [searched, setSearched] = useState(false)
   const [liked, setLiked] = useState<Record<string, boolean>>({})
   const [kidsOnly, setKidsOnly] = useState(false)
+
+  // finder_open is the top of the funnel on /admin, so it fires on the
+  // transition into `open` rather than on every render while it is open.
+  useEffect(() => {
+    if (open) logEvent('finder_open')
+  }, [open])
   const { dispatch } = useStore()
   const { taste, record } = useTaste()
 
@@ -61,6 +68,7 @@ export default function GiftFinder({ open, onClose, products }: Props) {
   }
 
   function findGifts() {
+    logEvent('finder_filter', { cat, meta: budget })
     setPicks(pick(taste, new Set(), 3))
     setLiked({})
     setSearched(true)
@@ -78,6 +86,7 @@ export default function GiftFinder({ open, onClose, products }: Props) {
 
   /** Shuffling past three suggestions is three weak "not that one"s. */
   function shuffleGifts() {
+    logEvent('shuffle', { meta: 'gift-finder' })
     let t = taste
     for (const p of picks) t = record(p, 'skip')
     setPicks(pick(t, new Set(picks.map((p) => p.id)), 3))
@@ -96,6 +105,7 @@ export default function GiftFinder({ open, onClose, products }: Props) {
   }
 
   function addToCart(item: Product) {
+    logEvent('finder_click', { productId: item.id, vendor: item.vendor, cat: item.cat })
     dispatch({ type: 'ADD_TO_CART', productId: item.id, variantIndex: 0 })
     record(item, 'cart')
   }

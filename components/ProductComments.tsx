@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { useStore } from '@/lib/store'
+import { logEvent } from '@/lib/site-events'
 
 /**
  * The comment thread on a product page.
@@ -92,6 +93,7 @@ export default function ProductComments({ productId }: { productId: string }) {
         setErr(j.error ?? 'could not post that')
       } else {
         try { localStorage.setItem(NAME_KEY, author.trim()) } catch { /* ignore */ }
+        logEvent('comment_post', { productId })
         setBody('')
         setReplyTo(null)
         await load()

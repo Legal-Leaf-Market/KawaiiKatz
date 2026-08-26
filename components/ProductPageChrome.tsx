@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useStore } from '@/lib/store'
+import { logEvent } from '@/lib/site-events'
 import Header from '@/components/Header'
 import CartDrawer from '@/components/CartDrawer'
 import WishlistDrawer from '@/components/WishlistDrawer'
@@ -41,7 +42,7 @@ export default function ProductPageChrome({ children }: { children: React.ReactN
         // place that can answer. Anything else would be a box that does nothing.
         onSearch={(q) => { if (q.trim()) router.push(`/?q=${encodeURIComponent(q.trim())}`) }}
         searchValue=""
-        onOpenCart={() => setCartOpen(true)}
+        onOpenCart={() => { logEvent('cart_open'); setCartOpen(true) }}
         onOpenWish={() => setWishOpen(true)}
         onOpenGift={() => setGiftOpen(true)}
         wishCount={state.wish.length}

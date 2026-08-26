@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, isNewItem, type Product } from '@/lib/data'
 import { pinProductPage } from '@/lib/pinterest'
+import { logEvent } from '@/lib/site-events'
 import { rankSimilar } from '@/lib/similar'
 import { shouldNudge, type TasteProfile, type TasteSignal } from '@/lib/taste'
 import { useTaste } from '@/hooks/useTaste'
@@ -238,7 +239,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                 {/* Pointer devices: the cornflower wash fades in on hover. */}
                 <button
                   type="button"
-                  onClick={() => { prime(); setFlipped(true) }}
+                  onClick={() => { prime(); logEvent('card_flip', { productId: p.id, vendor: p.vendor, cat: p.cat }); setFlipped(true) }}
                   className="kk-flip-wash absolute inset-0 z-10 items-center justify-center text-center px-3 cursor-pointer"
                   aria-label={`Flip ${p.name} over for more gift options`}
                 >
@@ -267,7 +268,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                 {inWish ? '♥' : '♡'}
               </button>
               <button
-                onClick={() => pinProductPage(p)}
+                onClick={() => { logEvent('pin_click', { productId: p.id, vendor: p.vendor, cat: p.cat }); pinProductPage(p) }}
                 className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-full w-[34px] h-[34px] cursor-pointer text-[15px] shadow-[0_4px_12px_rgba(255,138,101,.18)] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                 aria-label={`Pin ${p.name} to Pinterest`}
                 title="Share this to Pinterest"
