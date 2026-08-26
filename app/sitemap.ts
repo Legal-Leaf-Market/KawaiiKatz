@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 
+import { ARTICLES } from '@/lib/articles'
 import { BOARDS } from '@/lib/boards'
 import { liveLinkShowcases, showcaseVendors } from '@/lib/data'
 import { SITE_URL } from '@/lib/site'
@@ -23,7 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Gift guides. These ARE listed, and they are the only listing here that
     // holds products — a guide is our own editorial page, so it competes with
     // no vendor for their own product URL. The /p/<id> pages it links to stay
-    // out, and stay noindex.
+    // OUT of the sitemap, which is the rule; they are indexable as of
+    // 2026-08-26 because noindex was suppressing every Pin (§4f).
     {
       url: `${SITE_URL}/gifts`,
       changeFrequency: 'weekly' as const,
@@ -33,6 +35,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/gifts/${b.slug}`,
       changeFrequency: 'weekly' as const,
       priority: 0.9,
+    })),
+    // Articles. Listed for the same reason the guides are: they compete with no
+    // vendor because no vendor wrote them, and they are the only pages here
+    // that answer a question rather than list stock.
+    {
+      url: `${SITE_URL}/learn`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    ...ARTICLES.map((a) => ({
+      url: `${SITE_URL}/learn/${a.slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
     })),
     ...showcaseVendors().map((v) => ({
       url: `${SITE_URL}/${v.showcase!.slug}`,

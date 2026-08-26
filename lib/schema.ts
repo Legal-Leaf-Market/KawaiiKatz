@@ -46,8 +46,12 @@ type PageNode = {
    * one that does not — a brand showcase links out to a merchant's own
    * categories and has no product listing of its own, so calling it a
    * CollectionPage would be describing a page that isn't there.
+   *
+   * Article for /learn/<slug>. These are the only pages here that are a piece
+   * of writing rather than a view onto the catalogue, and the type is what
+   * lets a search engine treat them as such.
    */
-  type?: 'CollectionPage' | 'WebPage'
+  type?: 'CollectionPage' | 'WebPage' | 'Article'
 }
 
 export function pageNode({ path, name, description, type = 'WebPage' }: PageNode) {

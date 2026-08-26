@@ -19,7 +19,9 @@ import ProductPageChrome from '@/components/ProductPageChrome'
  * "do not add product URLs to the sitemap — every product lives on the vendor's
  * own site and we should not compete with them for it". A guide competes with
  * no vendor's page, because no vendor has one: it is the only original
- * editorial work on this site. The product pages it links to stay noindex.
+ * editorial work on this site. The product pages it links to are indexable too
+ * as of 2026-08-26 (§4f), but stay out of the sitemap, which is what the rule
+ * actually says.
  *
  * `dynamicParams = false` matters here for the same reason it does on
  * /[brand] — without it any /gifts/<anything> would render a guide-shaped page
