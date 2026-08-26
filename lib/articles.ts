@@ -239,6 +239,379 @@ export const ARTICLES: Article[] = [
       },
     ],
   },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'blind-box-odds',
+    emoji: '🎲',
+    title: 'Blind box odds, explained honestly',
+    answer:
+      'A "secret" is usually 1 in 72 or 1 in 144, and a sealed case of 12 gives you roughly an 85% chance of one at the better rate. Buying single boxes is the expensive way to chase, and no shaking technique changes anything.',
+    updated: '2026-08-26',
+    readMins: 3,
+    tags: ['blind boxes', 'collecting', 'buying advice'],
+    related: 'blind-boxes',
+    body: [
+      { t: 'h', text: 'The three tiers' },
+      {
+        t: 'table',
+        head: ['Tier', 'Typical odds', 'Share of the series'],
+        rows: [
+          ['Standard', 'about 1 in 6', 'roughly 70%'],
+          ['Rare or chaser', 'about 1 in 24', 'roughly 25%'],
+          ['Secret', '1 in 72 to 1 in 144', 'roughly 1 to 3%'],
+        ],
+      },
+      {
+        t: 'p',
+        text: 'Ratios differ by series and the good ones are printed on the box or the case. If a listing will not tell you the ratio, assume the worst end of that range.',
+      },
+      { t: 'h', text: 'What a case actually buys you' },
+      {
+        t: 'p',
+        text: 'A sealed case is treated as its own pool, and it contains at most one secret. At 1 in 72, a 12-box case works out to roughly an 85% chance of pulling one, which is far better than twelve independent singles. It is also the only way to complete a standard set without duplicates piling up.',
+      },
+      {
+        t: 'note',
+        text: 'The thing most guides skip: a case improves your odds because of how cases are packed, not because you bought more boxes. Twelve singles bought separately from twelve different cases is a worse bet at the same price.',
+      },
+      { t: 'h', text: 'Things that do not work' },
+      {
+        t: 'ul',
+        items: [
+          'Shaking, weighing or squeezing. Manufacturers pad and weight boxes specifically to defeat this, and any trick that once worked has been designed out.',
+          'Barcode reading. The runs that had unique codes per figure were patched years ago.',
+          'Picking from the middle of the display. Retail boxes are not packed in case order once a display has been opened.',
+        ],
+      },
+      { t: 'h', text: 'Buy it as a toy, not an investment' },
+      {
+        t: 'p',
+        text: 'Secondary prices for secrets are real but volatile, and they collapse the moment a series is reissued. The reliable way to enjoy blind boxes is to like the standard figures enough that a duplicate is not a loss. If you would be unhappy opening the most common one in the series, buy an open-box figure instead and pick the one you want.',
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'plushie-sizes',
+    emoji: '📏',
+    title: 'Plushie sizes are lying to you (a bit)',
+    answer:
+      'The number in the listing is usually the plushie lying flat and stretched, measured tip to tip. A "16 inch" plush sitting on a shelf is commonly 10 to 12 inches tall, so measure against something in your room before you buy.',
+    updated: '2026-08-26',
+    readMins: 2,
+    tags: ['plushies', 'buying advice', 'gifting'],
+    related: 'plushies',
+    body: [
+      { t: 'h', text: 'Why the number is bigger than the plushie' },
+      {
+        t: 'p',
+        text: 'Sellers measure the longest available dimension, which for most animals means flat on its back with ears and legs extended. Nothing about that is dishonest, it is just the industry convention, and it is not how the toy will sit on a bed.',
+      },
+      {
+        t: 'table',
+        head: ['Listed size', 'Roughly what arrives', 'Good for'],
+        rows: [
+          ['6 to 8 in', 'Fits a hand, sits about 5 in tall', 'Desk, bag charm, stocking'],
+          ['10 to 12 in', 'Sits about 8 in tall', 'The default gift size'],
+          ['16 to 18 in', 'Sits about 11 in tall', 'A child can carry it around'],
+          ['24 in and up', 'Genuinely large, awkward to post', 'A statement gift, needs floor space'],
+          ['40 in and up', 'Bigger than a toddler', 'Photographs well, lives on the floor'],
+        ],
+      },
+      { t: 'h', text: 'Three checks before you buy' },
+      {
+        t: 'ol',
+        items: [
+          'Look for a photo with a person or a hand in it. If every photo is the plushie alone on white, the size is unverifiable.',
+          'Measure the number against something real in the room you are buying it for. 18 inches is about the long side of a laptop.',
+          'Check the shipped weight if it is listed. A large plush that weighs almost nothing is thinly stuffed and will not hold its shape.',
+        ],
+      },
+      {
+        t: 'note',
+        text: 'For gifting a child, 10 to 12 inches is the size that actually gets carried around. Bigger ones get admired and then live on a bed.',
+      },
+      { t: 'h', text: 'The "jumbo" problem' },
+      {
+        t: 'p',
+        text: 'Jumbo, giant and mega are marketing words with no agreed meaning, and in the squishy and plush world jumbo often means about 7 centimetres. Ignore the adjective entirely and read the measurement, and if there is no measurement, treat that as the answer.',
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'sanrio-real-or-fake',
+    emoji: '🎀',
+    title: 'Sanrio: licensed, unlicensed, and counterfeit',
+    answer:
+      'Look for a copyright line reading "© Sanrio Co., Ltd." plus a named distributor. Licensed goods always carry both. Fan-made goods carry neither and do not pretend to; counterfeits copy the character and get the paperwork wrong.',
+    updated: '2026-08-26',
+    readMins: 3,
+    tags: ['sanrio', 'buying advice', 'collecting'],
+    body: [
+      { t: 'h', text: 'Three different things, often confused' },
+      {
+        t: 'table',
+        head: ['Type', 'What it is', 'How you can tell'],
+        rows: [
+          ['Licensed', 'Made under agreement with Sanrio', 'Copyright line and a named distributor'],
+          ['Fan-made', 'An artist’s own work, sold openly as such', 'No Sanrio marks, and no claim to any'],
+          ['Counterfeit', 'Pretending to be licensed', 'Character copied, paperwork wrong or missing'],
+        ],
+      },
+      {
+        t: 'p',
+        text: 'Only the third one is a problem. Fan art at a convention is not trying to fool you, and the price and the stall tell you exactly what it is.',
+      },
+      { t: 'h', text: 'What licensed goods carry' },
+      {
+        t: 'ul',
+        items: [
+          'A copyright line reading "SANRIO CO., LTD." with a year, on a sewn tag, a moulded stamp, or printed on the packaging.',
+          'A named licensee or distributor. A tag that says Hello Kitty but never mentions Sanrio or any company is the loudest warning there is.',
+          'A product or item number that matches the retailer’s listing.',
+          'Consistent character art. The face is drawn to a strict spec, so proportions that feel slightly off usually are.',
+        ],
+      },
+      { t: 'h', text: 'Character tells' },
+      {
+        t: 'ul',
+        items: [
+          'Hello Kitty has no mouth. A drawn or embroidered mouth is a counterfeit, every time.',
+          'The bow sits on her left ear from the viewer’s perspective, and the face is symmetrical.',
+          'Embroidery on genuine plush is dense and even. Fakes show loose stitching, gaps, and eyes at different heights.',
+          'Printing is sharp. Pixelation, banding or muddy colour means a copied file.',
+        ],
+      },
+      {
+        t: 'note',
+        text: 'One honest caveat: some genuinely licensed goods made for one regional market carry tags in another language and look unfamiliar. Unfamiliar is not the same as fake. Check for the copyright line rather than for a look you recognise.',
+      },
+      { t: 'h', text: 'Where the risk actually is' },
+      {
+        t: 'p',
+        text: 'Counterfeits concentrate in open marketplaces and social-media shops, especially on plush and bags, and especially at prices well under the going rate. A shop with a real returns address, a stated distributor, and photographs of the actual tags is doing the work that makes this checkable.',
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'montessori-label',
+    emoji: '🪵',
+    title: 'What "Montessori" means on a toy label',
+    answer:
+      'Nothing legally. The word is unregulated and anyone can print it. What it should mean is a toy that does one thing, is made of a real material, and lets the child find their own mistakes.',
+    updated: '2026-08-26',
+    readMins: 3,
+    tags: ['learning', 'wooden toys', 'parents'],
+    related: 'wooden-montessori-toys',
+    body: [
+      { t: 'h', text: 'Why the word is on everything' },
+      {
+        t: 'p',
+        text: 'Maria Montessori’s name is not a trademark anyone enforces on toys, so it functions as a search term rather than a standard. Plenty of things labelled Montessori are simply wooden, and plenty of genuinely good Montessori materials are not labelled at all.',
+      },
+      { t: 'h', text: 'Three questions that sort it out' },
+      {
+        t: 'ol',
+        items: [
+          'Does it do one thing? A single clear purpose beats a toy with five modes. The point is repetition, not variety.',
+          'Does the toy correct the child, or does an adult have to? A shape that only fits one hole teaches by itself. Lights and sounds that celebrate every action teach nothing.',
+          'Is it a real material at a real weight? Wood, metal and cloth give honest feedback when handled. Very light plastic does not.',
+        ],
+      },
+      {
+        t: 'note',
+        text: 'If it has batteries and it praises the child, it is not Montessori, whatever the box says. That is the fastest single filter.',
+      },
+      { t: 'h', text: 'What actually holds up' },
+      {
+        t: 'ul',
+        items: [
+          'Object permanence boxes, posting and sorting toys, simple knobbed puzzles.',
+          'Stacking rings and nesting cups, which are self-correcting by design.',
+          'Practical-life items scaled down to child size: a small jug, a dustpan, a set of tongs.',
+          'Open-ended natural materials, which get used differently at two and at five.',
+        ],
+      },
+      { t: 'h', text: 'Buying it sensibly' },
+      {
+        t: 'p',
+        text: 'Age ranges on these are wider than they look, because a good one is used differently as the child grows. Two or three well-made pieces on an open shelf beat a box of ten, and rotating what is out matters more than owning more. Check finishes are non-toxic and that small parts suit the age, since wooden does not automatically mean safe for a one-year-old.',
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'resin-vinyl-pvc',
+    emoji: '🧪',
+    title: 'Resin, vinyl and PVC: what art toys are made of',
+    answer:
+      'Vinyl and PVC are the same family and cover almost every mass-produced figure. Resin is cast in small runs, heavier, sharper in detail, and far more fragile. The material explains most of the price gap.',
+    updated: '2026-08-26',
+    readMins: 3,
+    tags: ['collecting', 'materials', 'blind boxes'],
+    related: 'blind-boxes',
+    body: [
+      { t: 'h', text: 'The three you will meet' },
+      {
+        t: 'table',
+        head: ['Material', 'Feel', 'Breaks how'],
+        rows: [
+          ['Soft vinyl', 'Light, slightly hollow, gives under a squeeze', 'Dents and creases, rarely shatters'],
+          ['PVC or ABS', 'Firmer, solid, most blind box figures', 'Snaps at thin parts'],
+          ['Resin', 'Noticeably heavy, cold, glass-smooth', 'Chips and shatters if dropped'],
+        ],
+      },
+      {
+        t: 'p',
+        text: 'A blind box figure is nearly always PVC or ABS. Resin turns up in artist runs, small-batch designer pieces, and anything described as hand-cast or limited to a low number.',
+      },
+      { t: 'h', text: 'Why resin costs what it does' },
+      {
+        t: 'p',
+        text: 'Resin is poured into silicone moulds that wear out after a few dozen casts, and each piece is cleaned and painted by hand. That is the whole explanation for the price: it is a short run of hand-finished objects rather than an injection-moulded one. It also means small variations between copies are normal rather than defects.',
+      },
+      { t: 'h', text: 'Living with them' },
+      {
+        t: 'ul',
+        items: [
+          'Keep everything out of direct sun. Vinyl yellows and warps, and pigment fades on all three.',
+          'Never leave a figure in a hot car. Vinyl softens enough to deform under its own weight.',
+          'Dust with a soft dry brush. Solvent cleaners lift paint, especially on resin.',
+          'Resin needs a shelf it cannot be knocked off. A single fall usually ends it.',
+          'Soft vinyl that has dented can often be relaxed back with warm, not hot, water.',
+        ],
+      },
+      {
+        t: 'note',
+        text: 'A quick shop-floor test: pick it up. If it is heavier than it looks, it is resin. That one signal separates the two price tiers more reliably than any label.',
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'kawaii-under-15',
+    emoji: '💸',
+    title: 'What is actually good under $15',
+    answer:
+      'Stationery and small accessories are genuinely good cheap: 80% of the stationery we carry is under $15, at a median of about $7. Plush and blind boxes are not, and buying either at that price usually means buying a worse version.',
+    updated: '2026-08-26',
+    readMins: 3,
+    tags: ['budget', 'gifting', 'buying advice'],
+    related: 'squishies-and-fidgets',
+    body: [
+      {
+        t: 'p',
+        text: 'These numbers come from our own catalogue of 4,426 products across twelve shops, counted rather than estimated. About 1,045 of them, roughly a quarter, sit under $15.',
+      },
+      { t: 'h', text: 'Where cheap is genuinely good' },
+      {
+        t: 'table',
+        head: ['Category', 'Share under $15', 'Median price'],
+        rows: [
+          ['Stationery', '80%', 'about $7'],
+          ['Snacks and drinks', '95%', 'under $5'],
+          ['Accessories', '37%', 'about $20'],
+          ['Kitchen and bento', '32%', 'about $21'],
+        ],
+      },
+      {
+        t: 'p',
+        text: 'Stationery is the standout. Pens, sticker sheets, memo pads and washi are cheap because they are cheap to make well, not because the cheap ones are compromised. A $7 gel pen from a good shop is the same object a $12 one is.',
+      },
+      { t: 'h', text: 'Where cheap is a compromise' },
+      {
+        t: 'table',
+        head: ['Category', 'Share under $15', 'Median price'],
+        rows: [
+          ['Plush', '7%', 'about $30'],
+          ['Blind boxes and figures', 'very few', 'about $42'],
+          ['Puzzles', 'almost none', 'about $50'],
+          ['Wooden toys', 'almost none', 'about $36'],
+        ],
+      },
+      {
+        t: 'p',
+        text: 'Only 7% of plush is under $15, and there is a reason. Below that line you are usually getting thinner stuffing, shorter pile and looser stitching, which are exactly the three things that decide whether a plushie still looks good in a year.',
+      },
+      {
+        t: 'note',
+        text: 'The rule of thumb: under $15, buy something flat. Paper, stickers, charms and small accessories are honestly good at that price. Anything stuffed, cast or boxed is better bought one tier up or not at all.',
+      },
+      { t: 'h', text: 'Getting more for the money' },
+      {
+        t: 'ul',
+        items: [
+          'About 171 of the under-$15 items are on sale at any time, so the same budget reaches a tier higher if you are not in a hurry.',
+          'Stationery bundles beat single items on cost per piece and look more generous as a gift.',
+          'Shipping is the real cost at this price. One $12 order plus $8 postage is a $20 gift; three items from one shop is not.',
+          'A little over half of the under-$15 shelf is flagged kid-safe, which makes this the easiest budget for buying for children.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  {
+    slug: 'read-the-shipping-page',
+    emoji: '📦',
+    title: 'Read the shipping page before you buy',
+    answer:
+      'Two lines decide everything: where it ships from and what happens with customs. "Processing time" plus "shipping time" is the real wait, and phrases like "10 to 20 business days" quietly mean up to a month.',
+    updated: '2026-08-26',
+    readMins: 3,
+    tags: ['buying advice', 'shipping', 'gifting'],
+    body: [
+      { t: 'h', text: 'The two numbers that get added together' },
+      {
+        t: 'p',
+        text: 'Almost every complaint about a late kawaii order comes from reading only one of them. Processing is how long before it leaves the warehouse. Shipping is how long it travels. A shop offering "1 to 3 business days processing" and "10 to 20 business days shipping" is telling you up to five weeks, in a way that does not look like five weeks.',
+      },
+      {
+        t: 'note',
+        text: 'Business days exclude weekends and holidays. Twenty business days is about four calendar weeks, not three.',
+      },
+      { t: 'h', text: 'Phrases and what they mean' },
+      {
+        t: 'table',
+        head: ['If it says', 'Expect'],
+        rows: [
+          ['Ships from our US warehouse', 'Under a week, and simple returns'],
+          ['Ships directly from our supplier', 'Two to five weeks, often split parcels'],
+          ['Free worldwide shipping', 'The slowest service available'],
+          ['Buyer is responsible for customs', 'A possible bill on delivery'],
+          ['Pre-order', 'The date is a forecast and often moves'],
+        ],
+      },
+      { t: 'h', text: 'Customs, briefly' },
+      {
+        t: 'p',
+        text: 'On a small order it usually costs nothing. Above your country’s threshold you may pay duty plus a handling fee, and the handling fee is often the larger of the two. A shop that says nothing about customs anywhere has not thought about it, which tells you something about what happens if a parcel goes missing.',
+      },
+      { t: 'h', text: 'The gifting maths' },
+      {
+        t: 'p',
+        text: 'Work backwards from the date, not forwards from the order. For a birthday, take the longest quoted time, add a week, and order before that. For Christmas from an overseas shop, that means ordering in early November, which is also when stock is best.',
+      },
+      { t: 'h', text: 'Four things worth checking first' },
+      {
+        t: 'ul',
+        items: [
+          'Is there a returns address in your country, or does a return mean posting internationally at your cost?',
+          'Is tracking included, or only on paid upgrades?',
+          'Does the shop split large orders into several parcels, which multiplies customs events?',
+          'Is there a real contact address, not just a form? It is the single best predictor of a problem being fixed.',
+        ],
+      },
+    ],
+  },
 ]
 
 export function article(slug: string): Article | undefined {
