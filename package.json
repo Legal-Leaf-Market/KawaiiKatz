@@ -13,7 +13,6 @@
     "icons": "node scripts/mkicons.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.120.0",
     "@base-ui/react": "^1.5.0",
     "@tensorflow-models/coco-ssd": "^2.2.3",
     "@tensorflow/tfjs": "^4.22.0",

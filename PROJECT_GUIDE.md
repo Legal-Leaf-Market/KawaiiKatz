@@ -637,39 +637,52 @@ connect two or three at a time rather than all of them at once.
 
 ---
 
-## 4g. IG Studio — the writer, and where the gate went
+## 4g. IG Studio: the carousel exporter
 
-`/studio` + `lib/comic.ts` (types, grid) + `lib/comic-render.ts` (canvas) +
-`lib/comic-script.ts` (**server-only** — prompt and cast) + `/api/comic-script`.
+`/studio` + `lib/carousel.ts` (deck model) + `lib/carousel-render.ts` (canvas) +
+`lib/canvas-kit.ts` (shared primitives) + `components/CarouselStudio.tsx`.
 
-The workflow is three steps and the studio owns the first and third:
-**premise → dialogue + an art note per panel → pictures made elsewhere → back into the
-panels → export 1080×1350.** It does not generate images and is not going to.
+Pick an article, a gift guide, this week's arrivals or the current price drops, and get a
+numbered stack of PNGs. **1080×1350** for the Instagram feed, **1080×1920** for TikTok Photo
+Mode, Stories and Lemon8, from the same deck. Nothing is generated, nothing is paid for, and
+it needs no login: it reads the public catalogue and draws in the browser.
 
-**The page has no gate and the writer does.** The earlier comment in `app/studio/page.tsx`
-argued the studio needed no login because it "holds nothing, reads nothing, and calls
-nothing", and named the one thing that would change that — "a server-side generator
-spending money per request". That generator now exists, so the curator cookie went where
-the cost is. Laying out, dropping in pictures and exporting are still browser-only and
-still need no login; a login there would protect a drawing program. Asking Claude to write
-a strip bills our account, so `/api/comic-script` checks the cookie and fails closed.
+**This replaced a comic strip generator, and the reason is the only lesson worth keeping.**
+The strip needed four generated images per post. That cost real money per post, ran out
+within days, and the strips came back cheesy besides. A carousel needs zero new images,
+because 4,426 product photographs already exist and the articles are already written. Cost
+per post went from real money to nothing, which is the difference between a channel that
+survives a month and one that does not. Everything comic-shaped was deleted on 2026-08-26,
+including `ANTHROPIC_API_KEY` and the `@anthropic-ai/sdk` dependency.
 
-**`artNote` is the product, not a nicety.** Each one is read by an image tool in a fresh
-context with no sight of the other panels, so it repeats the full character description and
-the setting *every time*. An art note that says "same as panel 2" produces a blank stare.
+**The canvas renderer survived the pivot unchanged**, which is the part of that work worth
+having done. `lib/canvas-kit.ts` holds the primitives it left behind: `loadImage`,
+`wrapText`, `fitText`, `roundRect`, `cover`, `toPng`.
 
-**The cast description must match `public/brand-*.png`.** The first version of the bible
-described "a small round cream-and-peach cat"; the actual mark is a fluffy **black** cat
-with violet eyes, and the panda's eyes are magenta. Nothing failed — the strips would just
-have come back from the image tool as a different cat, which defeats the only reason to
-have a recurring cast. It was caught by rendering a strip and looking at it, not by reading
-the code. Both marks are **head-only**, so bodies are not established art: the prompt asks
-for a simple round chibi body, phrased the same way every time.
+**Blocks earned their keep.** §0b stores article bodies as typed blocks rather than markdown
+and the stated reason was this exporter. A slide is a heading plus a few lines, which is
+already the shape of a block, so cutting an article into a deck is a walk over an array
+rather than a markdown parse. A table becomes bullets, because a table does not survive a
+phone screen. A `note` breaks onto its own slide, because a note is the thing a skimmer must
+not miss.
 
-**The response is a forced tool call**, not "reply in JSON" — the shape is validated at the
-tool-call layer so a malformed strip is the model's retry rather than this route parsing
-prose. `toPanels()` still coerces every field afterwards, because an enum outside the
-renderer's unions draws nothing and fails silently.
+**The PROXIED image URL is correct here, which is the exact opposite of the RSS rule.** §4f
+says call `unproxied()` when writing a URL for something outside this site to fetch, because
+robots.txt disallows `/api/`. That is right and has been learned three times. For canvas it
+is backwards: *we* are the fetcher, from our own origin, and what matters is CORS rather than
+robots.txt. Drawing a remote image whose host sends no permissive header taints the canvas
+and `toBlob()` throws, at export time, after ten slides are laid out. `Product.image` is an
+`/api/img` path, so it is same-origin and can never taint anything.
+
+**Slides flow down from an anchor near the top, never centred.** The first version centred
+everything, which left the top third of a 1080×1920 frame empty while the content sat exactly
+where TikTok puts its caption and Stories puts the reply bar. Anchoring high fills the part
+of the frame that is actually visible and leaves the empty room where the platform wanted it.
+
+**Downloads are sequential with a 350ms gap.** Browsers throttle a burst of programmatic
+downloads: ten fired in a loop reliably yields six files and no error.
+
+---
 
 ## 5. Environment variables
 
@@ -677,7 +690,6 @@ renderer's unions draws nothing and fails silently.
 |---|---|---|
 | `ADA_PIN` | for curator mode | Gates `/api/ada-login`; unset ⇒ 503 |
 | `DATABASE_URL` | for write persistence | Neon Postgres, `store_exclusions` table |
-| `ANTHROPIC_API_KEY` | for the strip writer | Claude API key for `/api/comic-script` (§4g). **Unset ⇒ 503 and nothing is called.** Never reaches the browser: `lib/comic-script.ts` imports `server-only` so a drift into a `'use client'` tree is a build error, not a leak. |
 | `PINTEREST_CONVERSION_TOKEN` | for ad measurement | Bearer token for the Conversions API. **Unset ⇒ nothing is sent to Pinterest at all** — that is the opt-in, so the site collects nothing for advertising until there are ads to measure. Regenerate it in Ads Manager if it is ever pasted anywhere; Pinterest does not store it either. |
 
 The storefront runs without either: `GET /api/exclusions` catches DB errors and returns an
@@ -724,7 +736,5 @@ There is no test suite, so verify by hand:
   `pnpm probe` and its affiliate tracking value is real (§4). Both halves, not one.
 - Do NOT loosen `CUT_PHRASES` in `lib/adult-apparel.ts` to make a vendor's product count go
   up. A genuine false positive gets a narrow `KID_SAFE` entry instead (§4).
-- Do NOT remove the curator gate from `/api/comic-script`, or import `lib/comic-script.ts`
-  from a client component — it is one import from the API key (§4g).
 - Do NOT import `lib/partners.ts` from a client component — it is our commission paperwork
   and every byte a client component imports is served to every visitor (§4c).
