@@ -19,3 +19,10 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 .vercel
 .env*
+
+# Roblox / Rojo
+roblox/*.rbxl
+roblox/*.rbxlx
+roblox/*.rbxm
+roblox/*.rbxmx
+roblox/sourcemap.json
