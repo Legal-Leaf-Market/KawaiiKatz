@@ -637,6 +637,23 @@ Pin. Thousands of affiliate Pins is the thing that gets an account actioned.
 outcome you want, not the first observable step toward it. "The Pins exist" and "the Pins work"
 are different claims, and only one of them was checked.
 
+**"Plush" is an adjective, and the plushies feed was 26% not-a-plushie.** Reading all 240
+items (the page shows the top of a section; the feed carries all of it) found handbags,
+sleeping socks, a floor rug, high-top trainers, two bedding sets, 24 Plushible blanket
+hoodies and a Valentine Fuzzy Bear Lingerie Set, each published as "a kawaii plushie pick".
+Every one was a true match: Kore Kawaii and Kawaii Babe file soft goods as `plush` at the
+source. `PLUSH_NOT_A_TOY_TERMS` excludes them, and `Board.notVendors` drops Autoplush, whose
+twelve plush cars are genuinely plush and genuinely not kawaii; because the feed is ordered
+oldest-first, a Tesla Model X was the first Pin Pinterest ever made from a board called
+Kawaii Plushies. 240 tiles becomes 209.
+
+**That term list is a patch on a symptom, and the upstream fix is cheap.** The vendor's own
+`product_type` says "Bags" and "Dresses" outright. It is read by `categorize()` at scrape
+time and then thrown away, so it is not a field on `Product` and a board cannot ask. Carrying
+it through would replace the whole list with one rule and would fix the same rows on the home
+page's plush filter, where they are equally wrong and nobody has looked. It needs a scrape
+change and a cache version bump (§4), which is why it was not folded into the feed fix.
+
 **Read a feed before you connect it.** Both feeds that have been read line by line contained
 something that should not be pinned — the plushies feed shipped "Ohio State Brutus", and the
 wooden-toys feed shipped three storage shelves, a desktop organiser, a silicone spatula and a

@@ -146,6 +146,26 @@ export type Board = {
    */
   notWords?: string[]
   /**
+   * Shops that never appear on this page, whatever their products match.
+   *
+   * The same judgement as `notWords` one level up: the vendor is what
+   * disambiguates when no word can. Autoplush sells plush cars, and 9 of its 12
+   * products landed on the plushies page as genuine matches, because a Miata
+   * MX5 Plushie is a plushie. They are simply car-culture merch rather than
+   * kawaii, and the feed is ordered oldest-first (section 4f), so the two
+   * oldest rows in the catalogue meant a Tesla Model X was the first Pin
+   * Pinterest ever made from a board called Kawaii Plushies.
+   *
+   * Excluding by word would have needed every model name — skyline, ae86,
+   * supra, defender, wrangler, f150, mini — and `mini` alone would delete every
+   * mini plushie in the catalogue. One vendor line cannot drift like that.
+   *
+   * They keep their place in the catalogue, the search and the Gift Finder, at
+   * the highest commission rate we carry. They are just not what a kawaii guide
+   * is for.
+   */
+  notVendors?: string[]
+  /**
    * Tiles from one shop per section. Three is right for a gift guide, where a
    * band that is ten tiles of one shop reads as an advert.
    *
@@ -205,6 +225,72 @@ const OFF_SEASON_TERMS = [
  * live catalogue: this list catches 74 rows and nothing else — no kawaii
  * product in 4,426 uses any of these words.
  */
+/**
+ * Things made OF plush that are not a plushie.
+ *
+ * "Plush" is an adjective at least as often as it is a noun, and neither the
+ * plushies board's word net nor the vendors' own categories can tell the two
+ * apart. Kore Kawaii and Kawaii Babe both file soft goods as `plush`, so the
+ * live feed was publishing handbags, pencil cases, sleeping socks, a floor rug,
+ * high-top trainers, bedding sets and a Valentine Fuzzy Bear Lingerie Set, each
+ * captioned "a kawaii plushie pick". 55 of 240 tiles.
+ *
+ * That is the wooden-toys feed shipping a dustpan all over again, and it is
+ * invisible from the page: a page shows the top of a section, a feed carries
+ * all of it. Read the XML, not the grid.
+ *
+ * Excluded rather than demoted, for the reason SPORTS_LICENCE_TERMS records
+ * below. Demoting pushes a row down a list that then has to be filled from
+ * somewhere, and a feed carries the whole list regardless of order.
+ *
+ * `keychain` is deliberately absent: a plush keychain is a small plushie on a
+ * ring, which is what someone browsing this page wants. So are `pillow`,
+ * `puppet` and `bouquet` — a body pillow and a hand puppet are plush toys.
+ *
+ * `blanket` is absent too, and that one costs us. "K-Drama Cozy Warm Blanket"
+ * stays on the page, because the alternative is losing two genuine
+ * plushie-and-blanket gift sets to catch it. One row is the better price.
+ *
+ * THE REAL FIX IS UPSTREAM, and this list is a patch on the symptom. The
+ * vendor's own `product_type` says "Bags" and "Dresses" outright, but it is
+ * read by categorize() at scrape time and then discarded — it is not a field on
+ * Product. Carrying it through would replace this whole list with one rule, and
+ * would fix the same rows on the home page's plush filter, where they are
+ * equally wrong and nobody has looked. That is a scrape change and a
+ * unstable_cache version bump (section 4), so it is not folded in here.
+ */
+export const PLUSH_NOT_A_TOY_TERMS = [
+  // Bags and carriers.
+  'backpack', 'backpacks', 'bookbag', 'bag', 'bags', 'purse', 'handbag',
+  'tote', 'crossbody', 'sling bag', 'pouch', 'pouches', 'wallet', 'lanyard',
+  'case', 'basket',
+  // Worn.
+  'socks', 'slippers', 'mittens', 'gloves', 'scarf', 'earmuffs', 'hand muff',
+  'hand warmer', 'leg warmers', 'bucket hat', 'winter hat', 'high tops',
+  'hi tops',
+  'dress', 'jacket', 'coat', 'pants', 'trousers', 'shorts', 'crewneck',
+  'outfit', 'pajama', 'mary janes', 'lingerie', 'jsk', 'boots',
+  // Desk and stationery.
+  'notebook', 'pens', 'pencil cover', 'photo card', 'diary', 'craft kit',
+  'casting kit',
+  // Home, car and homeware.
+  'rug', 'bedding', 'pet bed', 'car seat', 'chair cushion', 'seat cushion',
+  'bottle cover', 'bottle covers', 'sleep mask', 'sleep masks', 'stocking',
+  'alarm clock', 'hair clip', 'hair clips',
+  /**
+   * Wearable blankets. Plushible's Snugible and Blankie Bestie lines are 24
+   * rows, every one `cat: 'plush'` and none of them a plushie: a Snugible is an
+   * adult blanket hoodie with a pillow, a Blankie Bestie is a blanket with a
+   * plush head. Section 4e already records them leading the squishies page,
+   * where they were only demoted. Demoting is not enough here, for the reason
+   * SPORTS_LICENCE_TERMS records below: the feed carries the whole list
+   * whatever its order, and this is where "HASBRO Dungeons & Dragons Snugible"
+   * was going out as a kawaii plushie pick.
+   */
+  'snugible', 'blankie', 'hoodie', 'blanket hoodie', 'wearable blanket',
+  'sweatshirt',
+]
+
 export const SPORTS_LICENCE_TERMS = [
   'nascar', 'ncaa', 'collegiate', 'university', 'buckeye', 'hoosier',
   'sooner', 'crimson tide', 'longhorn', 'wolverine', 'gator', 'aggie',
@@ -277,6 +363,7 @@ function tiebreak(id: string): number {
 /** Does this product belong on this page at all? */
 function belongs(b: Board, p: Product): boolean {
   if (b.notCats?.length && b.notCats.includes(p.cat)) return false
+  if (b.notVendors?.length && b.notVendors.includes(p.vendor)) return false
   if (b.notWords?.length && hasWord(String(p.name || '').toLowerCase(), b.notWords)) return false
   const byCat = b.cats?.length ? b.cats.includes(p.cat) : false
   const byWord = b.words?.length ? hasWord(haystack(p), b.words) : false
@@ -496,8 +583,11 @@ export const BOARDS: Board[] = [
     cats: ['plush'],
     words: ['plush', 'plushie', 'stuffed animal', 'soft toy'],
     // Plushible carries college-mascot and NASCAR licences. Real products, and
-    // nobody arrives at a kawaii plushie page hoping for Bucky Badger.
-    notWords: SPORTS_LICENCE_TERMS,
+    // nobody arrives at a kawaii plushie page hoping for Bucky Badger. The
+    // second list is the bags and footwear that "plush" the adjective drags in.
+    notWords: [...SPORTS_LICENCE_TERMS, ...PLUSH_NOT_A_TOY_TERMS],
+    // Autoplush is 12 plush cars. Genuinely plush, genuinely not kawaii.
+    notVendors: ['Autoplush'],
     maxPerVendor: 5,
     sections: themeSections('The ones that keep getting picked up.'),
   },
