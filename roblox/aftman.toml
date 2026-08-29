@@ -1,7 +1,0 @@
-# Toolchain pins for this Roblox project.
-# Install Aftman (https://github.com/LPGhatguy/aftman) or Rokit
-# (https://github.com/rojo-rbx/rokit), then run `aftman install`
-# (or `rokit install`) from this directory.
-
-[tools]
-rojo = "rojo-rbx/rojo@7.4.4"
