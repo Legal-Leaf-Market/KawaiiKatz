@@ -45,6 +45,38 @@ type Pinnable = {
    * something about the context of this Pin that the product record cannot.
    */
   catLead?: string
+  /**
+   * The hashtag pool to draw from, overriding the product's own category.
+   *
+   * The other half of the same defect `catLead` fixes, and it shipped because
+   * the fix was checked by reading the prose and not the tags. A Hello Kitty
+   * plush on the plushies feed had its caption corrected to "a kawaii plushie
+   * pick" and still went out carrying #BlindBoxUnboxing and
+   * #KawaiiCollectibles, because those come from the product record and it is
+   * genuinely a `collect` row.
+   *
+   * Hashtags are how Pinterest reads a Pin's topic, so this half arguably
+   * matters more than the sentence: a plushies board whose Pins are tagged as
+   * blind boxes is telling Pinterest the board is about blind boxes.
+   *
+   * Empty for a season, deliberately. A Christmas guide holds every category
+   * at once, its own `tag` already leads every Pin, and the product's own tags
+   * are the accurate ones for the rest.
+   */
+  catTags?: string[]
+}
+
+/**
+ * What a collection knows about a Pin that the product record does not.
+ *
+ * One object rather than three loose props because all three always travel
+ * together, always come from a Board, and each has been added separately to the
+ * same four call sites in turn.
+ */
+export type PinContext = {
+  tag?: string
+  catLead?: string
+  catTags?: string[]
 }
 
 const PIN_TAGS_BY_CAT: Record<string, string[]> = {
@@ -101,7 +133,7 @@ function pinHashtags(o: Pinnable): string[] {
     out.push(tag)
   }
   const cat = o.cat || 'other'
-  const pool = PIN_TAGS_BY_CAT[cat] || PIN_TAGS_BY_CAT.other
+  const pool = (o.catTags?.length ? o.catTags : PIN_TAGS_BY_CAT[cat]) || PIN_TAGS_BY_CAT.other
   // First, so it survives the slice(0, 5) below whatever else matches.
   if (o.tag) add(o.tag)
   add(pool[0]); add(pool[1])
@@ -240,7 +272,7 @@ export function openPin(o: Pinnable): void {
  */
 export function pinProductPage(
   p: Product,
-  opts?: { origin?: string; tag?: string; catLead?: string }
+  opts?: PinContext & { origin?: string }
 ): void {
   const base = opts?.origin || (typeof window !== 'undefined' ? window.location.origin : '')
   openPin({
@@ -255,6 +287,7 @@ export function pinProductPage(
     pinUrl: `${base}/p/${p.id}`,
     tag: opts?.tag,
     catLead: opts?.catLead,
+    catTags: opts?.catTags,
   })
 }
 

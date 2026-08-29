@@ -595,6 +595,18 @@ became **"blind boxe"** and "Accessories" became **"accessorie"**, so 993 of 4,4
 carried a typo into every Pin caption and RSS description. Twelve entries written out cannot
 be wrong in a new way when someone adds the thirteenth.
 
+**A board overrides both halves of a caption, and the second half was missed.** `Board.catLead`
+fixes the sentence, so a `collect` row pinned to the plushies board reads "a kawaii plushie
+pick". `Board.pinTags` fixes the hashtags, which is the half Pinterest actually reads a Pin's
+topic from. Only the first shipped the first time, so the plushies feed published Pins whose
+prose said plushie and whose tags said `#BlindBoxUnboxing #KawaiiCollectibles`. The verification
+was the real failure: the fix was checked by reading the captions and not the tags, and "zero
+mismatches" was then claimed for the whole caption. Measured after both halves landed: 1,006
+Pins across the seven boards, zero carrying another category's pool.
+
+A season deliberately sets no `pinTags`. A Christmas guide holds every category at once and its
+own `hashtag` already leads every Pin, so the product's own tags are the accurate ones under it.
+
 The caption comes from `pinCaption()` in `lib/pinterest.ts` — the same function the Pin
 button uses, so a Pin Pinterest creates reads exactly like one a person made, `#ad` included.
 It is passed `Board.hashtag`, not the month-based `seasonalTag()`: a feed is read whenever

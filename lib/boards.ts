@@ -80,6 +80,21 @@ export type Board = {
    * holds a Pin back.
    */
   catLead: string
+  /**
+   * The hashtags a Pin from this board draws from, overriding the product's
+   * own category pool in lib/pinterest.ts.
+   *
+   * `catLead` fixes the caption sentence; this fixes the tags, and the tags are
+   * the half Pinterest actually reads a Pin's topic from. Both were the same
+   * defect and only the first was fixed the first time round, so the plushies
+   * feed published Pins that said "a kawaii plushie pick" and were tagged
+   * #BlindBoxUnboxing.
+   *
+   * Absent on a season, on purpose: a Christmas guide carries every category at
+   * once and `hashtag` already leads every Pin, so the product's own tags are
+   * the accurate ones underneath it.
+   */
+  pinTags?: string[]
   /** Months (0-indexed) when a season guide peaks. Display only; empty for a theme. */
   season: number[]
   /**
@@ -402,6 +417,7 @@ export const BOARDS: Board[] = [
       'before you buy.',
     hashtag: 'MontessoriToys',
     catLead: 'wooden toy',
+    pinTags: ['MontessoriToys', 'WoodenToys', 'EducationalToys', 'ToddlerLearning', 'OpenEndedPlay'],
     season: [],
     cats: ['learning'],
     words: ['wooden', 'montessori', 'stacking', 'sorting', 'busy board', 'sensory'],
@@ -432,6 +448,7 @@ export const BOARDS: Board[] = [
       'trays that make the big ones bearable.',
     hashtag: 'JigsawPuzzle',
     catLead: 'puzzle',
+    pinTags: ['JigsawPuzzle', 'PuzzleLover', 'FamilyGameNight', 'PuzzleTime', 'KidsPuzzles'],
     season: [],
     cats: ['puzzle'],
     words: ['jigsaw', 'puzzle'],
@@ -453,6 +470,7 @@ export const BOARDS: Board[] = [
       'landfill. Chase figures, full sets and the single-box way in.',
     hashtag: 'BlindBoxUnboxing',
     catLead: 'blind box',
+    pinTags: ['BlindBoxUnboxing', 'KawaiiCollectibles', 'DesignerToys', 'ToyCollection', 'CollectibleFigures'],
     season: [],
     cats: ['collect'],
     words: ['blind box', 'blindbox', 'mystery box', 'art toy'],
@@ -473,6 +491,7 @@ export const BOARDS: Board[] = [
       'enormous one for a birthday without scrolling past each other.',
     hashtag: 'KawaiiPlushies',
     catLead: 'plushie',
+    pinTags: ['KawaiiPlushies', 'PlushieCollection', 'CutePlushies', 'SoftToys', 'PlushieLover'],
     season: [],
     cats: ['plush'],
     words: ['plush', 'plushie', 'stuffed animal', 'soft toy'],
@@ -493,6 +512,7 @@ export const BOARDS: Board[] = [
       'cheap, and the easiest thing on this site to buy several of.',
     hashtag: 'SquishyToy',
     catLead: 'squishy',
+    pinTags: ['SquishyToy', 'FidgetToys', 'SensoryToys', 'SquishyCollection', 'StressRelief'],
     season: [],
     cats: [],
     words: ['squishy', 'squishies', 'squish', 'fidget', 'mochi', 'stress ball', 'slow rising'],
@@ -515,6 +535,7 @@ export const BOARDS: Board[] = [
       'bottles that go with them.',
     hashtag: 'CuteLunchBox',
     catLead: 'lunch',
+    pinTags: ['CuteLunchBox', 'KawaiiBento', 'BentoBox', 'KidsLunchIdeas', 'SchoolLunchIdeas'],
     season: [],
     cats: ['kitchen'],
     // Bottles stay eligible through `cats`, but are deliberately NOT in `words`:

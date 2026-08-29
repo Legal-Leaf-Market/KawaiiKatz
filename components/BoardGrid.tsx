@@ -8,7 +8,7 @@ import { useTaste } from '@/hooks/useTaste'
 import { board, dealPages, fillBoardPages, vendorCap } from '@/lib/boards'
 import { tasteBonus, totalSignals } from '@/lib/taste'
 import { money, type Product } from '@/lib/data'
-import { pinProductPage, pinGuide } from '@/lib/pinterest'
+import { pinProductPage, pinGuide, type PinContext } from '@/lib/pinterest'
 import { track } from '@/lib/pinterest-track'
 import { logEvent } from '@/lib/site-events'
 import ProductImage from '@/components/ProductImage'
@@ -20,8 +20,14 @@ type Props = {
   title: string
   tagline: string
   hashtag: string
-  /** The caption noun for anything pinned from this board. See Board.catLead. */
-  catLead: string
+  /**
+   * What this board knows about a Pin that a product record does not: the
+   * caption noun and the hashtag pool. See Board.catLead and Board.pinTags.
+   *
+   * One prop rather than three because they always travel together, and each
+   * was added to these same call sites separately in turn.
+   */
+  pin: PinContext
   sections: Section[]
 }
 
@@ -55,7 +61,7 @@ type Props = {
  * collection is the opposite case: BRKOX is 43% of the blind-box shelf, and
  * dropping it on hydration would empty half the page the server just rendered.
  */
-export default function BoardGrid({ slug, title, tagline, hashtag, catLead, sections }: Props) {
+export default function BoardGrid({ slug, title, tagline, hashtag, pin, sections }: Props) {
   const { state, dispatch } = useStore()
   const { excludedIds } = useExclusions()
   const { allProducts, live } = useLiveCatalog()
@@ -415,7 +421,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, catLead, sect
                 {added === surprise.id ? 'Added ✓' : 'Add 🎀'}
               </button>
               <button
-                onClick={() => pinProductPage(surprise, { tag: hashtag, catLead })}
+                onClick={() => pinProductPage(surprise, pin)}
                 className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl px-3 py-2 cursor-pointer text-[13px] hover:bg-[#e60023] hover:text-white transition-colors"
               >
                 📌 Pin
@@ -467,8 +473,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, catLead, sect
             liked={liked}
             added={added}
             wish={state.wish}
-            hashtag={hashtag}
-            catLead={catLead}
+            pin={pin}
             onAdd={addToCart}
             onUp={thumbUp}
             onDown={thumbDown}
@@ -525,8 +530,7 @@ export default function BoardGrid({ slug, title, tagline, hashtag, catLead, sect
                 liked={liked}
                 added={added}
                 wish={state.wish}
-                hashtag={hashtag}
-                catLead={catLead}
+                pin={pin}
                 onAdd={addToCart}
                 onUp={thumbUp}
                 onDown={thumbDown}
@@ -541,14 +545,13 @@ export default function BoardGrid({ slug, title, tagline, hashtag, catLead, sect
 }
 
 function Grid({
-  items, liked, added, wish, hashtag, catLead, onAdd, onUp, onDown, onWish,
+  items, liked, added, wish, pin, onAdd, onUp, onDown, onWish,
 }: {
   items: Product[]
   liked: Set<string>
   added: string | null
   wish: string[]
-  hashtag: string
-  catLead: string
+  pin: PinContext
   onAdd: (p: Product) => void
   onUp: (p: Product) => void
   onDown: (p: Product) => void
@@ -641,7 +644,7 @@ function Grid({
                 </button>
                 <button
                   type="button"
-                  onClick={() => pinProductPage(p, { tag: hashtag, catLead })}
+                  onClick={() => pinProductPage(p, pin)}
                   className="flex-none border-2 border-[#e60023] bg-white text-[#e60023] rounded-xl w-9 cursor-pointer text-[14px] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                   aria-label={`Pin ${p.name} to Pinterest`}
                   title="Pin this"

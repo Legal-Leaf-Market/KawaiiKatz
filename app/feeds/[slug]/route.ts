@@ -133,7 +133,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
         const caption = pinCaption({
           id: p.id, name: p.name, vendor: p.vendor, cat: p.cat,
           price: p.price, image: p.image, url: p.url || p.domain,
-          domain: p.domain, tag: b.hashtag, catLead: b.catLead,
+          domain: p.domain, tag: b.hashtag, catLead: b.catLead, catTags: b.pinTags,
         })
         // Three ways of declaring the image, because feed readers disagree on
         // which one they honour: an <img> in the description, <enclosure>, and
