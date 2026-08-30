@@ -8,7 +8,7 @@ import { useExclusions } from '@/hooks/useExclusions'
 import { usePicks } from '@/hooks/usePicks'
 import { useStore } from '@/lib/store'
 import {
-  fillDecora,
+  fillDecoraPages,
   decoraPool,
   decoraBoardIndex,
   decoraPin,
@@ -212,7 +212,40 @@ export default function DecoraClient({
     [live, excludedIds, state.adaMode]
   )
 
-  const { sections, edit } = useMemo(() => fillDecora(visible), [visible])
+  const { sections, edit } = useMemo(() => fillDecoraPages(visible), [visible])
+
+  /**
+   * How much of each shelf is on screen, per section key.
+   *
+   * `start` is which page the shelf begins at and `count` is how many pages are
+   * stacked from there, so Load more grows the shelf and Shuffle swaps it for a
+   * different slice of the same size. Both wrap, so a shelf can be walked round
+   * and round without ever hitting a dead end.
+   *
+   * DEFAULTS TO `{start: 0, count: 1}` FOR EVERY SECTION, which is what makes
+   * the first client render identical to the server's: round 0 of
+   * fillDecoraPages is `fillDecora` by construction. Seeding this from
+   * Math.random, or restoring it from storage, would be a hydration mismatch on
+   * a prerendered page - the same rule lib/similar.ts and lib/boards.ts follow.
+   */
+  const [shelf, setShelf] = useState<Record<string, { start: number; count: number }>>({})
+  const shelfOf = (key: string) => shelf[key] ?? { start: 0, count: 1 }
+
+  function loadMore(key: string, total: number) {
+    setShelf((s) => {
+      const cur = s[key] ?? { start: 0, count: 1 }
+      return { ...s, [key]: { ...cur, count: Math.min(cur.count + 1, total) } }
+    })
+  }
+
+  function shuffleShelf(key: string, total: number) {
+    setShelf((s) => {
+      const cur = s[key] ?? { start: 0, count: 1 }
+      // Advance by however much is on screen, so shuffling shows things you
+      // have not seen rather than re-dealing the same page one along.
+      return { ...s, [key]: { ...cur, start: (cur.start + cur.count) % total } }
+    })
+  }
   const pool = useMemo(() => decoraPool(visible), [visible])
 
   /**
@@ -540,7 +573,13 @@ export default function DecoraClient({
               ))}
             </nav>
 
-            {sections.map(({ section, products }, si) => (
+            {sections.map(({ section, pages }, si) => {
+              const { start, count } = shelfOf(section.key)
+              const products = Array.from({ length: Math.min(count, pages.length) }, (_, k) =>
+                pages[(start + k) % pages.length]
+              ).flat()
+              const shelfTotal = pages.reduce((n, pg) => n + pg.length, 0)
+              return (
               <section
                 key={section.key}
                 id={section.key}
@@ -656,8 +695,46 @@ export default function DecoraClient({
                     />
                   ))}
                 </div>
+
+                {/*
+                  SHUFFLE AND LOAD MORE, per shelf.
+
+                  The room holds 1,400-odd products and a shelf shows eight or
+                  twelve, so all but 5% of it was unreachable without these. The
+                  two buttons do different things on purpose: Load more GROWS
+                  the shelf and keeps what you were looking at, Shuffle SWAPS it
+                  for a slice the same size that you have not seen. Both wrap,
+                  so a shelf can be walked round and round.
+
+                  Neither appears when there is nothing behind it - a Shuffle
+                  that re-deals the same eight tiles is a button that lies.
+                */}
+                {pages.length > 1 && (
+                  <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => { logEvent('shuffle', { cat: section.key, meta: 'decora' }); shuffleShelf(section.key, pages.length) }}
+                      className="inline-flex items-center gap-2 rounded-full border-[3px] border-[#25e0e8] bg-transparent px-4 py-2 font-display text-[13px] font-extrabold text-[#25e0e8] transition-colors hover:bg-[#25e0e8] hover:text-[#12071f]"
+                    >
+                      🔀 Shuffle
+                    </button>
+                    {count < pages.length && (
+                      <button
+                        type="button"
+                        onClick={() => { logEvent('load_more', { cat: section.key, meta: 'decora' }); loadMore(section.key, pages.length) }}
+                        className="inline-flex items-center gap-2 rounded-full border-[3px] border-[#8b3dff] bg-[#8b3dff] px-4 py-2 font-display text-[13px] font-extrabold text-white transition-colors hover:bg-white hover:text-[#8b3dff]"
+                      >
+                        ↓ Load more
+                      </button>
+                    )}
+                    <span className="font-display text-[12.5px] font-bold text-[#9d86c4]">
+                      {products.length} of {shelfTotal}
+                    </span>
+                  </div>
+                )}
               </section>
-            ))}
+              )
+            })}
 
             {/* ═════════════════════════════ THE GRUMPY EDIT */}
             {edit.length > 0 && (

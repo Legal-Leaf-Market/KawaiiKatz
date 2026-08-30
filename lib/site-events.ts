@@ -73,6 +73,9 @@ export type EventName =
   | 'finder_click'
   // Collection browsing
   | 'shuffle'
+  /** A shelf asked for another page of itself. Paired with `shuffle`: one grows
+   *  the shelf and keeps what you were looking at, the other swaps it. */
+  | 'load_more'
   | 'surprise_me'
   | 'taste_up'
   | 'taste_down'

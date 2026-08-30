@@ -410,6 +410,7 @@ function eligible(p: Product): boolean {
 }
 
 export type FilledSection = { section: DecoraSection; products: Product[] }
+export type PagedSection = { section: DecoraSection; pages: Product[][] }
 
 /**
  * Fill every section from the room's sources.
@@ -420,29 +421,70 @@ export type FilledSection = { section: DecoraSection; products: Product[] }
  * data itself carries. Same rule lib/boards.ts follows and for the same reason.
  */
 export function fillDecora(all: Product[]): { sections: FilledSection[]; edit: Product[] } {
+  // Round 0 of the paged fill, deliberately, so the one-page view and the first
+  // page of the paged view cannot drift apart. The edit runs over the whole
+  // pool rather than the leftovers: it is a tour of the brands, and the best
+  // piece from a brand has usually already been placed, so anything it repeats
+  // is repeated on purpose.
+  const { sections, edit } = fillDecoraPages(all, 1)
+  return { sections: sections.map((s) => ({ section: s.section, products: s.pages[0] })), edit }
+}
+
+/**
+ * Every section dealt into pages, so a shelf can shuffle and load more.
+ *
+ * -----------------------------------------------------------------------------
+ * PAGING IS ROUNDS OF THE SAME PASS, NOT A BIGGER VERSION OF IT
+ *
+ * lib/boards.ts learned this the expensive way and the note there is worth
+ * repeating, because the tempting implementation is wrong: letting each section
+ * claim `max * maxPages` up front starves the sections below it. On the gift
+ * guides that cut the jigsaw page from 36 tiles to 11, because "The pick of
+ * them" had claimed 48 puzzles before the price bands got a look.
+ *
+ * Running the same one-round pass repeatedly over what is left makes round 0
+ * IDENTICAL to `fillDecora` by construction, which is what keeps the server's
+ * prerender and the browser's first render agreeing.
+ *
+ * Still pure and still deterministic: no Math.random and no Date.now. The
+ * shuffle is the CLIENT walking these pages, not this function reordering them
+ * — a random order here would be a hydration mismatch on a prerendered page,
+ * which is the same rule lib/similar.ts and lib/boards.ts follow.
+ */
+export function fillDecoraPages(all: Product[], maxPages = 8): {
+  sections: PagedSection[]
+  edit: Product[]
+} {
   const pool = all.filter((p) => fromSource(p) && eligible(p)).sort(byNewest)
 
-  const used = new Set<string>()
-  const sections: FilledSection[] = []
-
-  for (const section of SECTIONS) {
-    const picked: Product[] = []
-    for (const p of pool) {
-      if (picked.length >= section.max) break
-      if (used.has(p.id)) continue
-      if (!section.match(p)) continue
-      picked.push(p)
-      used.add(p.id)
-    }
-    sections.push({ section, products: picked })
+  function round(used: Set<string>): FilledSection[] {
+    return SECTIONS.map((section) => {
+      const picked: Product[] = []
+      for (const p of pool) {
+        if (picked.length >= section.max) break
+        if (used.has(p.id)) continue
+        if (!section.match(p)) continue
+        picked.push(p)
+        used.add(p.id)
+      }
+      return { section, products: picked }
+    })
   }
 
-  // The edit runs LAST and over the whole pool rather than the leftovers: it is
-  // a tour of the brands, and the best piece from a brand has usually already
-  // been placed. Anything it repeats is repeated on purpose.
-  const edit = theEdit(pool, new Set(), 9)
+  const used = new Set<string>()
+  const rounds: FilledSection[][] = []
+  for (let r = 0; r < maxPages; r++) {
+    const got = round(used)
+    if (!got.some((x) => x.products.length)) break
+    rounds.push(got)
+  }
 
-  return { sections: sections.filter((s) => s.products.length > 0), edit }
+  const sections: PagedSection[] = SECTIONS.map((section, i) => ({
+    section,
+    pages: rounds.map((r) => r[i].products).filter((page) => page.length > 0),
+  })).filter((x) => x.pages.length > 0)
+
+  return { sections, edit: theEdit(pool, new Set(), 9) }
 }
 
 /** Everything this room can show, for the first-paint slice and the counts. */

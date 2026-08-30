@@ -1011,6 +1011,38 @@ cutouts in front of it look sharper for it. Replace the treatment only if a wide
 arrives. The pattern tiles are 180px wide and were tiled 1:1, which asks a 2x display to
 upscale every tile; tiling smaller than native is free sharpness.
 
+### Shuffle and Load more, per shelf
+
+The room holds 1,409 products and its shelves are capped at 8 or 12, so **72 tiles were
+reachable and 95% of the shop was not**. `fillDecoraPages()` deals every section into pages
+and each shelf gets two controls.
+
+**They do different things on purpose.** Load more GROWS the shelf and keeps what you were
+looking at; Shuffle SWAPS it for a slice the same size you have not seen, by advancing the
+start by however much is on screen. Both wrap, so a shelf can be walked round and round.
+Neither renders when there is only one page behind it: a Shuffle that re-deals the same
+eight tiles is a button that lies.
+
+**Paging is rounds of the same pass, not a bigger version of it** — the lesson §4e already
+paid for on the gift guides, where letting each section claim `max * maxPages` up front cut
+the jigsaw page from 36 tiles to 11. Running the one-round pass repeatedly over what is left
+makes round 0 **identical to `fillDecora` by construction**, which is what keeps the
+prerender and the first client render agreeing. `fillDecora` is now literally
+`fillDecoraPages(all, 1)` so the two cannot drift. Asserted against the live catalogue, not
+assumed.
+
+Still no `Math.random` and no `Date.now`: the shuffle is the client walking pre-dealt pages,
+and the per-section state defaults to `{start: 0, count: 1}` for every shelf. Seeding it
+randomly, or restoring it from storage, would be a hydration mismatch on a prerendered page.
+
+Reachable per shelf, measured 2026-08-30: new 96, fit 96, more 96, anime 89, room 49, bags
+45, desk 31. **502 tiles against 72.**
+
+**`load_more` had to be added in two places.** `EventName` in `lib/site-events.ts` and the
+`ALLOWED` set in `app/api/events/route.ts`, which drops anything it does not recognise. The
+comment there says "must stay in step" and it means it: miss the second and the button works,
+the event fires, and the dashboard never sees it.
+
 ### Ada Mode works on this page, and for a while it did not
 
 `/decora` rendered `ProductCard` with no curator props at all, so a product could be seen

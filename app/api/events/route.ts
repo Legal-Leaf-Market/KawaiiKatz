@@ -53,7 +53,7 @@ const ALLOWED = new Set([
   'cart_open', 'checkout_click',
   'search', 'search_zero', 'search_click',
   'finder_open', 'finder_filter', 'finder_zero', 'finder_click',
-  'shuffle', 'surprise_me', 'taste_up', 'taste_down', 'kid_safe_on',
+  'shuffle', 'load_more', 'surprise_me', 'taste_up', 'taste_down', 'kid_safe_on',
   'comment_post',
 ])
 
