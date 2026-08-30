@@ -548,7 +548,26 @@ export function mapAwinRows(
   const out: Product[] = []
   const seen = new Set<string>()
 
+  /**
+   * A Create-a-Feed download can hold SEVERAL advertisers in one file, which is
+   * the sensible way to buy them: one URL, one fetch, every AWIN merchant we
+   * carry. It is also a silent catastrophe if nobody checks, because this
+   * function stamps `vendor: cfg.vendor` on every row it maps. Handed a
+   * combined feed, it would file MamaRaya's nursery baskets and BRKOX's LEGO
+   * frames under GiftLAB, at GiftLAB's commission, linking to GiftLAB's
+   * programme. Every product would look fine and every attribution would be
+   * wrong.
+   *
+   * So a vendor with an awinMerchantId takes only its own rows. `merchant_id`
+   * is in the standard Awin column set. A single-advertiser feed is unaffected
+   * because every row already matches, and a feed with no merchant_id column at
+   * all falls through rather than mapping nothing.
+   */
+  const wantMerchant = String(cfg.awinMerchantId || '').trim()
+  const feedHasMerchantId = rows.some((r) => String(r.merchant_id || '').trim())
+
   for (const r of rows || []) {
+    if (wantMerchant && feedHasMerchantId && String(r.merchant_id || '').trim() !== wantMerchant) continue
     const id = (r.merchant_product_id || r.aw_product_id || '').trim()
     const name = (r.product_name || '').trim()
     if (!id || !name) continue

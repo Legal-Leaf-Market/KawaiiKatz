@@ -1,10 +1,11 @@
 import 'server-only'
+import { cache } from 'react'
 import type { Product } from './data'
 import { VENDORS } from './data'
 import { mapAwinRows, type AwinRow } from './catalog-shared'
 
 /**
- * Read an AWIN product feed.
+ * Read AWIN product feeds.
  *
  * -----------------------------------------------------------------------------
  * WHY THIS EXISTS AT ALL
@@ -16,44 +17,78 @@ import { mapAwinRows, type AwinRow } from './catalog-shared'
  * that no User-Agent gets past host-level protection, so there is no scraper to
  * write. Being approved on AWIN buys tracking, not access.
  *
- * What it does buy is the datafeed. AWIN's Create-a-Feed produces an HTTPS
- * download of the merchant's whole catalogue, which is a better source than a
- * scrape in three ways: the merchant maintains it, it carries `product_type`
- * (which the scraper reads and throws away, see §4f), and `aw_deep_link` is a
- * tracked link AWIN built rather than one we assemble.
+ * What it does buy is the datafeed, which is a better source than a scrape in
+ * three ways: the merchant maintains it, it carries `product_type` (which the
+ * scraper reads and throws away, see §4f), and `aw_deep_link` is a tracked link
+ * AWIN built rather than one we assemble.
  *
  * -----------------------------------------------------------------------------
- * THE URL IS A CREDENTIAL
+ * A LIST OF URLS, NOT ONE PER VENDOR, AND THAT IS THE WHOLE DESIGN
  *
- * A Create-a-Feed URL has the publisher's API key in its path. It is read from
- * the environment and never written down. Unset means this vendor yields
- * nothing and says so once — the same fail-closed-and-quiet posture the scraper
- * takes for a vendor that 500s, so a missing credential can never take the site
- * down.
+ * AWIN hands out download URLs that do not say which merchant they hold. They
+ * arrive looking like `.../feed/F4238.csv.gz` and `.../feed/F3673.csv.gz`, and
+ * a single one of them may hold several advertisers at once. Asking an operator
+ * to work out which file is which merchant is asking them to guess, and a wrong
+ * guess is not visible: the products all map, and every one is filed under the
+ * wrong vendor at the wrong commission, linking to the wrong programme.
+ *
+ * So the config is a flat LIST of feed URLs and nothing else. Every feed is
+ * downloaded once, the rows are pooled, and each vendor takes the rows whose
+ * `merchant_id` matches its own `awinMerchantId` (see mapAwinRows). Order does
+ * not matter, a combined feed and three separate ones behave identically, and
+ * an extra feed for a merchant we do not carry is simply ignored.
+ *
+ * -----------------------------------------------------------------------------
+ * THE URLS ARE CREDENTIALS
+ *
+ * Every AWIN download URL has the publisher's API key in its path. They are
+ * read from the environment and never written down. Unset means the AWIN
+ * vendors yield nothing and say so once — the same fail-closed-and-quiet
+ * posture the scraper takes for a vendor that 500s, so a missing credential can
+ * never take the site down.
  */
 
-/** Per-vendor env var holding a full Create-a-Feed download URL. */
-const FEED_ENV: Record<string, string> = {
-  GiftLAB: 'AWIN_FEED_GIFTLAB',
+/**
+ * `AWIN_FEEDS`: one or more Create-a-Feed download URLs, separated by
+ * whitespace, commas or newlines.
+ *
+ * `AWIN_FEED_<VENDOR>` is also read, for a single named feed. Both are merged,
+ * because the earlier instructions asked for the per-vendor form and an
+ * operator who followed them should not have to undo that.
+ */
+function feedUrls(): string[] {
+  const out = new Set<string>()
+  for (const raw of String(process.env.AWIN_FEEDS || '').split(/[\s,]+/)) {
+    const u = raw.trim()
+    if (/^https?:\/\//i.test(u)) out.add(u)
+  }
+  for (const [key, val] of Object.entries(process.env)) {
+    if (!key.startsWith('AWIN_FEED_')) continue
+    const u = String(val || '').trim()
+    if (/^https?:\/\//i.test(u)) out.add(u)
+  }
+  return [...out]
 }
 
+/** True when this vendor could be sourced from a feed at all. */
 export function hasFeed(vendor: string): boolean {
-  return Boolean(FEED_ENV[vendor])
+  const cfg = VENDORS.find((v) => v.vendor === vendor)
+  return Boolean(cfg?.awinMerchantId && feedUrls().length)
 }
 
 /**
- * Split one CSV line into fields.
+ * Split one CSV buffer into rows.
  *
  * Written out rather than `split(',')` because product descriptions contain
  * commas and quotes as a matter of course, and a naive split silently shifts
  * every column after the first offending one. The failure would not look like
- * an error: prices would land in the image column and the vendor would appear
- * to sell 2,426 things at $0.
+ * an error: prices would land in the image column and a merchant would appear
+ * to sell thousands of things at $0.
  *
  * RFC4180 rules, which is what AWIN emits: fields may be quoted, a doubled
  * quote inside a quoted field is a literal quote, and a newline inside quotes
- * is part of the value (handled by the caller, which is why this takes a whole
- * buffer rather than a line).
+ * is part of the value — which is why this takes a whole buffer rather than
+ * working line by line.
  */
 function parseCsv(text: string): AwinRow[] {
   const rows: string[][] = []
@@ -86,7 +121,6 @@ function parseCsv(text: string): AwinRow[] {
     } else if (c === '\n') {
       row.push(field)
       field = ''
-      // A trailing \r belongs to the line ending, not the last field.
       if (row.length && row[row.length - 1].endsWith('\r')) {
         row[row.length - 1] = row[row.length - 1].slice(0, -1)
       }
@@ -103,6 +137,8 @@ function parseCsv(text: string): AwinRow[] {
 
   const header = rows.shift()
   if (!header) return []
+  // Strip a UTF-8 BOM off the first header cell, or the first column's key is
+  // "﻿aw_deep_link" and every lookup of it silently returns undefined.
   const keys = header.map((h) => h.trim().replace(/^﻿/, ''))
 
   const out: AwinRow[] = []
@@ -117,36 +153,21 @@ function parseCsv(text: string): AwinRow[] {
   return out
 }
 
-/**
- * Download, decompress and parse one vendor's feed.
- *
- * Returns [] for every failure, having logged it. A vendor that cannot be read
- * must never be the reason a build fails or a page 500s: the rest of the
- * catalogue still loads, and `?debug` is where a missing vendor gets noticed.
- */
-export async function fetchAwinFeed(vendorName: string): Promise<Product[]> {
-  const cfg = VENDORS.find((v) => v.vendor === vendorName)
-  const envKey = FEED_ENV[vendorName]
-  if (!cfg || !envKey) return []
-
-  const url = process.env[envKey]
-  if (!url) {
-    console.log(`[awin-feed] ${vendorName}: ${envKey} is unset, skipping`)
-    return []
-  }
-
+async function downloadFeed(url: string): Promise<AwinRow[]> {
+  // Never log the URL: the API key is in its path.
+  const label = url.replace(/^https?:\/\/([^/]+).*?([^/]+)$/, '$1/…/$2')
   try {
     const res = await fetch(url, { cache: 'no-store' })
     if (!res.ok) {
-      console.warn(`[awin-feed] ${vendorName}: HTTP ${res.status}`)
+      console.warn(`[awin-feed] ${label}: HTTP ${res.status}`)
       return []
     }
 
     /**
      * The URL asks for gzip, but AWIN sometimes serves the file with
      * Content-Encoding set, in which case fetch() has already decompressed it
-     * and a second pass would throw. Sniff the gzip magic number (1f 8b) rather
-     * than trusting either the URL or the header.
+     * and a second pass would throw. Sniff the gzip magic number (1f 8b)
+     * rather than trusting the filename or the header.
      */
     const buf = new Uint8Array(await res.arrayBuffer())
     let bytes: Uint8Array = buf
@@ -156,15 +177,42 @@ export async function fetchAwinFeed(vendorName: string): Promise<Product[]> {
       bytes = new Uint8Array(await new Response(stream).arrayBuffer())
     }
 
-    const text = new TextDecoder('utf-8').decode(bytes)
-    const rows = parseCsv(text)
-    const products = mapAwinRows(cfg, rows)
-    console.log(
-      `[awin-feed] ${vendorName}: ${rows.length} rows -> ${products.length} products`
-    )
-    return products
+    const rows = parseCsv(new TextDecoder('utf-8').decode(bytes))
+    const merchants = [...new Set(rows.map((r) => `${r.merchant_id || '?'}:${r.merchant_name || '?'}`))]
+    console.log(`[awin-feed] ${label}: ${rows.length} rows, merchants ${merchants.join(', ')}`)
+    return rows
   } catch (e) {
-    console.warn(`[awin-feed] ${vendorName}: ${(e as Error).message}`)
+    console.warn(`[awin-feed] ${label}: ${(e as Error).message}`)
     return []
   }
+}
+
+/**
+ * Every feed's rows, pooled. `cache()` dedupes within one render pass, so three
+ * AWIN vendors in one build download each file once between them rather than
+ * three times each.
+ */
+const allRows = cache(async (): Promise<AwinRow[]> => {
+  const urls = feedUrls()
+  if (!urls.length) {
+    console.log('[awin-feed] no AWIN_FEEDS configured, skipping every feed vendor')
+    return []
+  }
+  const results = await Promise.all(urls.map(downloadFeed))
+  return results.flat()
+})
+
+/**
+ * One vendor's products, taken from whichever pooled feed holds its rows.
+ *
+ * Returns [] for every failure, having logged it. A vendor that cannot be read
+ * must never be the reason a build fails or a page 500s: the rest of the
+ * catalogue still loads, and `?debug` is where a missing vendor gets noticed.
+ */
+export async function fetchAwinFeed(vendorName: string): Promise<Product[]> {
+  const cfg = VENDORS.find((v) => v.vendor === vendorName)
+  if (!cfg) return []
+  const products = mapAwinRows(cfg, await allRows())
+  console.log(`[awin-feed] ${vendorName}: ${products.length} products after merchant filter`)
+  return products
 }

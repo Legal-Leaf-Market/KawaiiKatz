@@ -66,8 +66,11 @@ The URL contains an API key. **Do not paste it into a chat and do not commit it.
 ### B. Put it in Vercel
 
 ```bash
-printf 'PASTE_THE_WHOLE_URL_HERE' | vercel env add AWIN_FEED_GIFTLAB production
-vercel env add AWIN_FEED_GIFTLAB preview     # same value, needed to test on a branch
+# One or more download URLs, separated by spaces. Order does not matter and you
+# do NOT need to know which feed holds which merchant: every feed is pooled and
+# each vendor takes the rows whose merchant_id matches its awinMerchantId.
+printf 'URL_ONE URL_TWO' | vercel env add AWIN_FEEDS production
+printf 'URL_ONE URL_TWO' | vercel env add AWIN_FEEDS preview
 ```
 
 Use bash, not PowerShell. PowerShell prepends a UTF-8 BOM and the value is silently
@@ -118,7 +121,7 @@ network buys tracking, not access, but it does buy the feed.
 
 A reader that turns one AWIN CSV feed into `Product[]`.
 
-- Fetch the URL from `process.env.AWIN_FEED_GIFTLAB`. Absent means return `[]` and log
+- Fetch the URLs from `process.env.AWIN_FEEDS`. Absent means return `[]` and log
   why. It must fail closed and quiet, exactly like the Shopify path does, so a missing
   credential never takes the site down.
 - Handle gzip. `DecompressionStream('gzip')` is available in the Vercel runtime and needs
@@ -260,7 +263,7 @@ From PROJECT_GUIDE section 7, all of which this task can trip over:
 
 ## 7. Definition of done
 
-- [ ] `AWIN_FEED_GIFTLAB` set in Vercel, production and preview (feed 105668)
+- [ ] `AWIN_FEEDS` set in Vercel, production and preview
 - [ ] `lib/awin-feed.ts` reads, parses and maps the feed
 - [ ] `aw_deep_link` is not double-wrapped by `affiliateUrl()`
 - [ ] Cache key bumped to `v8` in the same commit as the mapping change
