@@ -303,6 +303,7 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Kawaii Slime Company | 162 | 136 | **pending** — 67 land in `other`, needs a category |
 | Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
 | MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
+| GiftLAB | 0 | 0 | **HTTP 403, Cloudflare** — AWIN 95201, joined 2026-08-30, needs ShopWindow |
 
 Two things that only showed up under real data:
 
@@ -349,6 +350,16 @@ Two things in there worth knowing without reading it:
 1. **Rakuten is migrating onto impact.com** (announced 2026-04-28, ~2,000 programmes). A
    merchant that reads as "Rakuten, not one of our networks" today may already be reachable
    through the Impact account we hold. Re-search the marketplace before writing one off.
+3. **A merchant can be on our network and still be unreadable.** GiftLAB (AWIN 95201,
+   joined 2026-08-30) sits behind Cloudflare: `/products.json`, `/collections/all/products.json`
+   and `/sitemap.xml` all answer 403 with the "Just a moment..." interstitial, measured from a
+   Vercel build on 2026-08-30. A challenge on `sitemap.xml` is the tell that it is a site-wide
+   bot rule rather than a closed endpoint, and §4 already settles that no User-Agent gets past
+   host-level protection. Being approved on a network buys tracking, not access. The
+   consolation is that AWIN's **ShopWindow** datafeed carries the catalogue (2,426 products),
+   so for an AWIN merchant the fallback is a feed reader rather than a bespoke scraper — but it
+   needs a datafeed URL from the AWIN Toolbox, which is a credential, not a config edit.
+
 2. **Not every good merchant can be ingested.** This site reads Shopify `products.json` and
    nothing else. Hot Topic, Claire's, Smiggle and TruffleShuffle are all strong fits on
    networks we use, and all run other platforms — so they need a showcase page

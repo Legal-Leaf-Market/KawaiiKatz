@@ -423,25 +423,44 @@ export const VENDORS: VendorConfig[] = [
   // Third AWIN partner, and like BRKOX and MamaRaya they approached us
   // (approved 2026-08-30). GiftLAB sell personalised photo gifts: custom face
   // socks, photo blankets and tapestries, printed mugs and calendars. AWIN
-  // advertiser 95201, ShopWindow reporting 2,426 products, 10-15% commission
-  // on a 30-day cookie.
+  // advertiser 95201, 10-15% on a 30-day cookie, ShopWindow reporting 2,426
+  // products.
   //
-  // PENDING BECAUSE NOBODY HAS READ THE FEED, which is the whole of §7's rule
-  // and the reason it exists. Two things about this one are unsettled:
+  // THE FEED IS BEHIND CLOUDFLARE AND STAYS PENDING INDEFINITELY. Probed
+  // 2026-08-30 from a Vercel build (the build-log recipe, §4), which is a
+  // datacentre IP sending Mozilla/5.0:
   //
-  //   1. It may not be Shopify at all. Their /collections/<handle> URLs are the
-  //      Shopify pattern, which is encouraging, but this site reads
-  //      products.json and nothing else, and a row that returns zero products
-  //      forever is the Tokyo Tiger failure by construction. The probe settles
-  //      it. If it is not Shopify, the AWIN ShopWindow feed is a real second
-  //      path precisely because we are already on their network — see
-  //      lib/partners.ts on merchants that need an ingest path of their own.
+  //   /products.json                     403
+  //   /collections/all/products.json     403
+  //   /sitemap.xml                       403
   //
-  //   2. Whether personalised photo gifts belong here at all is a judgement
-  //      nobody has made yet, and the histogram will not make it. "Custom face
-  //      socks" is a different shelf from a kawaii plushie, and §4e's own rule
-  //      is that a guide which gets pinned is the public face of the brand.
-  //      Worth reading the category split before deciding how they surface.
+  //   all three: server=cloudflare, and the body is the "Just a moment..."
+  //   interstitial rather than an error page.
+  //
+  // A challenge on sitemap.xml is the tell. That is a static file every crawler
+  // on earth requests, so this is a site-wide bot rule and not a closed JSON
+  // endpoint. It is the Tokyo Tiger shape exactly (§4), and the conclusion
+  // recorded there holds here without re-testing it: no User-Agent gets past
+  // host-level protection.
+  //
+  // So products.json can never ingest this merchant, and per §4c a merchant we
+  // cannot ingest needs an ingest path of its own rather than a row that
+  // returns zero products forever. The difference from Tokyo Tiger is that the
+  // fallback here is cheap and already paid for: we are on AWIN, and AWIN's
+  // ShopWindow carries the whole catalogue. That needs a datafeed URL from the
+  // AWIN Toolbox, which is a credential nobody has fetched yet, and a reader
+  // for it — a real change, not a config edit.
+  //
+  // Kept registered rather than deleted, for the same reason Tokyo Tiger is:
+  // the partnership is real and approved, and a row with this comment on it is
+  // what stops the next person spending another two builds rediscovering
+  // Cloudflare. `pending` keeps it out of getCatalog() and visible in ?debug.
+  //
+  // Whether personalised photo gifts belong on a kawaii shelf at all is still
+  // unanswered and is the question to settle BEFORE building a ShopWindow
+  // reader. Custom face socks are a different market from a plushie, and §4e's
+  // rule is that anything pinned is the public face of the brand. If the answer
+  // is yes-but-separately, a showcase page is the shape, as BRKOX got.
   //
   // commissionPct stays 0 until the rate is confirmed in the dashboard rather
   // than read off a programme description, the same as MamaRaya and BRKOX.
