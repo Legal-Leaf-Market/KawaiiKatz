@@ -635,10 +635,10 @@ export const VENDORS: VendorConfig[] = [
   // AWIN Toolbox, which is a credential nobody has fetched yet, and a reader
   // for it — a real change, not a config edit.
   //
-  // Kept registered rather than deleted, for the same reason Tokyo Tiger is:
-  // the partnership is real and approved, and a row with this comment on it is
-  // what stops the next person spending another two builds rediscovering
-  // Cloudflare. `pending` keeps it out of getCatalog() and visible in ?debug.
+  // SHIPPED 2026-08-30 once AWIN_FEEDS was set. The scrape is still impossible
+  // and always will be; what changed is that the catalogue now arrives from the
+  // network instead. lib/awin-feed.ts pools every configured feed and this
+  // vendor takes the rows whose merchant_id is 95201.
   //
   // Whether personalised photo gifts belong on a kawaii shelf at all is still
   // unanswered and is the question to settle BEFORE building a ShopWindow
@@ -648,7 +648,7 @@ export const VENDORS: VendorConfig[] = [
   //
   // commissionPct stays 0 until the rate is confirmed in the dashboard rather
   // than read off a programme description, the same as MamaRaya and BRKOX.
-  { vendor: 'GiftLAB', domain: 'https://www.giftlab.com', prefix: 'glab', affiliateParam: '', network: 'awin', awinMerchantId: '95201', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'GiftLAB', domain: 'https://www.giftlab.com', prefix: 'glab', affiliateParam: '', network: 'awin', awinMerchantId: '95201', commissionPct: 0, couponCode: '', couponPct: 0 },
 
   // Second AWIN partner, and like BRKOX they came to us (2026-08-24).
   // Personalised baby and nursery goods: custom cotton-rope baskets with a
