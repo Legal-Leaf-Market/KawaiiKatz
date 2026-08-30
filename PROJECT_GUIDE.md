@@ -304,6 +304,12 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
 | MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
 | GiftLAB | 0 | 0 | **HTTP 403, Cloudflare** — AWIN 95201, joined 2026-08-30, needs ShopWindow |
+| CozyKawaii | 719 | 710 | reads, but pet beds + licensed characters + $2.5k robot. **Decline or narrow** |
+| BerryKawaii | 0 | 0 | **HTTP 402 "Unavailable Shop"** — Shopify store frozen, not trading |
+| Tabletop Item Shop | 0 | 0 | **HTTP 404 "Not Found"** — no store at that subdomain |
+| Best of Kawaii | 0 | 0 | **HTTP 404, Cloudflare HTML** — not Shopify, or products.json removed |
+| Minecraft Plushies | 0 | 0 | **HTTP 404, non-Shopify JSON** — different platform |
+| Kawaii Fashion Store | 0 | 0 | **fetch threw** — DNS or refused. Re-probe once before writing off |
 
 Two things that only showed up under real data:
 
@@ -350,6 +356,27 @@ Two things in there worth knowing without reading it:
 1. **Rakuten is migrating onto impact.com** (announced 2026-04-28, ~2,000 programmes). A
    merchant that reads as "Rakuten, not one of our networks" today may already be reachable
    through the Impact account we hold. Re-search the marketplace before writing one off.
+4. **An approval is not a shop, and six at once is how you find that out.** On 2026-08-30
+   seven partnerships were registered in one sitting and probed in the same pass. **One of
+   the seven returned a readable feed**, and that one was recommended for decline. The rest:
+   one Cloudflare 403 (GiftLAB), one frozen Shopify store answering 402 "Unavailable Shop",
+   one 404 with no store at the subdomain, two 404s from non-Shopify platforms, and one
+   thrown fetch. None of that was visible from the affiliate dashboard, which showed all of
+   them as approved partners in good standing.
+
+   Three lessons, in order of how much they cost:
+
+   - **`pending` is the whole reason this was free.** Every one went in with the flag on,
+     `getCatalog()` skipped them, `?debug` listed them, and no visitor ever saw a vendor
+     with no products. This is the intake of 2026-08-11 run properly.
+   - **Read the response body, not just the status.** `{"errors":"Unavailable Shop"}` with a
+     402 is a frozen store; `{"errors":"Not Found"}` with a 404 is no store at all;
+     `{ "message": "" }` with no server header is a live shop on a platform we cannot read.
+     Three different problems, three different answers, and the status code alone
+     distinguishes none of them.
+   - **Unreadable is not dead.** A shop we cannot ingest may be trading perfectly well. That
+     is the §4c showcase-or-nothing case, not a reason to tell the merchant they are broken.
+
 3. **A merchant can be on our network and still be unreadable.** GiftLAB (AWIN 95201,
    joined 2026-08-30) sits behind Cloudflare: `/products.json`, `/collections/all/products.json`
    and `/sitemap.xml` all answer 403 with the "Just a moment..." interstitial, measured from a

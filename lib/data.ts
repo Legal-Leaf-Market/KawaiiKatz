@@ -431,9 +431,17 @@ export const VENDORS: VendorConfig[] = [
   // not a bug, and the fix for a genuine false positive is a narrow KID_SAFE
   // entry and never a loosened CUT_PHRASES (§7).
   //
-  // If most of the shelf is women's fashion rather than kawaii accessories,
-  // that is a different question again: this site's apparel is a minority
-  // category and a clothing-led vendor changes what the grid looks like.
+  // MEASURED 2026-08-30 (build log, §4): the fetch THREW rather than returning
+  // a status. `fetch failed` from a Vercel build is DNS or a refused
+  // connection, so the host did not answer at all.
+  //
+  // This is the one result of the batch that deserves a second look rather than
+  // a conclusion. An HTTP status is the server talking; a thrown fetch can also
+  // be a transient resolver failure on the build machine. Re-probe once before
+  // writing this vendor off. If it throws again, the domain is not live.
+  //
+  // If it does come back, the number to read first is the kid-safety drop count
+  // rather than the category split, for the reason above.
   { vendor: 'Kawaii Fashion Store', domain: 'https://kawaiifashionstore.com', prefix: 'kfs', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // Fifth of the batch (2026-08-30), and the one whose name promises the best
@@ -453,7 +461,19 @@ export const VENDORS: VendorConfig[] = [
   // category split. A high overlap is a reason to decline a vendor even when
   // every product is individually fine.
   //
-  // No `include` list guessed at until the histogram is read (§4).
+  // MEASURED 2026-08-30 (build log, §4): products.json answers HTTP 404 with
+  // server=cloudflare and an HTML body, not Shopify's `{"errors":"Not Found"}`
+  // JSON. An HTML 404 from Cloudflare means we are talking to an edge, not to a
+  // Shopify storefront, so either the shop is not Shopify or products.json has
+  // been removed.
+  //
+  // IMPORTANT DISTINCTION: this does not mean the shop is dead. It means we
+  // cannot INGEST it. The storefront may be perfectly live in a browser, which
+  // puts it in §4c's "not every good merchant can be ingested" bucket alongside
+  // Hot Topic and Claire's: a showcase page or nothing, never a VENDORS row
+  // that returns zero products forever. Open it in a browser before deciding.
+  //
+  // The overlap question below was never reached.
   { vendor: 'Best of Kawaii', domain: 'https://bestofkawaii.com', prefix: 'bok', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // Fourth of the same batch (2026-08-30). On category this is the easiest fit
@@ -479,8 +499,15 @@ export const VENDORS: VendorConfig[] = [
   //    into cute plush — but "it is plush" is not by itself the answer. Read
   //    the names in the probe output.
   //
-  // Registered pending like the rest. The feed is unread and neither question
-  // above has been asked of anyone who can answer it.
+  // MEASURED 2026-08-30 (build log, §4): products.json answers HTTP 404 with no
+  // server header and a body of `{ "message": "" }`. That is NOT Shopify's
+  // `{"errors":"Not Found"}` shape, so this storefront is on some other
+  // platform and this site reads Shopify and nothing else.
+  //
+  // Same distinction as Best of Kawaii: unreadable is not the same as dead. If
+  // the shop is live in a browser it is a §4c showcase-or-nothing candidate,
+  // never a VENDORS row. But settle the licensing question FIRST, because it
+  // decides whether we want them at all and costs nothing to check.
   { vendor: 'Minecraft Plushies', domain: 'https://minecraftplushies.com', prefix: 'mine', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // Third approval surfaced on 2026-08-30, and the only one registered with an
