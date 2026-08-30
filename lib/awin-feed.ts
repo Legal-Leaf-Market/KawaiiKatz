@@ -49,6 +49,42 @@ import { mapAwinRows, type AwinRow } from './catalog-shared'
  */
 
 /**
+ * -----------------------------------------------------------------------------
+ * WHAT REAL FEEDS TURNED OUT TO LOOK LIKE, measured 2026-08-30 on two files
+ * pulled straight from the AWIN dashboard. Read this before generating another.
+ *
+ * AWIN emits at least two formats and they are not interchangeable.
+ *
+ *   "Awin" (standard)   GiftLAB, 2,426 rows, 86 columns, one row per product:
+ *                       merchant_product_id, product_name, search_price,
+ *                       merchant_image_url, merchant_id. This reader speaks it,
+ *                       and parsed that exact file: 2,426 in, 2,387 mapped, all
+ *                       merchant_id 95201. Parser and merchant filter are now
+ *                       proven against real data, not a synthetic fixture.
+ *
+ *   "retail" (Google)   MamaRaya, 854 rows, Google Merchant Center columns:
+ *                       id, title, price, image_link, advertiser_id. Every
+ *                       field this reader looks for is absent, so it maps zero.
+ *
+ * ASK FOR THE "Awin" FORMAT. The retail one is worse than a scrape even after
+ * translating the columns: its 854 rows are the same ~58 products exploded one
+ * per size ("Baby Gift Basket - S / M / L / XL / XXL / XXXL"), and
+ * `item_group_id` is EMPTY on all 854, so there is no regrouping them. The
+ * fields that would have justified switching are empty too: product_type 0/854,
+ * adult 0/854, age_group 0/854, sale_price 0/854.
+ *
+ * So MamaRaya and BRKOX stay on the scraper, and that is the right outcome
+ * rather than a consolation. A Shopify store that answers products.json does
+ * not need this reader, and where a feed is variant-exploded the scraper is
+ * strictly better, because mapShopifyProducts collapses variants and a feed
+ * cannot.
+ *
+ * WORTH STATING PLAINLY: this reader currently has no vendor that needs it.
+ * It was built for GiftLAB, whose catalogue then measured as a poor fit and was
+ * declined. It is kept because it is proven and because the next
+ * Cloudflare-blocked AWIN merchant will need exactly this.
+ *
+ * -----------------------------------------------------------------------------
  * `AWIN_FEEDS`: one or more Create-a-Feed download URLs, separated by
  * whitespace, commas or newlines.
  *

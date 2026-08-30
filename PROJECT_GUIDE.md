@@ -316,7 +316,7 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Kawaii Slime Company | 162 | 136 | **pending** — 67 land in `other`, needs a category |
 | Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
 | MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
-| GiftLAB | 0 | 0 | **HTTP 403, Cloudflare** — AWIN 95201, joined 2026-08-30, needs ShopWindow |
+| GiftLAB | 2426 | — | **DECLINED 2026-08-30** — feed reads fine, catalogue is not kawaii |
 | CozyKawaii | 719 | 462 | GoAffPro, live 2026-08-30 on a narrow `include` (plush types only) |
 | Best of Kawaii | 0 | 0 | **HTTP 404, Cloudflare HTML** — not Shopify, or products.json removed |
 | Minecraft Plushies | 0 | 0 | **HTTP 404, non-Shopify JSON** — different platform |

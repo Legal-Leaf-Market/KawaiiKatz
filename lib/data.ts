@@ -604,67 +604,6 @@ export const VENDORS: VendorConfig[] = [
     ],
   },
 
-  // Third AWIN partner, and like BRKOX and MamaRaya they approached us
-  // (approved 2026-08-30). GiftLAB sell personalised photo gifts: custom face
-  // socks, photo blankets and tapestries, printed mugs and calendars. AWIN
-  // advertiser 95201, 10-15% on a 30-day cookie, ShopWindow reporting 2,426
-  // products.
-  //
-  // THE FEED IS BEHIND CLOUDFLARE AND STAYS PENDING INDEFINITELY. Probed
-  // 2026-08-30 from a Vercel build (the build-log recipe, §4), which is a
-  // datacentre IP sending Mozilla/5.0:
-  //
-  //   /products.json                     403
-  //   /collections/all/products.json     403
-  //   /sitemap.xml                       403
-  //
-  //   all three: server=cloudflare, and the body is the "Just a moment..."
-  //   interstitial rather than an error page.
-  //
-  // A challenge on sitemap.xml is the tell. That is a static file every crawler
-  // on earth requests, so this is a site-wide bot rule and not a closed JSON
-  // endpoint. It is the Tokyo Tiger shape exactly (§4), and the conclusion
-  // recorded there holds here without re-testing it: no User-Agent gets past
-  // host-level protection.
-  //
-  // So products.json can never ingest this merchant, and per §4c a merchant we
-  // cannot ingest needs an ingest path of its own rather than a row that
-  // returns zero products forever. The difference from Tokyo Tiger is that the
-  // fallback here is cheap and already paid for: we are on AWIN, and AWIN's
-  // ShopWindow carries the whole catalogue. That needs a datafeed URL from the
-  // AWIN Toolbox, which is a credential nobody has fetched yet, and a reader
-  // for it — a real change, not a config edit.
-  //
-  // SHIPPED 2026-08-30 once AWIN_FEEDS was set. The scrape is still impossible
-  // and always will be; what changed is that the catalogue now arrives from the
-  // network instead. lib/awin-feed.ts pools every configured feed and this
-  // vendor takes the rows whose merchant_id is 95201.
-  //
-  // Whether personalised photo gifts belong on a kawaii shelf at all is still
-  // unanswered and is the question to settle BEFORE building a ShopWindow
-  // reader. Custom face socks are a different market from a plushie, and §4e's
-  // rule is that anything pinned is the public face of the brand. If the answer
-  // is yes-but-separately, a showcase page is the shape, as BRKOX got.
-  //
-  // commissionPct stays 0 until the rate is confirmed in the dashboard rather
-  // than read off a programme description, the same as MamaRaya and BRKOX.
-  // BACK TO PENDING 2026-08-30, an hour after it shipped. AWIN_FEEDS was set and
-  // the build still produced `fetched: 0`, so the vendor was live on the site
-  // with an empty shelf: the Tokyo Tiger shape, and exactly the risk flagged
-  // when the flag came off.
-  //
-  // hasFeed() needs awinMerchantId AND at least one URL, and the merchant id is
-  // right here, so either the variable was not visible to that build or the
-  // download failed. The likeliest cause is the host: the URLs supplied were
-  // ui.awin.com/productdata-darwin-download/..., and ui.awin.com is the
-  // logged-in dashboard, which may want a session cookie on top of the key in
-  // the path. productdata.awin.com is the API host built for exactly this and
-  // is the thing to try next.
-  //
-  // Reverting rather than leaving it live is the point of the flag. A vendor
-  // that sells nothing is worse than a vendor nobody has heard of.
-  { vendor: 'GiftLAB', domain: 'https://www.giftlab.com', prefix: 'glab', affiliateParam: '', network: 'awin', awinMerchantId: '95201', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
-
   // Second AWIN partner, and like BRKOX they came to us (2026-08-24).
   // Personalised baby and nursery goods: custom cotton-rope baskets with a
   // name on them, newborn and baby-shower gifts, kids' backpacks and lunch

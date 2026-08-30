@@ -175,5 +175,19 @@ export const PARTNERS_REJECTED: { merchant: string; why: string }[] = [
   // dashboard entries, and both are dead shops. That is the finding worth
   // keeping: an approval says a programme exists, not that a store does.
   { merchant: 'Tabletop Item Shop', why: 'Dead. products.json answered HTTP 404 with Shopify\'s {"errors":"Not Found"}, meaning no store at that subdomain, and the shop could not be found by search either (confirmed by Jacob 2026-08-30). GoAffPro approval was real; the storefront was not.' },
+  {
+    merchant: 'GiftLAB',
+    why:
+      'AWIN 95201, approved 2026-08-30, and declined the same day on its own feed. ' +
+      'Cloudflare blocks products.json so an AWIN datafeed reader was built for it; ' +
+      'the reader works (2,426 rows parsed, 2,387 mapped) and the catalogue does not ' +
+      'fit. Of 2,387 products: ZERO contain "kawaii", zero "plush", zero "Sanrio", ' +
+      '31 "cute". 699 (29%) land in `other` because the classifier has no rule for ' +
+      'personalised photo gifts. 21% kid-safe. 465 are near-duplicate variants, ' +
+      'including 28 all-but-identical AirPod cases. product_type is EMPTY on all ' +
+      '2,426 rows, so an include list cannot trim it (section 4) and there is no ' +
+      'kawaii subset to keep anyway. Their own titles misspell "Persoanlized" five ' +
+      'times. Adding it would have made a third of the catalogue non-kawaii.',
+  },
   { merchant: 'BerryKawaii', why: 'Dead. products.json answered HTTP 402 with {"errors":"Unavailable Shop"}, which is Shopify\'s response for a frozen or paused store (confirmed by Jacob 2026-08-30). Its ref value looked correct, which is the lesson: a plausible tracking code tells you nothing about whether the shop is trading.' },
 ]
