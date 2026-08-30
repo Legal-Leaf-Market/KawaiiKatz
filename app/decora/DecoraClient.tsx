@@ -49,7 +49,7 @@ import WishlistDrawer from '@/components/WishlistDrawer'
  * art is used, per the brief, and no category name is baked into a raster.
  */
 
-const IMG = '/collab/gb/'
+const IMG = '/decora/'
 
 /** Product tiles per row band, so the grid never renders 400 cards at once. */
 const HERO_STICKERS = [
