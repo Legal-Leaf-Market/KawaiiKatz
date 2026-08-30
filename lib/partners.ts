@@ -81,7 +81,95 @@ export const RAKUTEN_MIGRATION_NOTE =
   'Rakuten programmes are migrating onto impact.com (announced 2026-04-28). ' +
   'Re-search the Impact marketplace for any merchant last seen on Rakuten.'
 
+/**
+ * THE DECORA SEARCH, 2026-08-30. Read this before hunting for another one.
+ *
+ * Ada has wanted more decora vendors since the beginning, and /decora is now a
+ * room built to take them as a list rather than as new pages. Both network
+ * directories were searched in full: GoAffPro's 22,429 stores and AWIN's 20,000
+ * advertisers, matched word-anchored on the J-fashion vocabulary.
+ *
+ * THE ANSWER IS THAT THEY ARE ALL ON GOAFFPRO AND NONE ARE ON AWIN.
+ *
+ * AWIN, term by term across programme name, description and URL:
+ *   kawaii 0, harajuku 0, j-fashion 0, manga 0, otaku 0, gyaru 0, menhera 0.
+ *   lolita 3, and two of those are cosplay-costume shops. sanrio 1, which is a
+ *   noodle brand. Every `decora` hit was Portuguese or an interior-decor shop,
+ *   because `decora` is a substring of DECORATION and of decoracao. That is the
+ *   advent/ADVENTURE bug wearing a different hat, and it is why the search is
+ *   word-anchored (see lib/boards.ts).
+ *
+ * So do not spend another afternoon in the AWIN marketplace for this niche.
+ * AWIN is where the big retail programmes are, and GiftLAB proved its
+ * ShopWindow datafeed is worth having when a shop is Cloudflare-blocked, but
+ * it has no decora shelf to sell.
+ *
+ * The GoAffPro candidates are below. NONE has been probed: this container has
+ * no egress to merchant hosts, so "does it answer products.json and is it
+ * actually decora" still needs the section 4 build-log probe recipe, and every
+ * one of them goes in with `pending: true` (section 4c, the intake of
+ * 2026-08-30 where six of seven approvals turned out to be unreadable).
+ */
+export const DECORA_SEARCH_NOTE =
+  'GoAffPro has the decora shelf; AWIN has none (0 kawaii, 0 harajuku, 0 j-fashion ' +
+  'across 20,000 advertisers, searched 2026-08-30). Do not re-run the AWIN hunt.'
+
 export const PARTNER_PROSPECTS: PartnerProspect[] = [
+  /* ---- The decora shortlist, GoAffPro, 2026-08-30. Unprobed. ---- */
+  {
+    merchant: 'Lolita Harajuku',
+    domain: 'https://lolita-harajuku.myshopify.com',
+    network: 'goaffpro',
+    rate: '10%',
+    cookie: '180 days, which is the longest in either directory',
+    fit: 'The single best keyword match in 42,000 programmes across both networks. Names the aesthetic twice.',
+    blocker: 'Unprobed. A myshopify.com subdomain often means a small or dormant shop, which is exactly the BerryKawaii and Tabletop shape, so read the feed before believing the listing.',
+  },
+  {
+    merchant: 'SparkX Harajuku',
+    domain: 'https://sparkx-harajuku.com',
+    network: 'goaffpro',
+    rate: '10%',
+    cookie: 'unstated',
+    fit: 'Harajuku by name on its own domain, which is a better sign of a real shop than a myshopify subdomain.',
+    blocker: 'Unprobed.',
+  },
+  {
+    merchant: 'Kawaii Unicorn',
+    domain: 'https://kawaii-unicorn.com',
+    network: 'goaffpro',
+    rate: '15%',
+    cookie: 'unstated',
+    fit: 'Highest rate of the kawaii cluster. Own domain.',
+    blocker: 'Unprobed, and the name suggests general kawaii rather than decora, so it may be a main-grid vendor rather than a /decora source.',
+  },
+  {
+    merchant: 'KawaiiMoriStore',
+    domain: 'https://shop.kawaiimoristore.com',
+    network: 'goaffpro',
+    rate: '10%',
+    cookie: 'unstated',
+    fit: 'Kawaii on its own domain.',
+    blocker: 'Unprobed.',
+  },
+  {
+    merchant: 'Kawaii mood',
+    domain: 'https://kawaiimood.com',
+    network: 'goaffpro',
+    rate: '10%',
+    cookie: 'unstated',
+    fit: 'Kawaii on its own domain.',
+    blocker: 'Unprobed.',
+  },
+  {
+    merchant: 'Egirldoll',
+    domain: 'https://egirldoll.com',
+    network: 'goaffpro',
+    rate: '10%',
+    cookie: 'unstated',
+    fit: 'E-girl and alt fashion, adjacent to the decora room rather than in it. Worth a look for the same tween audience.',
+    blocker: 'Unprobed, and the aesthetic needs Ada\'s eye before it goes near a page aimed at tweens.',
+  },
   {
     // Ada asked for this one by name, so it gets the most careful note.
     merchant: 'Hot Topic',
@@ -181,5 +269,9 @@ export const PARTNERS_REJECTED: { merchant: string; why: string }[] = [
   // shop was live on the shelf for over a month at the highest commission rate
   // we carry. It was removed on a brand judgement, not a technical one, and
   // nothing about it was broken.
+  // Turned up by the decora search of 2026-08-30 and written down so it is
+  // never surfaced again by a keyword match on "Japanese".
+  { merchant: 'Liebe Seele', why: 'NEVER. A Japanese premium bondage and fetish retailer, GoAffPro, 20%. It matched the J-fashion search on "Japanese" alone. Same rejection class as SpreePicky and Modakawa but without the borderline: there is no kid-safe fraction of this catalogue and this site sells to tweens.' },
+
   { merchant: 'Autoplush', why: 'Delisted 2026-08-30 by Jacob and Ada. Twelve plush cars at 20% commission, the highest rate we carry, and the feed worked fine. It is a car-culture brand rather than a kawaii one: the photography does not sit next to the rest of the shelf and the products were never a fit, they were inventory taken on early to make the catalogue look fuller. Four guides had to name the vendor in notVendors to keep a Tesla Model X off a board called Kawaii Plushies, which is the tell that the exclusion belonged upstream. Do not re-add on the commission rate alone; that is what put it here the first time.' },
 ]
