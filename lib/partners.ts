@@ -131,16 +131,7 @@ export const PARTNER_PROSPECTS: PartnerProspect[] = [
     rate: '10%',
     cookie: '180 days, which is the longest in either directory',
     fit: 'The single best keyword match in 42,000 programmes across both networks. Names the aesthetic twice.',
-    blocker: 'Unprobed. A myshopify.com subdomain often means a small or dormant shop, which is exactly the BerryKawaii and Tabletop shape, so read the feed before believing the listing.',
-  },
-  {
-    merchant: 'SparkX Harajuku',
-    domain: 'https://sparkx-harajuku.com',
-    network: 'goaffpro',
-    rate: '10%',
-    cookie: 'unstated',
-    fit: 'Harajuku by name on its own domain, which is a better sign of a real shop than a myshopify subdomain.',
-    blocker: 'Unprobed.',
+    blocker: 'APPLIED 2026-08-30, under review. Unprobed. A myshopify.com subdomain often means a small or dormant shop, which is exactly the BerryKawaii and Tabletop shape, so read the feed before believing the listing - and SparkX Harajuku off this same shortlist turned out to be a dead store.',
   },
   {
     // Ada asked for this one by name, so it gets the most careful note.
@@ -236,6 +227,12 @@ export const PARTNERS_REJECTED: { merchant: string; why: string }[] = [
   // keeping: an approval says a programme exists, not that a store does.
   { merchant: 'Tabletop Item Shop', why: 'Dead. products.json answered HTTP 404 with Shopify\'s {"errors":"Not Found"}, meaning no store at that subdomain, and the shop could not be found by search either (confirmed by Jacob 2026-08-30). GoAffPro approval was real; the storefront was not.' },
   { merchant: 'BerryKawaii', why: 'Dead. products.json answered HTTP 402 with {"errors":"Unavailable Shop"}, which is Shopify\'s response for a frozen or paused store (confirmed by Jacob 2026-08-30). Its ref value looked correct, which is the lesson: a plausible tracking code tells you nothing about whether the shop is trading.' },
+
+  // The decora shortlist, 2026-08-30. Six leads, four joined, and this is what
+  // the other two and one of the four came to.
+  { merchant: 'SparkX Harajuku', why: 'Dead URL, dead store (confirmed by Jacob 2026-08-30). Never applied for. It was the shortlist entry whose OWN DOMAIN was supposed to be the reassuring signal against a myshopify subdomain, and it was the one that did not exist. A domain tells you a shop was set up once, not that it is trading.' },
+  { merchant: 'Best of Kawaii', why: 'Dead, and confirmed twice. products.json answered HTTP 404 with a Cloudflare HTML error page on 2026-08-22 and again on 2026-08-30, so it is not a Shopify store or the endpoint is gone. §4 asks for one re-probe before writing a shop off; it has had it.' },
+  { merchant: 'Minecraft Plushies', why: 'Dead, and confirmed twice. products.json answered HTTP 404 with a non-Shopify JSON body ({"message":""}, no server header) on 2026-08-22 and again on 2026-08-30. A live shop on a platform we cannot read is the §4c showcase-or-nothing case, but nothing answers here at all.' },
 
   // DELISTED rather than never-listed, and the distinction is the point. This
   // shop was live on the shelf for over a month at the highest commission rate

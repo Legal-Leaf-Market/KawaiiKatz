@@ -357,9 +357,10 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
 | GiftLAB | 2426 | — | **DECLINED 2026-08-30** — feed reads fine, catalogue is not kawaii |
 | CozyKawaii | 719 | 462 | GoAffPro, live 2026-08-30 on a narrow `include` (plush types only) |
-| Best of Kawaii | 0 | 0 | **HTTP 404, Cloudflare HTML** — not Shopify, or products.json removed |
-| Minecraft Plushies | 0 | 0 | **HTTP 404, non-Shopify JSON** — different platform |
 | Kawaii Fashion Store | 0 | 0 | **fetch threw** — DNS or refused. Re-probe once before writing off |
+| Kawaii Unicorn | 1250 | 1234 | GoAffPro 15%, **live 2026-08-30**. 8 of 703 dropped by the phrase filter, the cleanest feed here. No `include` (empty types) |
+| KawaiiMoriStore | 1250 | 943 | GoAffPro 10%, **live 2026-08-30**. J-fashion, so it is a `/decora` source too. **Hits the 5-page cap.** 156 of 784 dropped |
+| Kawaii mood | 0 | 0 | GoAffPro 10%, joined and **frozen**: HTTP 402 `{"errors":"Unavailable Shop"}`. Stays `pending` |
 
 Two things that only showed up under real data:
 

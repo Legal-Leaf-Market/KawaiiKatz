@@ -457,7 +457,19 @@ export const VENDORS: VendorConfig[] = [
   // does to a decora wardrobe: `pleated skirt`, `thigh high`, `lace up`,
   // `chiffon` and `satin` are all in CUT_PHRASES and are also the plain
   // vocabulary of the clothes we signed them for.
-  { vendor: 'Kawaii Unicorn', domain: 'https://kawaii-unicorn.com', prefix: 'kuni', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  // LIVE 2026-08-30. Probed from a build log (§4): 1,234 products map cleanly
+  // across apparel 589, plush 151, home 124, accessories 114, collect 62,
+  // stationery 46, puzzle 39. The kid-safety number, which is the one to read
+  // first: 703 in scanned categories, **8** dropped. That is the cleanest feed
+  // any vendor has returned.
+  //
+  // NO `include` LIST, and §4 says why: the feed carries empty product_types,
+  // and an include list cannot reach an empty type, so writing one would
+  // silently delete that share of the shelf. MamaRaya is the worked example.
+  //
+  // It is a UNICORN shop - rainbow bedding, onesies, lamps, headbands - so it
+  // is general kawaii and belongs on the main grid, not in the decora room.
+  { vendor: 'Kawaii Unicorn', domain: 'https://kawaii-unicorn.com', prefix: 'kuni', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
 
   // KawaiiMoriStore. Joined GoAffPro the same sitting, same real tracking value
   // (https://shop.kawaiimoristore.com/?ref=kawaiikatz). Same pending rule.
@@ -466,10 +478,39 @@ export const VENDORS: VendorConfig[] = [
   // where products.json must be read from, and the apex would answer for a
   // different site. §4c's lesson about reading the response body rather than
   // the status applies here more than usual.
-  { vendor: 'KawaiiMoriStore', domain: 'https://shop.kawaiimoristore.com', prefix: 'kmori', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+  // LIVE 2026-08-30, and it is a J-FASHION shop rather than a kawaii one, which
+  // the listing did not say and the feed did: Clothing Tops 520, Dresses 304,
+  // Skirts 277, and titles reading "Sweet Princess Lolita", "Dawn Keeper Lolita
+  // Skirt", "Sweet Jirai Kei Set", "Prince Ouji Set", "Cyberpunk Hooded Jacket".
+  // That is the decora room's vocabulary, so it is a SOURCE_SHOPS entry as well
+  // as a main-grid vendor. 943 of 1,250 survive mapping.
+  //
+  // HITS THE 5-PAGE CAP, like Kore Kawaii and Kawaii Babe, so part of this
+  // catalogue has never been ingested (§4).
+  //
+  // 156 of 784 are dropped by the kid-safety phrase filter, which is 20% and is
+  // the highest of any vendor here. Read that before assuming it is a bug: the
+  // phrases are "lace up" (37), "high waist" (37), "slit" (20), "camisole" (12),
+  // "halter" (11), "chiffon", "satin", "pleated skirt". §4 records exactly this
+  // - CUT_PHRASES is tuned for suggestive cuts and that is also, word for word,
+  // the vocabulary of a lolita wardrobe. It is the filter working as written.
+  // A genuine false positive gets a narrow KID_SAFE entry, never a loosened
+  // CUT_PHRASES (§7).
+  { vendor: 'KawaiiMoriStore', domain: 'https://shop.kawaiimoristore.com', prefix: 'kmori', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0 },
 
-  // Kawaii mood. Third of the same sitting, same real tracking value
-  // (https://kawaiimood.com/?ref=kawaiikatz). Same pending rule.
+  // Kawaii mood. Tracking is real (https://kawaiimood.com/?ref=kawaiikatz) and
+  // the shop is NOT. Probed 2026-08-30:
+  //
+  //   HTTP 402, server: cloudflare, body: {"errors":"Unavailable Shop"}
+  //
+  // That is a FROZEN Shopify store, which §4c spells out as distinct from a 404
+  // (no store at all) and from a 403 interstitial (Cloudflare bot rule). The
+  // affiliate dashboard shows it as an approved partner in good standing, which
+  // is exactly the gap `pending` exists to cover. Nobody saw a vendor with no
+  // products because it never went live.
+  //
+  // Left pending rather than deleted: a frozen store can be unfrozen, and the
+  // approval survives. Re-probe before writing it off (§4).
   { vendor: 'Kawaii mood', domain: 'https://kawaiimood.com', prefix: 'kmood', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
 
   // Egirldoll. Fourth of the sitting, tracking real
@@ -517,7 +558,6 @@ export const VENDORS: VendorConfig[] = [
   // that returns zero products forever. Open it in a browser before deciding.
   //
   // The overlap question below was never reached.
-  { vendor: 'Best of Kawaii', domain: 'https://bestofkawaii.com', prefix: 'bok', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // Fourth of the same batch (2026-08-30). On category this is the easiest fit
   // of the four: plush is the biggest shelf we have, and a Minecraft plush is a
@@ -547,11 +587,11 @@ export const VENDORS: VendorConfig[] = [
   // `{"errors":"Not Found"}` shape, so this storefront is on some other
   // platform and this site reads Shopify and nothing else.
   //
-  // Same distinction as Best of Kawaii: unreadable is not the same as dead. If
+  // Same distinction Best of Kawaii used to carry (it is in PARTNERS_REJECTED
+  // now, confirmed dead twice): unreadable is not the same as dead. If
   // the shop is live in a browser it is a §4c showcase-or-nothing candidate,
   // never a VENDORS row. But settle the licensing question FIRST, because it
   // decides whether we want them at all and costs nothing to check.
-  { vendor: 'Minecraft Plushies', domain: 'https://minecraftplushies.com', prefix: 'mine', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // GoAffPro, and Jacob believes the approval landed without him noticing
   // (surfaced 2026-08-30). GoAffPro attributes on a query param like Refersion
@@ -593,8 +633,8 @@ export const VENDORS: VendorConfig[] = [
   //
   //   2. THE STOCK IS OTHER PEOPLE'S CHARACTERS. Duolingo Owl, Snoopy tote and
   //      shoulder bags, Rilakkuma, Hangyodon, SKZOO, "Love & Deepspace". No
-  //      dropshipper holds those four licences at once. Same concern as
-  //      Minecraft Plushies above, and it lands harder here because /learn
+  //      dropshipper holds those four licences at once. Same concern
+  //      Minecraft Plushies raised, and it lands harder here because /learn
   //      carries two articles teaching people to spot counterfeits.
   //
   //   3. THE PRICES ARE WRONG FOR THIS SHELF. A $73.50 pet bed, a $130 ride-on

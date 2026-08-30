@@ -63,6 +63,7 @@ import type { Product } from './data'
  * MEASURED BEFORE IT WAS WRITTEN, against the live catalogue on 2026-08-30:
  *
  *   Grumpy Bunny       438 of 438   (all)     untracked
+ *   KawaiiMoriStore    943 of 1250  (all)     TRACKED, 10%   (added 2026-08-30)
  *   Kawaii Babe        113 of 921   (decora)  untracked
  *   sugarhai            29 of 408   (decora)  untracked
  *   Kore Kawaii         24 of 1062  (decora)  TRACKED, 15%
@@ -86,6 +87,12 @@ export type Source = {
 
 export const SOURCE_SHOPS: Source[] = [
   { vendor: 'Grumpy Bunny', take: 'all' },
+  // `all`, like Grumpy Bunny, because it IS a J-fashion shop and the feed said
+  // so where the affiliate listing did not: Clothing Tops 520, Dresses 304,
+  // Skirts 277, titles reading Sweet Lolita, Jirai Kei, Prince Ouji, Cyberpunk.
+  // A `decora` filter would drop the plain pieces somebody builds the rest of
+  // the outfit around, which is the half this room is actually for.
+  { vendor: 'KawaiiMoriStore', take: 'all' },
   { vendor: 'Kawaii Babe', take: 'decora' },
   { vendor: 'sugarhai', take: 'decora' },
   { vendor: 'Kore Kawaii', take: 'decora' },
@@ -183,6 +190,13 @@ export const SHOPS: Shop[] = [
       '6% DOKIDOKI', 'ACDC RAG', 'Dear My Love', 'Gloomy Bear',
       'Hypercore', 'Listen Flavor', 'Menhera Chan', 'Sanrio', 'San-X',
     ],
+  },
+  {
+    vendor: 'KawaiiMoriStore',
+    home: 'https://shop.kawaiimoristore.com',
+    says: 'Japanese fashion: lolita, jirai kei and ouji',
+    shipsFrom: 'Asia',
+    brands: [],
   },
   {
     vendor: 'Kawaii Babe',
