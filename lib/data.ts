@@ -510,65 +510,6 @@ export const VENDORS: VendorConfig[] = [
   // decides whether we want them at all and costs nothing to check.
   { vendor: 'Minecraft Plushies', domain: 'https://minecraftplushies.com', prefix: 'mine', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
-  // Third approval surfaced on 2026-08-30, and the only one registered with an
-  // open question about whether it belongs here at all. Jacob looked at them
-  // originally for the gaming site and wants to see how they fit this one, so
-  // this row exists to be MEASURED, not to be shipped.
-  //
-  // Tabletop is a real adjacency rather than an obvious one. Kawaii dice sets,
-  // pastel dice trays and cute meeple accessories are a genuine category that
-  // this audience buys; rulebooks, card sleeves, painting supplies and licensed
-  // minis are a different hobby that happens to share a shop. Which of the two
-  // this merchant mostly stocks is exactly what categorize() will show, and the
-  // number to watch is how many land in `other`: a shop whose stock our
-  // classifier has no rule for is a shop this site has no shelf for.
-  //
-  // If it splits, the answer is probably an `include` list rather than a whole
-  // vendor, and if the kawaii part is thin the honest answer is to leave them
-  // to the gaming site and not dilute this one. §4e's rule applies: a page that
-  // gets pinned is the public face of the brand.
-  //
-  // MEASURED 2026-08-30 (build log, §4): products.json answers HTTP 404 with
-  // {"errors":"Not Found"}. That is Shopify's own response for a store that
-  // does not exist at that subdomain, not a bot block and not a closed
-  // endpoint, so the handle is wrong or the shop is gone. There is nothing to
-  // evaluate and the fit question above was never reached. Ask the merchant for
-  // their real storefront URL before spending anything else on this.
-  //
-  // Raw myshopify.com domain again, so the custom-domain note on BerryKawaii
-  // below applies here too.
-  { vendor: 'Tabletop Item Shop', domain: 'https://tabletop-itemshop.myshopify.com', prefix: 'ttis', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
-
-  // Second of two approvals Jacob found on the same day (2026-08-30) and had
-  // not realised he had. Network unconfirmed; GoAffPro is the assumption
-  // because CozyKawaii below arrived the same way, and `ref=` is the shape
-  // GoAffPro, Refersion and Impact all use.
-  //
-  // NOTE THE SPELLING, because it is evidence about the other one. This link
-  // came through as ?ref=kawaiikatz, correctly spelled and matching the eight
-  // vendors already tracking. CozyKawaii's came through as ?ref=kawaittkatz.
-  // Two links pasted minutes apart, one right and one not, which makes the
-  // CozyKawaii value more likely to be a genuine typo than a house style. It
-  // still has to be read off the dashboard rather than inferred from this.
-  //
-  // The domain is the raw myshopify.com one. That is fine for products.json and
-  // for tracking, but if the shop has a custom domain the storefront link
-  // should use it: a shopper who lands on a myshopify.com URL sees a less
-  // finished shop than the merchant actually runs. Squishy Bottle has the same
-  // shape (stopshop9.myshopify.com) and nobody has ever checked.
-  //
-  // MEASURED 2026-08-30 (build log, §4): products.json answers HTTP 402 with
-  // {"errors":"Unavailable Shop"}. 402 Payment Required plus that body is
-  // Shopify's response for a frozen or paused store, so this shop is not
-  // trading. The affiliate approval may well be real; there is currently
-  // nothing behind it, and a live link would send shoppers to a dead
-  // storefront. Ask the merchant before anything else.
-  //
-  // The ref value looked right, which is worth noting: a plausible tracking
-  // code told us nothing about whether the shop was open. Both halves of §7's
-  // rule are separate checks for a reason.
-  { vendor: 'BerryKawaii', domain: 'https://berrykawaiiuwu.myshopify.com', prefix: 'berry', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
-
   // GoAffPro, and Jacob believes the approval landed without him noticing
   // (surfaced 2026-08-30). GoAffPro attributes on a query param like Refersion
   // and Impact, so approval really is a one-line change here (§4c) and there is

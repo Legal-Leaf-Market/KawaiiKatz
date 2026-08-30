@@ -305,8 +305,6 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
 | GiftLAB | 0 | 0 | **HTTP 403, Cloudflare** — AWIN 95201, joined 2026-08-30, needs ShopWindow |
 | CozyKawaii | 719 | 462 | GoAffPro, live 2026-08-30 on a narrow `include` (plush types only) |
-| BerryKawaii | 0 | 0 | **HTTP 402 "Unavailable Shop"** — Shopify store frozen, not trading |
-| Tabletop Item Shop | 0 | 0 | **HTTP 404 "Not Found"** — no store at that subdomain |
 | Best of Kawaii | 0 | 0 | **HTTP 404, Cloudflare HTML** — not Shopify, or products.json removed |
 | Minecraft Plushies | 0 | 0 | **HTTP 404, non-Shopify JSON** — different platform |
 | Kawaii Fashion Store | 0 | 0 | **fetch threw** — DNS or refused. Re-probe once before writing off |
@@ -376,6 +374,13 @@ Two things in there worth knowing without reading it:
      distinguishes none of them.
    - **Unreadable is not dead.** A shop we cannot ingest may be trading perfectly well. That
      is the §4c showcase-or-nothing case, not a reason to tell the merchant they are broken.
+
+   Two of the seven turned out to be genuinely dead and were confirmed as such by hand:
+   Tabletop Item Shop could not be found by search at all, and BerryKawaii's store is
+   frozen. Both were removed from `VENDORS` on 2026-08-30 and recorded in
+   `PARTNERS_REJECTED` in `lib/partners.ts`, which is where a merchant goes once it has
+   been looked at and ruled out. Deleting the row without writing down why is how the same
+   afternoon gets spent twice.
 
 3. **A merchant can be on our network and still be unreadable.** GiftLAB (AWIN 95201,
    joined 2026-08-30) sits behind Cloudflare: `/products.json`, `/collections/all/products.json`

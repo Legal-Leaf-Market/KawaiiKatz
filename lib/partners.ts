@@ -170,4 +170,10 @@ export const PARTNERS_REJECTED: { merchant: string; why: string }[] = [
   { merchant: 'Attitude Clothing', why: 'Good kawaii department, but the programme runs on Visualsoft/Partnerize — a fifth network relationship for one merchant.' },
   { merchant: 'BoxLunch', why: 'On CJ, which we are not on. Hot Topic is the same parent company and reachable on a network we can use.' },
   { merchant: 'Etsy / Redbubble', why: 'Marketplaces, not merchants. Thousands of sellers, no single catalogue to ingest and no consistent quality to stand behind.' },
+
+  // The 2026-08-30 GoAffPro batch. Both were APPROVED partnerships with live
+  // dashboard entries, and both are dead shops. That is the finding worth
+  // keeping: an approval says a programme exists, not that a store does.
+  { merchant: 'Tabletop Item Shop', why: 'Dead. products.json answered HTTP 404 with Shopify\'s {"errors":"Not Found"}, meaning no store at that subdomain, and the shop could not be found by search either (confirmed by Jacob 2026-08-30). GoAffPro approval was real; the storefront was not.' },
+  { merchant: 'BerryKawaii', why: 'Dead. products.json answered HTTP 402 with {"errors":"Unavailable Shop"}, which is Shopify\'s response for a frozen or paused store (confirmed by Jacob 2026-08-30). Its ref value looked correct, which is the lesson: a plausible tracking code tells you nothing about whether the shop is trading.' },
 ]
