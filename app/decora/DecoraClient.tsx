@@ -54,22 +54,61 @@ const IMG = '/decora/'
 /**
  * The cast, in small. All transparent, all cut from the asset sheet.
  *
- * `alt` is written as what the sticker SHOWS rather than as a filename,
- * because a screen reader on this row should get the joke the row is making:
- * Katz is chaos, Panda is unbothered, Bunny is unimpressed.
+ * `alt` is what the sticker SHOWS rather than a filename, because a screen
+ * reader on this row should get the joke the row is making: Katz is chaos,
+ * Panda is unbothered, Bunny is unimpressed.
  */
 const HERO_STICKERS = [
-  { src: 'st-katz.webp', alt: 'Katz, delighted about something' },
+  { src: 'st-katz.webp', alt: 'Katz, fluffed up and sparkling' },
   { src: 'st-bunny.webp', alt: 'The bunny, deadpan, throwing a peace sign' },
   { src: 'st-panda.webp', alt: 'Panda in headphones, entirely unbothered' },
   { src: 'st-box.webp', alt: 'Katz and Panda in a parcel that just arrived' },
+  { src: 'st-donut.webp', alt: 'Panda eating a donut in one go' },
+  { src: 'st-katzflower.webp', alt: 'Katz buried in flowers' },
 ]
 
-/** A pose pinned beside a section heading, where one earns its place. */
+/**
+ * EVERY SECTION GETS A POSE. Not most, every one.
+ *
+ * The pairing is meant rather than shuffled: the bunny drowning in shopping
+ * bags goes on Bags and chaos, the one hugging a plush on Room loot, Panda in
+ * headphones on the tech-adjacent shelf. A random pose per section would read
+ * as wallpaper; a chosen one reads as a joke about that shelf.
+ */
 const SECTION_STICKER: Record<string, { src: string; alt: string }> = {
+  new: { src: 'st-box.webp', alt: 'Katz and Panda in a parcel that just arrived' },
+  fit: { src: 'st-p2.webp', alt: 'The bunny, mid outfit check' },
+  more: { src: 'st-p4.webp', alt: 'The bunny wearing every clip she owns' },
   bags: { src: 'st-bags.webp', alt: 'The bunny carrying more bags than she can hold' },
+  desk: { src: 'st-p7.webp', alt: 'Katz sitting on the stationery' },
   room: { src: 'st-room.webp', alt: 'The bunny in a hoodie, hugging a plush' },
+  anime: { src: 'st-panda.webp', alt: 'Panda in headphones, entirely unbothered' },
 }
+
+/**
+ * Patterns, used as narrow banding rather than as full backgrounds.
+ *
+ * A leopard print behind a product grid is unreadable and a plaid behind body
+ * copy is worse. They run as thin strips under the section headings, where the
+ * texture registers and nothing has to be read through it. Cycled by index so
+ * consecutive sections never repeat.
+ */
+const PATTERNS = ['pat-plaid.webp', 'pat-stripe.webp', 'pat-check.webp', 'pat-leopard.webp']
+
+/**
+ * Charm clusters, scattered behind the hero content.
+ *
+ * `pointer-events-none` and `aria-hidden` on every one: they are confetti. A
+ * screen reader listing four charm clusters before the headline, or a stray
+ * click landing on a bow instead of the link under it, would both be the
+ * decoration taking something from the page rather than giving to it.
+ */
+const HERO_CONFETTI = [
+  { src: 'charms-a.webp', cls: 'top-[-5%] left-[-3%] w-[160px] rotate-[-14deg] opacity-70' },
+  { src: 'charms-c.webp', cls: 'top-[-6%] right-[6%] w-[210px] rotate-[10deg] opacity-60' },
+  { src: 'charms-d.webp', cls: 'bottom-[-4%] right-[-3%] w-[200px] rotate-[-8deg] opacity-70' },
+  { src: 'charms-b.webp', cls: 'bottom-[-6%] left-[-4%] w-[210px] rotate-[6deg] opacity-55' },
+]
 
 function Sticker({ children, tone = 'pink' }: { children: React.ReactNode; tone?: 'pink' | 'violet' | 'cyan' | 'black' }) {
   const tones: Record<string, string> = {
@@ -156,6 +195,31 @@ export default function DecoraClient({
           className="absolute inset-0"
           style={{ background: 'radial-gradient(120% 90% at 50% 0%, rgba(139,61,255,.6), rgba(18,7,31,.82) 68%)' }}
         />
+
+        {/* CONFETTI SITS ABOVE THE GRADIENT, NOT UNDER IT.
+            The first pass had the art beneath the wash, which is what made
+            everything look muted and half-there: a 82% dark radial over the
+            top of a drawing is a drawing you have dimmed on purpose. The
+            gradient's job is to make the HEADLINE readable, so it goes under
+            anything drawn and over nothing else. Hidden below `sm` because on
+            a phone there is no margin to scatter into. */}
+        {/* CONFETTI HUGS THE FRAME AND NEVER THE COPY.
+            The first placement scattered these across the whole hero, which
+            put a bow on top of the back-link and a row of hearts through the
+            affiliate disclosure. Decoration that sits on the one paragraph
+            with a legal job is decoration that has taken something from the
+            page. They now clip to the outer edges only. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden sm:block overflow-hidden">
+          {HERO_CONFETTI.map((c) => (
+            <img
+              key={c.src}
+              src={`${IMG}${c.src}`}
+              alt=""
+              aria-hidden
+              className={`absolute h-auto drop-shadow-[0_4px_12px_rgba(0,0,0,.45)] ${c.cls}`}
+            />
+          ))}
+        </div>
 
         <div className="relative max-w-[1180px] mx-auto px-4 sm:px-6 pt-6 pb-10">
           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -250,14 +314,22 @@ export default function DecoraClient({
                 hide a background-carrying crop, and Katz and Panda were sliced
                 by the container edge. The asset sheet has them drawn together,
                 so the composition is the artist's rather than CSS's. */}
-            <div className="relative flex items-end justify-center min-h-[220px] sm:min-h-[320px]">
+            <div className="relative flex items-center justify-center min-h-[240px] sm:min-h-[340px]">
+              {/* A halo behind the cast rather than a wash over it, so the art
+                  sits on the top layer and stays at full strength. */}
+              <div
+                aria-hidden
+                className="absolute inset-0 -z-10"
+                style={{ background: 'radial-gradient(58% 58% at 50% 52%, rgba(255,45,146,.34), transparent 72%)' }}
+              />
               <Image
                 src={`${IMG}trio.webp`}
                 alt="Katz, the bunny and Panda, out together in full decora"
-                width={1100}
-                height={573}
+                width={1200}
+                height={926}
                 priority
-                className="w-full max-w-[540px] h-auto drop-shadow-[0_10px_26px_rgba(0,0,0,.6)]"
+                sizes="(max-width: 640px) 92vw, 620px"
+                className="relative w-full max-w-[620px] h-auto drop-shadow-[0_14px_34px_rgba(0,0,0,.65)]"
               />
             </div>
           </div>
@@ -274,6 +346,14 @@ export default function DecoraClient({
         </div>
       </header>
 
+      {/* A charm string across the full width, straight under the hero. The
+          divider art tiles, so this costs one image and no layout. */}
+      <div
+        aria-hidden
+        className="h-[34px] sm:h-[46px] bg-repeat-x bg-center border-b-2 border-[#3a2359]"
+        style={{ backgroundImage: `url(${IMG}divider.webp)`, backgroundSize: 'auto 100%' }}
+      />
+
       {/* ══════════════════════════════════════════════════ SECTIONS */}
       <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-9">
         {loading && !pool.length ? (
@@ -284,6 +364,34 @@ export default function DecoraClient({
           </p>
         ) : (
           <>
+            {/* The picnic, framed, beside the jump chips. It is the softest
+                image in the set, which is why it sits here rather than in a
+                product section: it introduces the cast before the shelf
+                starts, and then the page gets loud. */}
+            <div className="flex items-center gap-5 mb-7 flex-wrap">
+              <div className="relative shrink-0 hidden sm:block">
+                <Image
+                  src={`${IMG}scene-picnic.webp`}
+                  alt="Katz, the bunny and Panda on a picnic blanket"
+                  width={800}
+                  height={470}
+                  className="w-[260px] h-auto rounded-[18px] border-[4px] border-white shadow-[0_10px_26px_rgba(0,0,0,.6)] rotate-[-2deg]"
+                />
+                <Image
+                  src={`${IMG}charms-a.webp`}
+                  alt=""
+                  aria-hidden
+                  width={420}
+                  height={220}
+                  className="pointer-events-none absolute -right-7 -bottom-5 w-[120px] h-auto rotate-[12deg]"
+                />
+              </div>
+              <p className="text-[15px] font-bold text-[#ffd6ec] max-w-[38ch] leading-relaxed">
+                Eight shelves, one shop, and a cast that has opinions about all of it.
+                Start anywhere.
+              </p>
+            </div>
+
             {/* Section jump chips. Real anchors, so the page is navigable
                 without JavaScript and a Pin can deep-link to a section. */}
             <nav className="flex gap-2 flex-wrap mb-9">
@@ -299,7 +407,20 @@ export default function DecoraClient({
             </nav>
 
             {sections.map(({ section, products }, si) => (
-              <section key={section.key} id={section.key} className="mb-12 scroll-mt-6">
+              <section
+                key={section.key}
+                id={section.key}
+                className="relative mb-12 scroll-mt-6"
+              >
+                {/* Room loot, and only Room loot, gets the bedroom behind it.
+                    A scene per section would be noise; one section whose whole
+                    subject is a bedroom shelf gets to show the bedroom. */}
+                {section.key === 'room' && (
+                  <div aria-hidden className="pointer-events-none absolute -inset-x-4 -top-4 bottom-0 -z-10 overflow-hidden rounded-[26px]">
+                    <Image src={`${IMG}scene-bedroom.webp`} alt="" fill sizes="100vw" className="object-cover opacity-[0.16]" />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(18,7,31,.4), #12071f 78%)' }} />
+                  </div>
+                )}
                 {/* The charm string, between sections and never before the
                     first. Decorative only, so it is aria-hidden: a screen
                     reader announcing "bows and safety pins" eight times is
@@ -316,7 +437,7 @@ export default function DecoraClient({
                     {section.kicker}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 sm:gap-5">
                   <h2
                     className="font-display font-extrabold text-[34px] sm:text-[46px] leading-[0.98] text-white"
                     style={{ textShadow: '3px 3px 0 #ff2d92' }}
@@ -327,12 +448,23 @@ export default function DecoraClient({
                     <Image
                       src={`${IMG}${SECTION_STICKER[section.key].src}`}
                       alt={SECTION_STICKER[section.key].alt}
-                      width={400}
-                      height={300}
-                      className="h-[54px] sm:h-[68px] w-auto shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,.5)]"
+                      width={430}
+                      height={320}
+                      className="h-[70px] sm:h-[104px] w-auto shrink-0 -mt-2 drop-shadow-[0_6px_14px_rgba(0,0,0,.55)]"
                     />
                   )}
                 </div>
+                {/* A strip of the pattern, cycled so no two sections repeat.
+                    Narrow on purpose: these are loud prints and nothing has to
+                    be read through a strip. */}
+                <div
+                  aria-hidden
+                  className="h-[16px] rounded-full mt-3 mb-1 opacity-95 bg-repeat-x"
+                  style={{
+                    backgroundImage: `url(${IMG}${PATTERNS[si % PATTERNS.length]})`,
+                    backgroundSize: 'auto 100%',
+                  }}
+                />
                 <p className="text-[14.5px] font-semibold text-[#c9b4e8] mt-2 mb-5 max-w-[62ch] leading-relaxed">
                   {section.blurb}
                 </p>
@@ -347,14 +479,30 @@ export default function DecoraClient({
             {/* ═════════════════════════════ THE GRUMPY EDIT */}
             {edit.length > 0 && (
               <section id="edit" className="mb-12 scroll-mt-6">
-                <div className="rounded-[26px] border-[4px] border-[#ff2d92] bg-[#1d0d33] p-5 sm:p-7">
-                  <div className="flex items-center gap-4 flex-wrap mb-3">
+                <div className="relative overflow-hidden rounded-[26px] border-[4px] border-[#ff2d92] bg-[#1d0d33] p-5 sm:p-7">
+                  {/* Leopard, at 12%, only behind this one panel. The Edit is
+                      the page's editorial voice, so it gets a treatment the
+                      product sections do not. */}
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 opacity-[0.12] bg-repeat"
+                    style={{ backgroundImage: `url(${IMG}pat-leopard.webp)`, backgroundSize: '180px auto' }}
+                  />
+                  <Image
+                    src={`${IMG}wreath-heart.webp`}
+                    alt=""
+                    aria-hidden
+                    width={520}
+                    height={400}
+                    className="pointer-events-none absolute -right-8 -top-10 w-[210px] h-auto opacity-40 rotate-[8deg] hidden sm:block"
+                  />
+                  <div className="relative flex items-center gap-4 flex-wrap mb-3">
                     <Image
                       src={`${IMG}st-bunny.webp`}
                       alt=""
-                      width={393}
-                      height={300}
-                      className="h-[64px] w-auto"
+                      width={430}
+                      height={320}
+                      className="h-[96px] w-auto drop-shadow-[0_6px_14px_rgba(0,0,0,.5)]"
                     />
                     <div>
                       <span className="font-display font-extrabold text-[11.5px] uppercase tracking-[.24em] text-[#25e0e8]">
@@ -368,12 +516,12 @@ export default function DecoraClient({
                       </h2>
                     </div>
                   </div>
-                  <p className="text-[14.5px] font-semibold text-[#c9b4e8] mb-5 max-w-[64ch] leading-relaxed">
+                  <p className="relative text-[14.5px] font-semibold text-[#c9b4e8] mb-5 max-w-[64ch] leading-relaxed">
                     A tour rather than a top ten. We cannot see what sells on their site, only what
                     gets clicked on ours, so this is one thing from each of the Japanese labels the
                     shops are known for.
                   </p>
-                  <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
+                  <div className="relative grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
                     {edit.map((p) => (
                       <ProductCard key={`edit-${p.id}`} product={p} />
                     ))}
@@ -385,19 +533,59 @@ export default function DecoraClient({
         )}
 
         {/* ═════════════════════════════ WHERE IT COMES FROM */}
+        {/* THE WALK HOME. A full-bleed band, the one place on the page where a
+            scene gets to be a scene rather than a texture: it closes the shelf
+            and hands over to the plain attribution block below, which is the
+            one part that must not look decorated. */}
+        <section aria-hidden className="relative -mx-4 sm:-mx-6 mt-6 mb-6 overflow-hidden">
+          <div className="relative h-[150px] sm:h-[230px]">
+            <Image
+              src={`${IMG}scene-street.webp`}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+            {/* Fades into the page top and bottom so the band has no hard seam. */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(to bottom, #12071f 0%, rgba(18,7,31,0) 26%, rgba(18,7,31,0) 68%, #12071f 100%)',
+              }}
+            />
+          </div>
+        </section>
+
         {/* WHERE IT ALL COMES FROM. Each shop's own words about itself, never
             ours about them, and nothing time-sensitive: a page cached for six
             hours cannot keep a promise about stock or delivery. */}
-        <section className="rounded-[22px] border-2 border-[#8b3dff] bg-[#180b2a] p-5 sm:p-6 mt-4">
-          <h2 className="font-display font-extrabold text-[19px] text-white mb-1">
+        <section className="relative overflow-hidden rounded-[22px] border-2 border-[#8b3dff] bg-[#180b2a] p-5 sm:p-6 mt-4">
+          <Image
+            src={`${IMG}charms-c.webp`}
+            alt=""
+            aria-hidden
+            width={520}
+            height={220}
+            className="pointer-events-none absolute -right-6 -top-4 w-[180px] h-auto opacity-30 rotate-[-6deg] hidden sm:block"
+          />
+          <Image
+            src={`${IMG}frame-polaroid.webp`}
+            alt=""
+            aria-hidden
+            width={520}
+            height={400}
+            className="pointer-events-none absolute -left-10 -bottom-8 w-[190px] h-auto opacity-25 rotate-[-10deg] hidden lg:block"
+          />
+          <h2 className="relative font-display font-extrabold text-[19px] text-white mb-1">
             Where it comes from
           </h2>
-          <p className="text-[13px] font-semibold text-[#9a86c4] leading-relaxed max-w-[72ch] mb-4">
+          <p className="relative text-[13px] font-semibold text-[#9a86c4] leading-relaxed max-w-[72ch] mb-4">
             Kawaii Katz is the editorial. These are the shops that actually stock and ship it.
           </p>
 
           {SHOPS.map((shop) => (
-            <div key={shop.vendor} className="border-t border-[#3a2359] pt-4 mt-4 first:border-0 first:pt-0 first:mt-0">
+            <div key={shop.vendor} className="relative border-t border-[#3a2359] pt-4 mt-4 first:border-0 first:pt-0 first:mt-0">
               <h3 className="font-display font-extrabold text-[16px] text-white">{shop.vendor}</h3>
               <p className="text-[14px] font-semibold text-[#c9b4e8] leading-relaxed max-w-[72ch] mt-1">
                 Describes itself as carrying {shop.says}, and says orders ship from{' '}
@@ -416,7 +604,7 @@ export default function DecoraClient({
             </div>
           ))}
 
-          <p className="text-[13px] font-semibold text-[#9a86c4] leading-relaxed max-w-[72ch] mt-5 pt-4 border-t border-[#3a2359]">
+          <p className="relative text-[13px] font-semibold text-[#9a86c4] leading-relaxed max-w-[72ch] mt-5 pt-4 border-t border-[#3a2359]">
             Prices and availability come from each shop&apos;s live catalogue and change without
             us knowing. We are not affiliated with, endorsed by, or speaking for any of them, the
             labels named above are their trademarks and not ours, and the characters on this page
