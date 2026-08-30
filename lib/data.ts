@@ -574,20 +574,24 @@ export const VENDORS: VendorConfig[] = [
   // and Impact, so approval really is a one-line change here (§4c) and there is
   // no awin1.com redirect to build.
   //
-  // *** THE REF VALUE IS ALMOST CERTAINLY A TYPO AND MUST BE CONFIRMED. ***
+  // *** THE REF VALUE WAS A TYPO. CONFIRMED AND CORRECTED 2026-08-30. ***
   //
   // The link supplied was https://cozykawaii.shop/?ref=kawaittkatz — "kawaitt",
   // with two t's, where all eight other tracked vendors use `ref=kawaiikatz`.
-  // It is recorded here EXACTLY as supplied rather than silently corrected,
-  // because only the GoAffPro dashboard knows which is real: if the affiliate
-  // account was created under a misspelled handle then kawaittkatz is the
-  // working code and "fixing" it would break the tracking.
+  // It was recorded here EXACTLY as supplied rather than silently corrected,
+  // because only the GoAffPro dashboard knew which was real: had the account
+  // been created under a misspelled handle, kawaittkatz would have been the
+  // working code and "fixing" it would have broken the tracking.
+  //
+  // Jacob checked and corrected it in GoAffPro on 2026-08-30. kawaiikatz is
+  // right, and is what ships.
   //
   // This is precisely the failure §4 warns about. A wrong ref is not an error
   // anyone sees: the link resolves, the shopper buys, the merchant keeps the
   // commission, and nothing on this site or in any dashboard says a word. The
   // Sydney Sock Project has been live and untracked since 2026-08-11 for a
-  // related reason. Confirm the code in GoAffPro before `pending` comes off.
+  // related reason. Ten minutes reading a dashboard beat finding it in a
+  // payout report six months from now.
   //
   // MEASURED 2026-08-30 (build log, §4). The feed reads: 719 products, 710
   // survive mapping, 0 dropped by the adult filter, 616 of 710 kid-safe. Those
@@ -616,11 +620,19 @@ export const VENDORS: VendorConfig[] = [
   //   4. THE TITLES ARE THE DROPSHIP SIGNATURE. Every one is "Kawaii X - Soft
   //      Stuffed Y", generated, em dash included.
   //
-  // RECOMMENDATION: decline, or take an include list of the genuine plush types
-  // only ("Stuffed Animals", "Stuffed Animals (Giant)", "Stuffed Animals 1/2/3",
-  // "Plush Toy"), which is roughly 456 of 719 and still carries the licensing
-  // question. Do NOT paste the probe's suggested include list: it happily
-  // includes Pet Beds, Cat Trees, Floor Rug and Harnesses.
+  // DECIDED 2026-08-30: shipped on the narrow include list below rather than
+  // declined. It keeps the eight genuine plush types and drops every pet bed,
+  // cat tree, floor rug, slipper, harness, tote bag and robot, so points 1, 3
+  // and 4 above are handled in config. Do NOT paste the probe's own suggested
+  // include list, which happily included all of those.
+  //
+  // POINT 2 IS NOT HANDLED AND CANNOT BE HERE. `include` gates on
+  // product_type, so the Duolingo, Rilakkuma, Hangyodon and SKZOO plush stay:
+  // they are filed under "Stuffed Animals" like everything else. Only the
+  // Snoopy bags left, and only because bags left. Whether to carry another
+  // brand's characters from a shop that plainly does not hold the licence is a
+  // judgement about who we send shoppers to, and it stays open with the vendor
+  // live.
   //
   // The include list below is WRITTEN AND READY, so shipping this vendor is a
   // one-line change: delete `pending` once the ref is confirmed. It keeps the
@@ -634,12 +646,11 @@ export const VENDORS: VendorConfig[] = [
     vendor: 'CozyKawaii',
     domain: 'https://cozykawaii.shop',
     prefix: 'cozy',
-    affiliateParam: 'ref=kawaittkatz',
+    affiliateParam: 'ref=kawaiikatz',
     network: 'goaffpro',
     commissionPct: 0,
     couponCode: '',
     couponPct: 0,
-    pending: true,
     include: [
       'Stuffed Animals',
       'Stuffed Animals (Giant)',

@@ -304,7 +304,7 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Tokyo Tiger | 0 | 0 | **HTTP 403**, host-level bot protection |
 | MamaRaya | 52 | 52 | AWIN, joined 2026-08-24 — 92% kid-safe, no `include` (16 empty types) |
 | GiftLAB | 0 | 0 | **HTTP 403, Cloudflare** — AWIN 95201, joined 2026-08-30, needs ShopWindow |
-| CozyKawaii | 719 | 710 | reads, but pet beds + licensed characters + $2.5k robot. **Decline or narrow** |
+| CozyKawaii | 719 | 462 | GoAffPro, live 2026-08-30 on a narrow `include` (plush types only) |
 | BerryKawaii | 0 | 0 | **HTTP 402 "Unavailable Shop"** — Shopify store frozen, not trading |
 | Tabletop Item Shop | 0 | 0 | **HTTP 404 "Not Found"** — no store at that subdomain |
 | Best of Kawaii | 0 | 0 | **HTTP 404, Cloudflare HTML** — not Shopify, or products.json removed |
