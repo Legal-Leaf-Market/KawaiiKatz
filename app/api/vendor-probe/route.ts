@@ -120,6 +120,47 @@ async function probe(cfg: (typeof VENDORS)[number]) {
   L('END')
 }
 
+/**
+ * What answered 403, and is anything else open?
+ *
+ * The first run got HTTP 403 on /products.json page 1 from Vercel's IPs with
+ * the Mozilla/5.0 header — the Tokyo Tiger signature in §4 word for word. Note
+ * this is a real HTTP response, not the CONNECT-tunnel 403 the Claude Code
+ * egress proxy returns, so we did reach the host and it refused us.
+ *
+ * Before concluding, three cheap checks that change what the fallback is:
+ *   - the root URL: 403 there too means a site-wide WAF, 200 means the JSON
+ *     endpoint specifically is closed
+ *   - /collections/all/products.json: the other Shopify path to the same data
+ *   - /sitemap.xml: confirms Shopify and, if open, is a product-URL source
+ *
+ * §4 says not to re-run the Tokyo Tiger experiment, and this is not that. That
+ * rule is about re-testing headers against a host already proven to block at
+ * the host level; this is the first measurement of a different merchant, and
+ * it is asking which door is shut rather than knocking on the same one twice.
+ */
+async function reach(url: string, ua: string) {
+  const L = (s: string) => console.log('[probe] ' + s)
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': ua,
+        Accept: 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      cache: 'no-store',
+    })
+    const ct = res.headers.get('content-type') || '?'
+    const server = res.headers.get('server') || '?'
+    const body = (await res.text()).slice(0, 160).replace(/\s+/g, ' ')
+    L(`${String(res.status).padEnd(4)} ${url}`)
+    L(`     server=${server} content-type=${ct}`)
+    L(`     body: ${body}`)
+  } catch (e) {
+    L(`ERR  ${url} -> ${(e as Error).message}`)
+  }
+}
+
 export async function GET() {
   for (const v of VENDORS.filter((x) => x.pending && x.vendor === 'GiftLAB')) {
     try {
@@ -128,6 +169,15 @@ export async function GET() {
       console.log(`[probe] threw: ${(e as Error).message}`)
     }
   }
+  const BROWSER =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+  console.log('[probe] ---- which door is shut ----')
+  await reach('https://www.giftlab.com/', BROWSER)
+  await reach('https://www.giftlab.com/products.json?limit=1', BROWSER)
+  await reach('https://www.giftlab.com/collections/all/products.json?limit=1', BROWSER)
+  await reach('https://www.giftlab.com/sitemap.xml', BROWSER)
+  console.log('[probe] ---- end ----')
+
   return new Response('probe ran; read the build log for [probe]', {
     headers: { 'content-type': 'text/plain' },
   })
