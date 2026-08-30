@@ -1,5 +1,7 @@
 import { BOARDS, board, fillBoard } from '@/lib/boards'
 import { getCatalog } from '@/lib/catalog-source'
+import { db } from '@/lib/db'
+import { storeExclusions } from '@/lib/db/schema'
 import { unproxied } from '@/lib/catalog-shared'
 import { pinCaption } from '@/lib/pinterest'
 import { SITE_URL } from '@/lib/site'
@@ -91,13 +93,42 @@ function rfc822(iso: string | undefined, fallback: number): string {
   return new Date(Number.isFinite(t) ? t : fallback).toUTCString()
 }
 
+/**
+ * The curator's hidden products, kept out of every feed.
+ *
+ * The guide PAGES have always honoured this list, through useExclusions in the
+ * browser. The feeds never did, and a feed is the half that publishes: a
+ * product Ada hid for being suggestive would still have gone to Pinterest as a
+ * Pin under our own account, on a board aimed at parents. Hiding something is
+ * the clearest signal we get that it should not be pinned, and it was being
+ * read on the one surface where it did not matter.
+ *
+ * Read straight from the table rather than through /api/exclusions, because
+ * this runs during a prerender and a route fetching its own API at build time
+ * is a request to a server that is not listening yet.
+ *
+ * Fails OPEN, deliberately, and that is the honest trade: with no DATABASE_URL
+ * the site still has to build (§5 says the storefront runs without one), so an
+ * unreachable table means an unfiltered feed rather than no feed. It is logged.
+ */
+async function excludedIds(): Promise<Set<string>> {
+  try {
+    const rows = await db.select({ productId: storeExclusions.productId }).from(storeExclusions)
+    return new Set(rows.map((r) => r.productId))
+  } catch (e) {
+    console.warn(`[feeds] exclusions unavailable, feed is unfiltered: ${(e as Error).message}`)
+    return new Set()
+  }
+}
+
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params
   const b = board(slug.replace(/\.xml$/, ''))
   if (!b) return new Response('Not found', { status: 404 })
 
   const { products } = await getCatalog()
-  const picks = fillBoard(b, products).flatMap((s) => s.products)
+  const hidden = await excludedIds()
+  const picks = fillBoard(b, products.filter((p) => !hidden.has(p.id))).flatMap((s) => s.products)
 
   // Stable order — see the note at the top. Ties fall back to id so the result
   // is fully determined even when two products carry the same `added` date.
