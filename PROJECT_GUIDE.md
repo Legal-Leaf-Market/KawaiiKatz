@@ -800,7 +800,7 @@ and public; ten minutes reading the XML is cheaper than deleting Pins later.
 Pinterest caps at 200 Pins/day across the account, and the seven feeds are ~280 items, so
 connect two or three at a time rather than all of them at once.
 
-### `/feeds/ada-picks.xml`, and the fallback that had to go first
+### `/feeds/ada-picks.xml`, its own route, and the fallback that had to go first
 
 The picks rail is the only list on this site chosen by a person one product at a time, and
 it had no way of reaching Pinterest at all. It does now, at `/feeds/ada-picks.xml`, read
@@ -812,6 +812,20 @@ It **fails CLOSED** where `excludedIds()` fails open. An unreachable exclusions 
 publishing something that should have been hidden, so that one stays open to keep the build
 alive; an unreachable picks table means publishing nothing, which is just an empty feed.
 Inventing content is the one thing a curated list must never do.
+
+**It is a route of its own** (`app/feeds/ada-picks.xml/route.ts`) rather than another slug
+on `/feeds/[slug]`, because segment config is per-route and the two want different cadences.
+It shipped on the shared route first and the mismatch showed within the hour: the picks table
+was emptied, the feed prerendered with zero items, and starring four products changed nothing
+because the entry was cached for six hours. Six hours is right for a board, which changes when
+the catalogue does. It is wrong for the one list here that changes when a person presses a
+star. **Ten minutes**, and it costs almost nothing: ISR regenerates only on request, and the
+only thing that requests this URL is Pinterest, a few times a day.
+
+A static segment beats a dynamic one in Next routing, so it wins for that path with no other
+change. `lib/feed-rss.ts` holds the markup both routes render, because two copies of it would
+have drifted the first time one was fixed, and the three-way image declaration is exactly the
+sort of thing that gets fixed in one place and forgotten in the other.
 
 It is **not sorted by `added`**. The point of that sort is that new items APPEND rather than
 landing mid-feed and shifting everything Pinterest has already read. For a picked list the
