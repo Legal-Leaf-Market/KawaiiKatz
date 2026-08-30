@@ -271,6 +271,16 @@ in real question. The fix, when it comes to that, is cheap and should not be pre
 route rendering every guide, or dropping `/gifts` back to a static list that never calls
 `getCatalog()`.
 
+**That prediction came true, five days later.** Twelve `BOARDS` entries now generate a guide
+page AND an RSS feed apiece, plus `/`, `/brkox`, `/giftlab`, `/api/catalog`, `/p/[id]` and
+`/[brand]`: **thirty catalogue-backed routes, up from five.** Measured on `be62863`,
+2026-08-30: **5.2 minutes** to generate 50 static pages on three workers, against the 121s
+above. `staticPageGenerationTimeout: 240` is per-page rather than per-build so nothing failed,
+and the per-vendor `unstable_cache` means only the first worker to reach a vendor pays for it.
+It is still 2.5x the last measurement, and the next thing added here should be a shared route
+rather than a thirteenth pair. **Re-measure on the deploy after any `BOARDS` change**; the
+number is in the build log as "Generating static pages ... in Nmin".
+
 **Pages are a server shell + client component** (`page.tsx` → `HomeClient.tsx` /
 `BrkoxClient.tsx`). The shell inlines a real slice of the catalogue as first-paint data;
 `FIRST_PAINT_COUNT` bounds it, because serialising all ~1,600 products would put 1.9MB in
