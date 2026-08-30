@@ -648,7 +648,22 @@ export const VENDORS: VendorConfig[] = [
   //
   // commissionPct stays 0 until the rate is confirmed in the dashboard rather
   // than read off a programme description, the same as MamaRaya and BRKOX.
-  { vendor: 'GiftLAB', domain: 'https://www.giftlab.com', prefix: 'glab', affiliateParam: '', network: 'awin', awinMerchantId: '95201', commissionPct: 0, couponCode: '', couponPct: 0 },
+  // BACK TO PENDING 2026-08-30, an hour after it shipped. AWIN_FEEDS was set and
+  // the build still produced `fetched: 0`, so the vendor was live on the site
+  // with an empty shelf: the Tokyo Tiger shape, and exactly the risk flagged
+  // when the flag came off.
+  //
+  // hasFeed() needs awinMerchantId AND at least one URL, and the merchant id is
+  // right here, so either the variable was not visible to that build or the
+  // download failed. The likeliest cause is the host: the URLs supplied were
+  // ui.awin.com/productdata-darwin-download/..., and ui.awin.com is the
+  // logged-in dashboard, which may want a session cookie on top of the key in
+  // the path. productdata.awin.com is the API host built for exactly this and
+  // is the thing to try next.
+  //
+  // Reverting rather than leaving it live is the point of the flag. A vendor
+  // that sells nothing is worse than a vendor nobody has heard of.
+  { vendor: 'GiftLAB', domain: 'https://www.giftlab.com', prefix: 'glab', affiliateParam: '', network: 'awin', awinMerchantId: '95201', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // Second AWIN partner, and like BRKOX they came to us (2026-08-24).
   // Personalised baby and nursery goods: custom cotton-rope baskets with a
