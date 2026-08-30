@@ -420,6 +420,26 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Fifth of the batch (2026-08-30), and the one whose name promises the best
+  // fit of all of them. Which is worth being slightly suspicious of.
+  //
+  // THE RISK HERE IS OVERLAP, NOT FIT. A shop named for the category is either
+  // a genuine curator or a dropshipper reselling the same AliExpress stock that
+  // Kore Kawaii and Kawaii Babe already carry. That is not a hypothetical
+  // problem for this catalogue, because de-duplication cannot catch it:
+  // getCatalog() keys its byId map on `${prefix}-${handle}`, so the identical
+  // product from two vendors has two different ids and appears twice, once
+  // under each shop, at two different prices.
+  //
+  // A visitor sees the same plushie twice in one grid and the site stops
+  // reading as curation, which is the whole proposition. Compare this feed's
+  // names against the live catalogue before the flag comes off, not just the
+  // category split. A high overlap is a reason to decline a vendor even when
+  // every product is individually fine.
+  //
+  // No `include` list guessed at until the histogram is read (§4).
+  { vendor: 'Best of Kawaii', domain: 'https://bestofkawaii.com', prefix: 'bok', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // Fourth of the same batch (2026-08-30). On category this is the easiest fit
   // of the four: plush is the biggest shelf we have, and a Minecraft plush is a
   // plush toy in a way that a photo blanket or a dice tray is not.

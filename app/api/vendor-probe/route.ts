@@ -18,7 +18,7 @@ import { MODEL_SCAN_CATS, adultApparelHit } from '@/lib/adult-apparel'
  */
 export const dynamic = 'force-static'
 
-const TARGETS = ['CozyKawaii', 'BerryKawaii', 'Tabletop Item Shop', 'Minecraft Plushies']
+const TARGETS = ['CozyKawaii', 'BerryKawaii', 'Tabletop Item Shop', 'Minecraft Plushies', 'Best of Kawaii']
 const PER_PAGE = 250
 const MAX_PAGES = 5
 const UA = 'Mozilla/5.0'
@@ -109,8 +109,8 @@ async function probe(cfg: (typeof VENDORS)[number]) {
   }
   L(`kidSafe flag: ${mapped.filter((p) => p.kidSafe).length} of ${mapped.length}`)
   L('')
-  L('30 names and prices, to judge fit rather than count:')
-  for (const p of mapped.slice(0, 30)) {
+  L('60 names and prices, to judge fit and catalogue overlap:')
+  for (const p of mapped.slice(0, 60)) {
     L(`  ${p.cat.padEnd(12)} $${String(p.price).padEnd(7)} ${p.name.slice(0, 56)}`)
   }
   L('')
