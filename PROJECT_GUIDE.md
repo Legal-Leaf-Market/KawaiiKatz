@@ -851,8 +851,14 @@ work that disappears was being thrown away. `/decora` and all six feeds now use 
 
 **The general lesson, and it generalises past this page:** a route's cost should be the
 size of its output, not the size of the catalogue. Any future route that renders one
-vendor, one category or one shelf should take the narrow build. **Re-measure on the deploy
-after this one.**
+vendor, one category or one shelf should take the narrow build.
+
+**Measured on `7d22cc1`, 2026-08-30: 57 static pages on three workers in 4.9 minutes, no
+timeouts.** Against 50 pages in 5.2 minutes on `be62863`. **Seven more pages and six more
+catalogue-backed routes, and the build got shorter** — the narrow build gave back more than
+the new routes cost. The 240s per-page budget is no longer the thing to watch on a
+one-shelf route; it is still the thing to watch on anything that adds a route needing the
+whole catalogue.
 
 **A product belongs to exactly one board.** The page's sections are capped, so a product a
 cap pushes out is simply not shown; a feed publishes everything it is given, and two boards
