@@ -979,8 +979,45 @@ that is the split rather than a preference. Pinterest reads the image to decide 
 topic: somebody searching Harajuku fashion wants the clothes. The one Pin whose subject
 really is the room gets the cast.
 
-**Grumpy Bunny is still untracked.** All 437 of these Pins send traffic that earns nothing
-until `affiliateParam` is filled in. It is one string in `VENDORS` and needs no code change.
+### Five shops, and four of them were already in the catalogue
+
+The room shipped with one source because Grumpy Bunny IS a decora shop: every row on its
+shelf belongs. That does not generalise, so `SOURCE_SHOPS` declares how much of each shop to
+take. `all` is a shop whose whole catalogue is the aesthetic; `decora` is a shop that carries
+some, and only the some comes. Kore Kawaii has 1,062 products of which 23 are Harajuku, and
+taking it wholesale would have made this page a second home page.
+
+Measured on the live catalogue, 2026-08-30:
+
+| Shop | in the room | of | tracked |
+|---|---:|---:|---|
+| Grumpy Bunny | 438 | 438 | no |
+| Kawaii Babe | 105 | 921 | no |
+| sugarhai | 29 | 408 | no |
+| Kore Kawaii | 23 | 1,062 | **yes, 15%** |
+| The Kawaii Shoppu | 20 | 485 | no |
+
+**438 → 615, with no new partnership.** Kawaii Babe is the one that matters and §4's own
+vendor table said so a week earlier: "fairy kei / decora ... for Kawaii Babe that is the
+decora stock Ada asked for". It has been in the catalogue the whole time and this page was
+not looking at it. Before signing up a new merchant, check what the shelf already holds.
+
+**Two terms were cut by reading the output, both the `elf` ⊂ SHELF class by a different
+door.** `scene` caught "Cozy & Cute cat Night Lights" and a "Send Noods" enamel pin, because
+product copy says "adds to any scene" — an ordinary English word rather than a substring.
+`egirl` in a blurb caught thumb-joystick caps, a telescopic phone stand and a Bluetooth
+controller, all sold as gaming gear "for the e-girl setup"; it now reads the name only.
+`kawaii` and `cute` are deliberately absent: they match the entire shop and would turn
+`take: 'decora'` back into `take: 'all'` by the back door.
+
+**`Shop.brands` is empty for the four new shops, on purpose.** It is a claim about labels a
+shop names on its own storefront, and it feeds The Edit ("one piece per house"). Writing
+"Pastel goth" in there would invent a label and put a non-house in a section whose whole
+premise is houses.
+
+**The room is still 96% untracked**, against 100% before. That is a reason to fill in
+`affiliateParam` for Grumpy Bunny and Kawaii Babe — one string each, no code change — not a
+reason to show a thinner page.
 
 ---
 

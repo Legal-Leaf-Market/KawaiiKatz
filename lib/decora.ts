@@ -44,7 +44,114 @@ import type { Product } from './data'
  * are the checkout. It also means a second decora shop is one entry here rather
  * than a second page, which is what the brief asked for in the first place.
  */
-export const SOURCES = ['Grumpy Bunny']
+/**
+ * The shops this room draws from, and how much of each it takes.
+ *
+ * -----------------------------------------------------------------------------
+ * WHY A MODE AND NOT JUST A LIST
+ *
+ * It was one vendor and a flat list of names, which worked because Grumpy Bunny
+ * IS a decora shop: every row on its shelf belongs here. That does not
+ * generalise. Kore Kawaii carries 1,062 products of which 24 are Harajuku;
+ * taking the vendor wholesale would bury the room under general kawaii and make
+ * this page a second home page.
+ *
+ * So a source declares what to take. `all` is a shop whose whole catalogue is
+ * the aesthetic. `decora` is a shop that carries some, and only the some comes.
+ *
+ * -----------------------------------------------------------------------------
+ * MEASURED BEFORE IT WAS WRITTEN, against the live catalogue on 2026-08-30:
+ *
+ *   Grumpy Bunny       438 of 438   (all)     untracked
+ *   Kawaii Babe        113 of 921   (decora)  untracked
+ *   sugarhai            29 of 408   (decora)  untracked
+ *   Kore Kawaii         24 of 1062  (decora)  TRACKED, 15%
+ *   The Kawaii Shoppu   21 of 485   (decora)  untracked
+ *
+ * Kawaii Babe is the one that matters and §4's vendor table already said so:
+ * "fairy kei / decora - hits the 5-page cap too, and for Kawaii Babe that is
+ * the decora stock Ada asked for". It has been in the catalogue the whole time
+ * and this page was not looking at it.
+ *
+ * The tracking picture is honest and unchanged: this room was 100% untracked
+ * with one shop and is 96% untracked with five. That is a reason to fill in
+ * `affiliateParam` for Grumpy Bunny and Kawaii Babe (one string each, no code),
+ * not a reason to show a thinner page.
+ */
+export type Source = {
+  vendor: string
+  /** `all`: the shop is the aesthetic. `decora`: take only what matches. */
+  take: 'all' | 'decora'
+}
+
+export const SOURCE_SHOPS: Source[] = [
+  { vendor: 'Grumpy Bunny', take: 'all' },
+  { vendor: 'Kawaii Babe', take: 'decora' },
+  { vendor: 'sugarhai', take: 'decora' },
+  { vendor: 'Kore Kawaii', take: 'decora' },
+  { vendor: 'The Kawaii Shoppu', take: 'decora' },
+]
+
+/** Vendor names only. Kept because the feeds narrow their catalogue build on it. */
+export const SOURCES = SOURCE_SHOPS.map((s) => s.vendor)
+
+const TAKE_ALL = new Set(SOURCE_SHOPS.filter((s) => s.take === 'all').map((s) => s.vendor))
+
+/**
+ * The Japanese labels and street-fashion vocabulary that make a row decora.
+ *
+ * Two lists rather than one because they fail differently. A BRAND is decisive:
+ * nothing called ACDC RAG is anything else. An AESTHETIC word is descriptive
+ * and needs the same word-anchoring every term list on this page uses, because
+ * `scene` sits inside no common word but `emo` sits inside DEMO and MEMO, and
+ * that bug class has cost this codebase real time three times (§4e).
+ *
+ * Deliberately NOT here: `kawaii` and `cute`. They match the entire shop and
+ * would turn `take: 'decora'` back into `take: 'all'` by the back door.
+ */
+const DECORA_BRANDS = [
+  'acdc rag', '6% dokidoki', 'dokidoki', 'listen flavor', 'menhera',
+  'dear my love', 'gloomy bear', 'hypercore', 'milklim', 'ank rouge', 'punyus',
+  'wego', 'zetsukigu', 'swankiss', 'liz lisa', 'angelic pretty', 'bodyline',
+  'pinktaho', 'artiswitch',
+]
+
+const DECORA_AESTHETIC = [
+  'harajuku', 'decora', 'jirai kei', 'jirai', 'yami kawaii', 'yami',
+  'fairy kei', 'pastel goth', 'lolita', 'gyaru', 'visual kei', 'kei fashion',
+  'j-fashion', 'jfashion', 'japanese street', 'street style', 'y2k', 'kandi',
+  'cyber', 'punk', 'goth', 'gothic', 'grunge',
+  'platform shoes', 'leg warmers', 'arm warmers', 'ita bag', 'sailor collar',
+  'pleated skirt', 'tulle', 'ribbon choker', 'choker',
+]
+
+/**
+ * Read from the NAME only, because in a blurb they are ordinary English.
+ *
+ * `scene` was in the list above until reading the output: it caught "Cozy &
+ * Cute cat Night Lights" and a "Send Noods" enamel pin, because product copy
+ * says things like "adds to any scene". It is gone entirely rather than
+ * narrowed, since a product whose NAME says scene is vanishingly rare and the
+ * aesthetic is covered by the other terms.
+ *
+ * `egirl` survives but only in a name. In a blurb it caught thumb-joystick
+ * caps, a telescopic phone stand and a Bluetooth controller, all of which sell
+ * themselves as gaming gear "for the e-girl setup". That is a different shelf.
+ */
+const NAME_ONLY_AESTHETIC = ['egirl', 'e-girl']
+
+/** Is this row decora, for a shop we take selectively? */
+export function isDecoraProduct(p: Product): boolean {
+  const h = hay(p)
+  if (hasWord(h, DECORA_BRANDS) || hasWord(h, DECORA_AESTHETIC)) return true
+  return hasWord(nameOf(p), NAME_ONLY_AESTHETIC)
+}
+
+/** Does this row belong in the room at all? */
+export function fromSource(p: Product): boolean {
+  if (TAKE_ALL.has(p.vendor)) return true
+  return SOURCES.includes(p.vendor) && isDecoraProduct(p)
+}
 
 export type Shop = {
   vendor: string
@@ -76,6 +183,38 @@ export const SHOPS: Shop[] = [
       '6% DOKIDOKI', 'ACDC RAG', 'Dear My Love', 'Gloomy Bear',
       'Hypercore', 'Listen Flavor', 'Menhera Chan', 'Sanrio', 'San-X',
     ],
+  },
+  {
+    vendor: 'Kawaii Babe',
+    home: 'https://kawaiibabe.com',
+    says: 'kawaii fashion and fairy kei, for anyone building the look',
+    shipsFrom: 'the US',
+    // No labels listed, deliberately. `brands` is a CLAIM about what a shop
+    // names on its own storefront, and it feeds The Edit ("one piece per
+    // house"). Writing an aesthetic word in here would invent a label and put a
+    // non-house in a section whose whole premise is houses.
+    brands: [],
+  },
+  {
+    vendor: 'sugarhai',
+    home: 'https://sugarhai.com',
+    says: 'cute things with a sweet and slightly strange streak',
+    shipsFrom: 'the US',
+    brands: [],
+  },
+  {
+    vendor: 'Kore Kawaii',
+    home: 'https://korekawaii.com',
+    says: 'kawaii goods across fashion, home and snacks',
+    shipsFrom: 'the US',
+    brands: [],
+  },
+  {
+    vendor: 'The Kawaii Shoppu',
+    home: 'https://thekawaiishoppu.com',
+    says: 'Japanese kawaii fashion and accessories',
+    shipsFrom: 'the US',
+    brands: [],
   },
 ]
 
@@ -252,7 +391,7 @@ export type FilledSection = { section: DecoraSection; products: Product[] }
  * data itself carries. Same rule lib/boards.ts follows and for the same reason.
  */
 export function fillDecora(all: Product[]): { sections: FilledSection[]; edit: Product[] } {
-  const pool = all.filter((p) => SOURCES.includes(p.vendor) && eligible(p)).sort(byNewest)
+  const pool = all.filter((p) => fromSource(p) && eligible(p)).sort(byNewest)
 
   const used = new Set<string>()
   const sections: FilledSection[] = []
@@ -279,7 +418,7 @@ export function fillDecora(all: Product[]): { sections: FilledSection[]; edit: P
 
 /** Everything this room can show, for the first-paint slice and the counts. */
 export function decoraPool(all: Product[]): Product[] {
-  return all.filter((p) => SOURCES.includes(p.vendor) && eligible(p)).sort(byNewest)
+  return all.filter((p) => fromSource(p) && eligible(p)).sort(byNewest)
 }
 
 /* ===========================================================================
@@ -561,7 +700,7 @@ export function decoraPin(b: DecoraBoard) {
  */
 export function assignDecoraBoards(all: Product[]): { board: DecoraBoard; products: Product[] }[] {
   const pool = all.filter(
-    (p) => SOURCES.includes(p.vendor) && eligible(p) && !hasWord(nameOf(p), UNPINNABLE)
+    (p) => fromSource(p) && eligible(p) && !hasWord(nameOf(p), UNPINNABLE)
   )
   const used = new Set<string>()
   return DECORA_BOARDS.map((board) => {

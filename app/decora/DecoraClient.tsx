@@ -444,7 +444,8 @@ export default function DecoraClient({
                 />
               </div>
               <p className="text-[15px] font-bold text-[#ffd6ec] max-w-[38ch] leading-relaxed">
-                Eight shelves, one shop, and a cast that has opinions about all of it.
+                Eight shelves, the shops that stock them, and a cast that has opinions about
+                all of it.
                 Start anywhere.
               </p>
             </div>
@@ -683,7 +684,7 @@ export default function DecoraClient({
               <h3 className="font-display font-extrabold text-[16px] text-white">{shop.vendor}</h3>
               <p className="text-[14px] font-semibold text-[#c9b4e8] leading-relaxed max-w-[72ch] mt-1">
                 Describes itself as carrying {shop.says}, and says orders ship from{' '}
-                {shop.shipsFrom}. Labels on its shelves include {shop.brands.join(', ')}. Those
+                {shop.shipsFrom}.{shop.brands.length > 0 && <> Labels on its shelves include {shop.brands.join(', ')}.</>} Those
                 are its words about its own shop, not a promise from us.
               </p>
               <a
