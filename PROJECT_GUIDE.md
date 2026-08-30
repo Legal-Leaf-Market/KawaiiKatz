@@ -767,10 +767,21 @@ items (the page shows the top of a section; the feed carries all of it) found ha
 sleeping socks, a floor rug, high-top trainers, two bedding sets, 24 Plushible blanket
 hoodies and a Valentine Fuzzy Bear Lingerie Set, each published as "a kawaii plushie pick".
 Every one was a true match: Kore Kawaii and Kawaii Babe file soft goods as `plush` at the
-source. `PLUSH_NOT_A_TOY_TERMS` excludes them, and `Board.notVendors` drops Autoplush, whose
-twelve plush cars are genuinely plush and genuinely not kawaii; because the feed is ordered
+source. `PLUSH_NOT_A_TOY_TERMS` excludes them, and `Board.notVendors` dropped Autoplush, whose
+twelve plush cars were genuinely plush and genuinely not kawaii; because the feed is ordered
 oldest-first, a Tesla Model X was the first Pin Pinterest ever made from a board called
 Kawaii Plushies. 240 tiles becomes 209.
+
+**Autoplush was delisted outright on 2026-08-30**, so `notVendors` now has no user and the
+field is documented as unused rather than deleted (§ the note on it in `lib/boards.ts`). The
+reason is worth keeping because it is the general case: **four separate guides had to name
+the same vendor to keep its stock off them.** When an exclusion has to be repeated on every
+board, the judgement is about the shelf and not about the boards, and it belongs in `VENDORS`.
+Ada and Jacob's call was a brand one rather than a technical one, at the highest commission
+rate on the site (20%) and with a feed that worked: car-culture photography does not sit
+beside the rest of the shelf, and the shop was only ever taken on to make the catalogue look
+fuller. It is recorded in `PARTNERS_REJECTED` with "do not re-add on the commission rate
+alone", because that is what put it there the first time.
 
 **That term list is a patch on a symptom, and the upstream fix is cheap.** The vendor's own
 `product_type` says "Bags" and "Dresses" outright. It is read by `categorize()` at scrape

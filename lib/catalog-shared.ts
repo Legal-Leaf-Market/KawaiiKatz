@@ -2,8 +2,8 @@ import { VENDORS, type Product } from './data'
 import { isKidSafeText } from './kid-safe'
 
 // Route vendor CDN images through our own proxy so strict hotlink-protected
-// stores (which reject cross-origin <img> requests) still render. Autoplush &
-// others that allow hotlinking are unaffected — the proxy just re-serves them.
+// stores (which reject cross-origin <img> requests) still render. Vendors that
+// allow hotlinking are unaffected — the proxy just re-serves them.
 export function proxied(src: string): string {
   if (!src) return ''
   if (!/^https?:\/\//i.test(src)) return src
@@ -466,7 +466,6 @@ function vendorDefaultCat(vendor: string): string {
   if (v === 'montessori & me') return 'learning'
   if (v === 'mintie lunchboxes') return 'kitchen'
   if (v === 'jigsawdepot') return 'puzzle'
-  if (v === 'autoplush') return 'plush'
   // Display frames and cases exist to show off collections, so they belong with
   // collectibles rather than in home decor, where the classifier's "wall / frame"
   // wording would otherwise drop them.

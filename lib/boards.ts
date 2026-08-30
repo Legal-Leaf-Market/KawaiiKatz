@@ -171,20 +171,22 @@ export type Board = {
    * Shops that never appear on this page, whatever their products match.
    *
    * The same judgement as `notWords` one level up: the vendor is what
-   * disambiguates when no word can. Autoplush sells plush cars, and 9 of its 12
-   * products landed on the plushies page as genuine matches, because a Miata
-   * MX5 Plushie is a plushie. They are simply car-culture merch rather than
-   * kawaii, and the feed is ordered oldest-first (section 4f), so the two
-   * oldest rows in the catalogue meant a Tesla Model X was the first Pin
+   * disambiguates when no word can. Autoplush was the case that earned this
+   * field. It sold plush cars, and 9 of its 12 products landed on the plushies
+   * page as genuine matches, because a Miata MX5 Plushie is a plushie. The feed
+   * is ordered oldest-first (section 4f), so a Tesla Model X was the first Pin
    * Pinterest ever made from a board called Kawaii Plushies.
    *
    * Excluding by word would have needed every model name — skyline, ae86,
    * supra, defender, wrangler, f150, mini — and `mini` alone would delete every
    * mini plushie in the catalogue. One vendor line cannot drift like that.
    *
-   * They keep their place in the catalogue, the search and the Gift Finder, at
-   * the highest commission rate we carry. They are just not what a kawaii guide
-   * is for.
+   * CURRENTLY UNUSED, because Autoplush was delisted from the catalogue
+   * entirely on 2026-08-30 (see PARTNERS_REJECTED in lib/partners.ts): once a
+   * vendor is gone from VENDORS there is nothing for a board to exclude. The
+   * field stays because the judgement it encodes is not specific to that shop,
+   * and the next off-brand vendor that is right for the shelf and wrong for a
+   * guide will want exactly this rather than a word list that drifts.
    */
   notVendors?: string[]
   /**
@@ -627,7 +629,8 @@ export const BOARDS: Board[] = [
     // A SEASON TAKES THE WHOLE CATALOGUE, which is right, and means it inherits
     // every problem the themed boards exclude one at a time. The live feed was
     // carrying "Penn State University Nittany Lion Kids Snugible" and three
-    // Autoplush cars as Christmas gift ideas.
+    // plush cars as Christmas gift ideas. The cars are gone with the vendor;
+    // the college mascots are still in the catalogue, so the word list stays.
     //
     // Note what is deliberately NOT excluded here: the Snugibles, slippers and
     // blanket hoodies stay. A blanket hoodie is a bad plushie and a perfectly
@@ -636,7 +639,6 @@ export const BOARDS: Board[] = [
     // travel are the ones about MARKET rather than about category: a college
     // mascot and a plush Ford F150 are not kawaii gifts in December either.
     notWords: SPORTS_LICENCE_TERMS,
-    notVendors: ['Autoplush'],
     season: [8, 9, 10, 11], // Sept–Dec; Pinterest searches Christmas from September
     seasonTerms: CHRISTMAS_TERMS,
     sections: [
@@ -729,7 +731,6 @@ export const BOARDS: Board[] = [
     // MARKET rather than category. A college mascot and a plush Ford F150 are
     // not kawaii Halloween either.
     notWords: SPORTS_LICENCE_TERMS,
-    notVendors: ['Autoplush'],
     sections: [
       {
         key: 'best',
@@ -886,8 +887,6 @@ export const BOARDS: Board[] = [
     // nobody arrives at a kawaii plushie page hoping for Bucky Badger. The
     // second list is the bags and footwear that "plush" the adjective drags in.
     notWords: [...SPORTS_LICENCE_TERMS, ...PLUSH_NOT_A_TOY_TERMS],
-    // Autoplush is 12 plush cars. Genuinely plush, genuinely not kawaii.
-    notVendors: ['Autoplush'],
     maxPerVendor: 5,
     sections: themeSections('The ones that keep getting picked up.'),
   },
@@ -914,9 +913,6 @@ export const BOARDS: Board[] = [
     // "Mochi Bunny Adult Snugible | Blanket Hoodie & Pillow" went out as a
     // kawaii squishy pick anyway. Same shared list, same reasoning.
     notWords: PLUSH_NOT_A_TOY_TERMS,
-    // Autoplush's Ae86 shipped here as "a kawaii squishy pick". A plush car is
-    // not a squishy and is not kawaii; see the note on the plushies board.
-    notVendors: ['Autoplush'],
     maxPerVendor: 6,
     sections: themeSections('Start here.'),
   },

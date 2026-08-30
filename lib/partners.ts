@@ -176,4 +176,10 @@ export const PARTNERS_REJECTED: { merchant: string; why: string }[] = [
   // keeping: an approval says a programme exists, not that a store does.
   { merchant: 'Tabletop Item Shop', why: 'Dead. products.json answered HTTP 404 with Shopify\'s {"errors":"Not Found"}, meaning no store at that subdomain, and the shop could not be found by search either (confirmed by Jacob 2026-08-30). GoAffPro approval was real; the storefront was not.' },
   { merchant: 'BerryKawaii', why: 'Dead. products.json answered HTTP 402 with {"errors":"Unavailable Shop"}, which is Shopify\'s response for a frozen or paused store (confirmed by Jacob 2026-08-30). Its ref value looked correct, which is the lesson: a plausible tracking code tells you nothing about whether the shop is trading.' },
+
+  // DELISTED rather than never-listed, and the distinction is the point. This
+  // shop was live on the shelf for over a month at the highest commission rate
+  // we carry. It was removed on a brand judgement, not a technical one, and
+  // nothing about it was broken.
+  { merchant: 'Autoplush', why: 'Delisted 2026-08-30 by Jacob and Ada. Twelve plush cars at 20% commission, the highest rate we carry, and the feed worked fine. It is a car-culture brand rather than a kawaii one: the photography does not sit next to the rest of the shelf and the products were never a fit, they were inventory taken on early to make the catalogue look fuller. Four guides had to name the vendor in notVendors to keep a Tesla Model X off a board called Kawaii Plushies, which is the tell that the exclusion belonged upstream. Do not re-add on the commission rate alone; that is what put it here the first time.' },
 ]
