@@ -71,65 +71,51 @@ unbothered, and Bunny is unimpressed.
 
 ---
 
-## Priority 1: the one that actually matters
+## Priority 1: DONE
 
-### `bunny.webp` — a clean bunny
+### `bunny.webp` — a clean bunny ✅
 
-**Replaces** the current file, which I cropped out of the concept sheet. It works,
-but it carries background: cherry blossom, a street lamp, and Katz's paw at the
-lower left. In the hero it sits inside a white sticker frame so the crop reads as
-intentional, which is why this is a polish job rather than a bug.
-
-- **Transparent background**, no scene behind her
-- Full body, standing, roughly 3:4 portrait
-- Peace sign is good, it is in the current one and reads well
-- Ears fully in frame, nothing cropped
-
-> Full-body chibi sticker illustration of an original character: a fashionably
-> grumpy white bunny with long floppy ears and a deadpan half-lidded expression,
-> loaded with decora accessories, black and hot-pink striped top, plaid skirt,
-> layered charm necklaces and bracelets, hair clips all over her ears, making a
-> peace sign. Glossy chibi sticker art, thick clean outlines, enormous
-> pink-violet jewel eyes with white highlights and a pink heart reflection.
-> **Fully transparent background. No text, no logos, no background scene.**
-> Full body, nothing cropped.
+**Delivered 2026-08-30** in `08_decora_asset_sheet.png`. Full body, transparent,
+ears intact, peace sign, deadpan. Exactly the ask. The cropped-from-concept-art
+version is gone.
 
 ---
 
-## Priority 2: things the page has no asset for
+## Priority 2: DONE
 
-These would each get a real slot. Nothing breaks without them.
+All three arrived on the same asset sheet and are live:
 
-| Filename | What it is | Notes |
-|---|---|---|
-| `trio.webp` | Katz, Bunny, Panda together, one composition | **Transparent.** Would replace the three separate hero cutouts with one properly composed group, which fixes the slight "pasted side by side" look. Bunny centre and tallest. |
-| `divider.webp` | A wide, short decorative strip | ~2400x200, transparent. Charms, safety pins, beads, stars, bows on a string. Sits between sections. |
-| `hero-bg.webp` | Wide Harajuku street backdrop | ~2400x1000. Blurred, low contrast, **no characters and no text** — it sits behind the headline, so it must not compete. Currently a CSS checkerboard, which is fine. |
+| Filename | State |
+|---|---|
+| `trio.webp` | ✅ Katz, Bunny and Panda drawn as one composition. Replaced three cutouts butted together, which read as pasted because they were. |
+| `divider.webp` | ✅ Bows, charms and safety pins on a string. Tiles horizontally between every section. |
+| `hero-bg.webp` | ✅ Harajuku street. Sits behind the hero at 22% with a slight blur, as a texture rather than a picture. |
 
 ---
 
-## Priority 3: reaction stickers
+## Priority 3: DONE, and there are spares
 
-The page uses four, cropped from the concept sheet's bottom row. They are
-serviceable but sit on a pale lavender rectangle rather than being transparent.
+The asset sheet carried about twenty transparent poses. Six are in use:
 
-**Transparent, roughly square, thick white sticker border**, about 400x400.
-
-| Filename | Character | Expression |
+| Filename | Shows | Where |
 |---|---|---|
-| `st-omg.webp` | Katz | Delighted, mouth open, sparkling eyes |
-| `st-bunny.webp` | Bunny | Deadpan side-eye |
-| `st-panda.webp` | Panda | Serene, unbothered, hearts |
-| `st-need.webp` | Bunny | Wide-eyed wanting it |
+| `st-katz.webp` | Katz, fluffy and sparkling | Hero row |
+| `st-bunny.webp` | Bunny, deadpan, peace sign | Hero row, and The Edit |
+| `st-panda.webp` | Panda in headphones | Hero row |
+| `st-box.webp` | Katz and Panda in a parcel | Hero row |
+| `st-bags.webp` | Bunny with more bags than she can hold | Beside "Bags and chaos" |
+| `st-room.webp` | Bunny in a hoodie hugging a plush | Beside "Room loot" |
 
-Extras, if you enjoy making them. Tell me the names you use and I will place them:
+**Katz is a black cat, so every pose of him is dark**, and on a near-black hero
+he vanished while the others read fine. The hero row now sits each pose on a
+pale sticker chip, which fixes it once rather than hunting for a light Katz the
+character cannot have.
 
-`st-sideeye` · `st-hearteyes` · `st-outfitcheck` · `st-parcel` (Bunny holding a
-parcel) · `st-boba` (Panda with boba, it is in the concept sheet already)
-
-> Die-cut sticker of [CHARACTER] with a [EXPRESSION] expression, glossy chibi
-> sticker art, thick white sticker border with a soft drop shadow.
-> **Fully transparent background outside the white border. No text.**
+**Still on the sheet, unused**, if you want them placed: panda with a donut,
+bunny with shopping bags in colour, katz with flowers, panda hugging bunny,
+bunny asleep in a blanket, katz peeking from a box. Also pattern swatches
+(plaid, stripes, checkerboard, leopard), heart and polaroid frames, a bedroom
+scene and a street scene with the trio. Say which and I will place them.
 
 ---
 
@@ -164,14 +150,14 @@ exporter follows.
 
 ## Current state, for reference
 
-Everything below is live now and works. This brief is upgrades, not repairs.
-
 | File | Size | Source |
 |---|---|---|
-| `katz.webp` | 814x760 | Supplied pack, transparent, trimmed |
-| `panda.webp` | 834x760 | Supplied pack, transparent, trimmed |
-| `bunny.webp` | 481x760 | **Cropped from the concept sheet.** Priority 1 above |
-| `duo.webp` | 900x900 | Katz and Panda profile. Not currently placed on the page |
-| `st-*.webp` | ~170x200 | Cropped from the concept sheet's sticker row |
+| `bunny.webp` | 556x900 | Asset sheet, transparent |
+| `trio.webp` | 1100x631 | Asset sheet, transparent |
+| `hero-bg.webp` | 1400x704 | Asset sheet |
+| `divider.webp` | 1400x155 | Asset sheet, transparent, tiles |
+| `st-*.webp` | ~300px tall | Asset sheet, transparent, six in use |
+| `katz.webp` / `panda.webp` | ~760 tall | First pack, transparent. Kept as canonical face references |
+| `duo.webp` | 900x900 | Katz and Panda profile. Not placed on the page |
 
-Total 552KB, down from 13MB of source PNGs.
+About 1.3MB total. The only outstanding items are Priority 4 social sizes.

@@ -51,13 +51,25 @@ import WishlistDrawer from '@/components/WishlistDrawer'
 
 const IMG = '/decora/'
 
-/** Product tiles per row band, so the grid never renders 400 cards at once. */
+/**
+ * The cast, in small. All transparent, all cut from the asset sheet.
+ *
+ * `alt` is written as what the sticker SHOWS rather than as a filename,
+ * because a screen reader on this row should get the joke the row is making:
+ * Katz is chaos, Panda is unbothered, Bunny is unimpressed.
+ */
 const HERO_STICKERS = [
-  { src: 'st-omg.webp', alt: 'Katz, delighted' },
-  { src: 'st-bunny.webp', alt: 'The bunny, unimpressed' },
-  { src: 'st-panda.webp', alt: 'Panda, unbothered' },
-  { src: 'st-need.webp', alt: 'Need it' },
+  { src: 'st-katz.webp', alt: 'Katz, delighted about something' },
+  { src: 'st-bunny.webp', alt: 'The bunny, deadpan, throwing a peace sign' },
+  { src: 'st-panda.webp', alt: 'Panda in headphones, entirely unbothered' },
+  { src: 'st-box.webp', alt: 'Katz and Panda in a parcel that just arrived' },
 ]
+
+/** A pose pinned beside a section heading, where one earns its place. */
+const SECTION_STICKER: Record<string, { src: string; alt: string }> = {
+  bags: { src: 'st-bags.webp', alt: 'The bunny carrying more bags than she can hold' },
+  room: { src: 'st-room.webp', alt: 'The bunny in a hoodie, hugging a plush' },
+}
 
 function Sticker({ children, tone = 'pink' }: { children: React.ReactNode; tone?: 'pink' | 'violet' | 'cyan' | 'black' }) {
   const tones: Record<string, string> = {
@@ -130,10 +142,19 @@ export default function DecoraClient({
             backgroundPosition: '0 0, 28px 28px',
           }}
         />
+        {/* The Harajuku street, low and blurred. It is a TEXTURE, not a
+            picture: at full strength it fights the headline, which is the
+            thing the hero is actually for. Behind the checkerboard and the
+            glow so the three layers read as one surface. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.22] bg-cover bg-center"
+          style={{ backgroundImage: `url(${IMG}hero-bg.webp)`, filter: 'blur(1.5px) saturate(1.15)' }}
+        />
         <div
           aria-hidden
           className="absolute inset-0"
-          style={{ background: 'radial-gradient(120% 90% at 50% 0%, rgba(139,61,255,.55), transparent 62%)' }}
+          style={{ background: 'radial-gradient(120% 90% at 50% 0%, rgba(139,61,255,.6), rgba(18,7,31,.82) 68%)' }}
         />
 
         <div className="relative max-w-[1180px] mx-auto px-4 sm:px-6 pt-6 pb-10">
@@ -198,43 +219,45 @@ export default function DecoraClient({
               )}
 
               <div className="flex gap-2.5 flex-wrap mt-5">
+                {/* EACH POSE SITS ON A CHIP, and that is not decoration.
+                    Katz is a black cat, so every pose of him is dark, and on a
+                    near-black hero he disappears while the bunny and Panda read
+                    fine. A pale chip behind all four fixes it once instead of
+                    hunting for a light Katz that the character cannot have, and
+                    the white sticker border is a listed motif anyway. */}
                 {HERO_STICKERS.map((s) => (
-                  <Image
+                  <span
                     key={s.src}
-                    src={`${IMG}${s.src}`}
-                    alt={s.alt}
-                    width={72}
-                    height={86}
-                    className="h-[58px] w-auto shrink-0 drop-shadow-[0_3px_6px_rgba(0,0,0,.5)] rotate-[-3deg] even:rotate-[3deg]"
-                  />
+                    className="inline-flex items-center justify-center h-[68px] w-[68px] rounded-2xl
+                      bg-[#f6ecff] border-[3px] border-white shrink-0
+                      shadow-[0_4px_10px_rgba(0,0,0,.45)] rotate-[-3deg] even:rotate-[3deg]"
+                  >
+                    <Image
+                      src={`${IMG}${s.src}`}
+                      alt={s.alt}
+                      width={400}
+                      height={300}
+                      className="h-[56px] w-auto max-w-[60px] object-contain"
+                    />
+                  </span>
                 ))}
               </div>
             </div>
 
-            {/* The cast. Bunny centre and largest: this room is hers. */}
-            <div className="relative flex items-end justify-center gap-0 min-h-[260px] sm:min-h-[340px] pb-1">
+            {/* THE CAST, AS ONE COMPOSED GROUP.
+                This was three separate cutouts butted together, which read as
+                pasted because it was: the bunny needed a white sticker frame to
+                hide a background-carrying crop, and Katz and Panda were sliced
+                by the container edge. The asset sheet has them drawn together,
+                so the composition is the artist's rather than CSS's. */}
+            <div className="relative flex items-end justify-center min-h-[220px] sm:min-h-[320px]">
               <Image
-                src={`${IMG}katz.webp`}
-                alt="Katz, the Kawaii Katz black cat"
-                width={814}
-                height={760}
+                src={`${IMG}trio.webp`}
+                alt="Katz, the bunny and Panda, out together in full decora"
+                width={1100}
+                height={573}
                 priority
-                className="w-[34%] max-w-[190px] h-auto -mr-[6%] mb-2 drop-shadow-[0_8px_18px_rgba(0,0,0,.55)]"
-              />
-              <Image
-                src={`${IMG}bunny.webp`}
-                alt="The Kawaii Katz editorial bunny, in full decora"
-                width={481}
-                height={760}
-                priority
-                className="w-[42%] max-w-[250px] h-auto rounded-[22px] border-[5px] border-white shadow-[0_10px_30px_rgba(0,0,0,.6)] z-10"
-              />
-              <Image
-                src={`${IMG}panda.webp`}
-                alt="Panda, the Kawaii Katz panda"
-                width={834}
-                height={760}
-                className="w-[34%] max-w-[190px] h-auto -ml-[6%] mb-2 drop-shadow-[0_8px_18px_rgba(0,0,0,.55)]"
+                className="w-full max-w-[540px] h-auto drop-shadow-[0_10px_26px_rgba(0,0,0,.6)]"
               />
             </div>
           </div>
@@ -275,19 +298,41 @@ export default function DecoraClient({
               ))}
             </nav>
 
-            {sections.map(({ section, products }) => (
+            {sections.map(({ section, products }, si) => (
               <section key={section.key} id={section.key} className="mb-12 scroll-mt-6">
+                {/* The charm string, between sections and never before the
+                    first. Decorative only, so it is aria-hidden: a screen
+                    reader announcing "bows and safety pins" eight times is
+                    noise, and the heading below already says where you are. */}
+                {si > 0 && (
+                  <div
+                    aria-hidden
+                    className="h-[26px] sm:h-[34px] mb-9 bg-repeat-x bg-center opacity-90"
+                    style={{ backgroundImage: `url(${IMG}divider.webp)`, backgroundSize: 'auto 100%' }}
+                  />
+                )}
                 <div className="flex items-end gap-3 flex-wrap mb-1">
                   <span className="font-display font-extrabold text-[11.5px] uppercase tracking-[.24em] text-[#25e0e8]">
                     {section.kicker}
                   </span>
                 </div>
-                <h2
-                  className="font-display font-extrabold text-[34px] sm:text-[46px] leading-[0.98] text-white"
-                  style={{ textShadow: '3px 3px 0 #ff2d92' }}
-                >
-                  {section.title}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2
+                    className="font-display font-extrabold text-[34px] sm:text-[46px] leading-[0.98] text-white"
+                    style={{ textShadow: '3px 3px 0 #ff2d92' }}
+                  >
+                    {section.title}
+                  </h2>
+                  {SECTION_STICKER[section.key] && (
+                    <Image
+                      src={`${IMG}${SECTION_STICKER[section.key].src}`}
+                      alt={SECTION_STICKER[section.key].alt}
+                      width={400}
+                      height={300}
+                      className="h-[54px] sm:h-[68px] w-auto shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,.5)]"
+                    />
+                  )}
+                </div>
                 <p className="text-[14.5px] font-semibold text-[#c9b4e8] mt-2 mb-5 max-w-[62ch] leading-relaxed">
                   {section.blurb}
                 </p>
@@ -307,8 +352,8 @@ export default function DecoraClient({
                     <Image
                       src={`${IMG}st-bunny.webp`}
                       alt=""
-                      width={158}
-                      height={200}
+                      width={393}
+                      height={300}
                       className="h-[64px] w-auto"
                     />
                     <div>
