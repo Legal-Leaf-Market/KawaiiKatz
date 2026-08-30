@@ -871,6 +871,18 @@ export function affiliateUrl(url: string, vendor: string): string {
   const cfg = vendorCfg(vendor)
   if (!url || !cfg) return url
 
+  /**
+   * ALREADY TRACKED LINKS PASS THROUGH UNTOUCHED.
+   *
+   * A product that came from an AWIN datafeed carries `aw_deep_link`, which is
+   * an awin1.com redirect AWIN built. Wrapping it again would produce an
+   * awin1.com link whose destination is another awin1.com link: the shopper
+   * would still arrive, eventually, and the click would be attributed to the
+   * OUTER hop only, so the inner one silently earns nothing. That is the
+   * untracked-vendor failure wearing a working link as a disguise.
+   */
+  if (/^https?:\/\/(www\.)?awin1\.com\//i.test(url)) return url
+
   // AWIN advertisers: the commission is attributed by the redirect through
   // awin1.com, so the destination goes in `ued` and no query param is appended.
   if (cfg.awinMerchantId) return awinDeepLink(url, cfg.awinMerchantId)

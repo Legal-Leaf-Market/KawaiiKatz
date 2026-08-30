@@ -1,6 +1,7 @@
 import 'server-only'
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
+import { fetchAwinFeed, hasFeed } from './awin-feed'
 
 import { VENDORS, liveVendors, isUntracked, type Product } from '@/lib/data'
 import { mapShopifyProducts } from '@/lib/catalog-shared'
@@ -140,7 +141,27 @@ async function scrapeVendor(vendorName: string): Promise<{ products: Product[]; 
  * like it silently did nothing. v1 -> v2 on 2026-08-22 for the UA change and
  * the include/exclude filtering below.
  */
-const fetchVendorCatalog = unstable_cache(scrapeVendor, ['vendor-catalog-v7'], {
+/**
+ * Source one vendor, by whichever route that vendor has.
+ *
+ * A merchant behind bot protection cannot be scraped however good the headers
+ * are (§4), but an AWIN merchant can still be READ, because the network
+ * publishes the catalogue as a datafeed. So the choice of route is a property
+ * of the vendor rather than a fallback: hasFeed() decides, and a feed vendor
+ * never touches products.json.
+ *
+ * Returns the same shape as scrapeVendor so the caller cannot tell them apart.
+ * `capped` is always false for a feed: a feed is the whole catalogue in one
+ * file, so there is no page limit to run into and nothing to warn about.
+ */
+async function sourceVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
+  if (hasFeed(vendorName)) {
+    return { products: await fetchAwinFeed(vendorName), capped: false }
+  }
+  return scrapeVendor(vendorName)
+}
+
+const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v8'], {
   revalidate: CATALOG_REVALIDATE_SECONDS,
   tags: ['catalog'],
 })

@@ -510,6 +510,124 @@ function typeAllowed(cfg: typeof VENDORS[number], productType: string): boolean 
   return true
 }
 
+/**
+ * One row of an AWIN "Awin" (standard) format product feed, reduced to the
+ * columns this site reads. Create-a-Feed emits about ninety; the rest are
+ * ignored rather than typed.
+ */
+export type AwinRow = Record<string, string>
+
+/**
+ * Map an AWIN product feed into the same `Product` shape the Shopify scraper
+ * produces.
+ *
+ * -----------------------------------------------------------------------------
+ * WHY THIS LIVES HERE AND NOT IN lib/awin-feed.ts
+ *
+ * `contentSafe()` and `vendorDefaultCat()` are module-private, and the kid-safe
+ * text filter is the one thing that must apply identically no matter where a
+ * product came from. Widening those to exports so a second file could call them
+ * would make it possible to write an ingest path that quietly skips them. The
+ * transport concerns (fetch, gzip, CSV) live in lib/awin-feed.ts; the judgement
+ * about what a Product is lives next to the only other function that decides it.
+ *
+ * -----------------------------------------------------------------------------
+ * THE FEED CARRIES product_type, WHICH THE SCRAPER THROWS AWAY
+ *
+ * §4f records the cost of that: "plush" is an adjective as often as a noun, and
+ * because the vendor's own product_type never reaches `Product`, a board has to
+ * guess from the name. Here it is right there in the row, so it goes into the
+ * classifier haystack. This does not fix the Shopify path, which still needs a
+ * scrape change and a cache bump, but it does mean feed-sourced vendors start
+ * out better classified than scraped ones.
+ */
+export function mapAwinRows(
+  cfg: typeof VENDORS[number],
+  rows: AwinRow[]
+): Product[] {
+  const out: Product[] = []
+  const seen = new Set<string>()
+
+  for (const r of rows || []) {
+    const id = (r.merchant_product_id || r.aw_product_id || '').trim()
+    const name = (r.product_name || '').trim()
+    if (!id || !name) continue
+
+    // A feed lists every variant as its own row, so the same merchant_product_id
+    // can appear several times. First wins; without this the grid shows one
+    // product once per size.
+    if (seen.has(id)) continue
+    seen.add(id)
+
+    const type = (r.product_type || r.merchant_category || '').trim()
+    if (!typeAllowed(cfg, type)) continue
+
+    // in_stock is "1"/"0" in the Awin format. Treat anything explicitly zero as
+    // out; treat an EMPTY value as in stock, because a merchant who does not
+    // populate the column is not telling us the shelf is bare.
+    if (String(r.in_stock ?? '').trim() === '0') continue
+    if (String(r.is_for_sale ?? '').trim() === '0') continue
+
+    const price = Number(r.search_price || r.display_price || 0) || 0
+    if (price <= 0) continue
+
+    let blurb = String(r.product_short_description || r.description || '')
+      .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
+    if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
+
+    // product_type and the merchant's category path both go in, which is more
+    // signal than the scraper ever gets.
+    const hay = `${name} ${type} ${r.merchant_product_category_path || ''} ${r.brand_name || ''} ${blurb}`
+    if (!contentSafe(hay)) continue
+
+    // rrp_price is the merchant's list price. Only a genuinely higher one is a
+    // sale; feeds routinely repeat search_price into it.
+    const rrp = Number(r.rrp_price || r.store_price || 0) || 0
+    const onSale = rrp > price
+    const discountPct = onSale ? Math.round((1 - price / rrp) * 100) : 0
+
+    let cat = cfg.forceCat ?? categorize(hay)
+    if (cat === 'other') cat = vendorDefaultCat(cfg.vendor)
+
+    out.push({
+      id: `${cfg.prefix}-${id}`,
+      vendor: cfg.vendor,
+      domain: cfg.domain,
+      name,
+      cat,
+      character: detectCharacter(hay),
+      kidSafe: isKidSafeText(hay, cat, name),
+      price,
+      unit: '',
+      onSale,
+      wasPrice: onSale ? rrp : 0,
+      discountPct,
+      commissionPct: cfg.commissionPct,
+      couponCode: cfg.couponCode,
+      couponPct: cfg.couponPct,
+      image: proxied(r.merchant_image_url || r.aw_image_url || ''),
+      // ALREADY TRACKED. aw_deep_link is an awin1.com redirect that AWIN built,
+      // so affiliateUrl() must not wrap it a second time; it checks for that
+      // host and returns early. See the note there.
+      url: (r.aw_deep_link || r.merchant_deep_link || '').trim(),
+      badge: '',
+      // A feed has no first-seen date. last_updated is when the MERCHANT last
+      // touched the row, which moves on every price change, so using it would
+      // reshuffle the RSS feeds under Pinterest every time a price moved (§4f).
+      // Left empty; catalog-source stamps it once on first ingest.
+      added: '',
+      variants: [],
+      blurb,
+    })
+  }
+  return out
+}
+
 export function mapShopifyProducts(
   cfg: typeof VENDORS[number],
   raw: ShopifyProductRaw[]
