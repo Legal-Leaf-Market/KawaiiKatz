@@ -220,6 +220,19 @@ commit as any change to what a cached entry contains — UA, mapping, classifier
 Two filter layers drop adult-model apparel — a text filter, then a coco-ssd image scan
 budgeted so a cold build cannot hang. Unscanned items stay; the text filter is the backstop.
 
+**The text filter runs on every category, and used to run on two.** It was gated to apparel
+and accessories on the reasoning that only clothing can be adult clothing, which is sound
+and was still a hole, because it assumed `categorize()` had got the category right. Three
+rows found on 2026-08-30 say it does not: "Valentine Fuzzy Bear Lingerie Set" and
+"Teddy Bear Lingerie Set" were `plush`, and "Satin Baby Bear Panties" was `tech`. Every one
+is a garment and every one was invisible to the one filter built to catch it. Ada found one
+by hand. **A safety filter must not depend on a classifier being right, because the
+classifier being wrong is the case where the filter matters.** Removing the gate cut 14 more
+rows from 4,426, all genuine; the handful of real false positives (a "coquette" phone case,
+a "silky" cooling blanket, "Christmas stockings") are held by a narrow `NOT_CLOTHING_AT_ALL`
+list, never by loosening `CUT_PHRASES` (§7). The coco-ssd image scan still gates on
+`MODEL_SCAN_CATS`, which is right: it is expensive and only makes sense on garment photos.
+
 ---
 
 ## 4b. Caching — how a visitor gets products instantly

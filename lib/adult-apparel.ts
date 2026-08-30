@@ -10,7 +10,38 @@
 // Both layers are scoped to apparel & accessories only, so plush, stationery,
 // kitchenware, etc. are never touched.
 
+/**
+ * Categories the coco-ssd IMAGE scan runs on.
+ *
+ * Still apparel and accessories only, because that scan is expensive and looks
+ * for a full-body human model, which is a thing that appears on garment photos
+ * and essentially nowhere else.
+ *
+ * NOTE WHAT THIS NO LONGER GATES. It used to gate the cheap TEXT filter too,
+ * and that was a hole: see isAdultApparelByText below.
+ */
 export const MODEL_SCAN_CATS = new Set(['apparel', 'accessories'])
+
+/**
+ * Names that are a false positive for a CUT_PHRASE because of what the object
+ * IS, not because of who it is for.
+ *
+ * Separate from KID_SAFE, which answers "is this for a child". These answer
+ * "this cannot be clothing at all": a phone case is not lingerie however it is
+ * decorated, a cooling blanket is silky in the way bedding is silky, and a
+ * Christmas stocking is a decoration that hangs on a fireplace.
+ *
+ * Each was a real row in the live catalogue, and §7's rule is that a genuine
+ * false positive gets a narrow entry here rather than a loosened CUT_PHRASES.
+ */
+const NOT_CLOTHING_AT_ALL: RegExp[] = [
+  /\b(phone|samsung|iphone|ipad|airpod|laptop|tablet)\s+case\b/,
+  /\bphone\s+(case|grip|strap|holder)\b/,
+  /\b(cooling|weighted|throw|fleece|sherpa)\s+blanket\b/,
+  /\bblanket\b.*\b(cooling|double sided|summer)\b/,
+  /\bchristmas\s+stockings?\b/,
+  /\bstockings?\b.*\b(christmas|holiday|fireplace|advent)\b/,
+]
 
 // Curated cut/style phrases (verbatim from the original KK_CUT_DEFAULT) plus
 // adult-model-specific wording. Phrase-matched against a normalized name.
@@ -75,8 +106,43 @@ export function adultApparelHit(name: string): string | null {
   return null
 }
 
-/** Convenience boolean for apparel/accessories text screening. */
+/**
+ * Text-layer screening, run on EVERY category.
+ *
+ * -----------------------------------------------------------------------------
+ * WHY THE CATEGORY GATE WAS REMOVED, WHICH IS THE WHOLE POINT OF THIS FUNCTION
+ *
+ * This used to return false unless the product was apparel or accessories, on
+ * the reasoning that only clothing can be adult clothing. That reasoning is
+ * sound and the implementation was still a hole, because it assumed the
+ * classifier had got the category right.
+ *
+ * Three rows found on 2026-08-30 say it does not:
+ *
+ *   "Valentine Fuzzy Bear Lingerie Set"   cat: plush
+ *   "Teddy Bear Lingerie Set"             cat: plush
+ *   "Satin Baby Bear Panties"             cat: tech
+ *
+ * Every one is a garment. Every one was invisible to the one filter built to
+ * catch it, purely because categorize() had filed it somewhere else. Ada found
+ * one of them by hand and excluded it manually, which is the system working
+ * only because a person was looking.
+ *
+ * A safety filter must not depend on a classifier being right, because the
+ * classifier being wrong is exactly the case where the safety filter matters.
+ * The text pass is cheap, so it now runs on everything.
+ *
+ * Measured cost of removing the gate, over 2,160 previously unscanned products:
+ * 17 newly cut, of which 13 are genuine (3 lingerie sets, 4 underwear, 2
+ * swimsuits, a nightgown, thigh highs, a coquette top, high-waist shorts) and 4
+ * were false positives now handled by NOT_CLOTHING_AT_ALL.
+ *
+ * The coco-ssd IMAGE scan is unchanged and still gates on MODEL_SCAN_CATS. That
+ * one is expensive and genuinely only makes sense on garment photography.
+ */
 export function isAdultApparelByText(name: string, cat: string): boolean {
-  if (!MODEL_SCAN_CATS.has(cat)) return false
+  void cat
+  const hay = norm(name)
+  if (NOT_CLOTHING_AT_ALL.some((re) => re.test(hay))) return false
   return adultApparelHit(name) !== null
 }

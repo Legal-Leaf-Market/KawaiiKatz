@@ -213,8 +213,16 @@ export const getCatalog = cache(async (): Promise<CatalogResult> => {
 
   let list = [...byId.values()]
 
-  // --- Adult-model exclusion (apparel & accessories only) ---
+  // --- Adult-model exclusion ---
   // Layer 1: instant text filter over suggestive-cut / adult-model wording.
+  // Runs on EVERY category as of 2026-08-30, not just apparel and accessories.
+  // Three garments were reaching the site filed as `plush` and `tech`, where
+  // the filter could not see them; a safety filter must not depend on the
+  // classifier being right, because the classifier being wrong is exactly when
+  // it matters. See isAdultApparelByText.
+  //
+  // No cache version bump: this runs here, AFTER the per-vendor unstable_cache,
+  // so no cached entry's contents change meaning.
   list = list.filter((p) => !isAdultApparelByText(p.name, p.cat))
 
   // Layer 2: coco-ssd image scan drops photos featuring a full-body (adult)
