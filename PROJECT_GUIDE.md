@@ -597,6 +597,65 @@ same, and an alphabetical id tiebreak is what the visitor sees: the jigsaw page 
 one. `tiebreak()` is FNV-1a over the id — it must be a hash and not `Math.random()`, because
 these pages prerender and a random order is a hydration mismatch.
 
+### A second season, and what it took
+
+Halloween shipped 2026-08-30. Christmas was the only season for as long as there was only
+one, and everything about seasons was written for it: `festiveScore()` read one hardcoded
+Christmas list, `offSeason()` read one hardcoded list of everybody else's holidays with
+Halloween at the top of it. A second season could not be an entry in `BOARDS`.
+
+It is now. **`Board.seasonTerms` holds a season's vocabulary and `otherSeasonTerms()` derives
+the screen-out list from the other `BOARDS` entries**, so adding a third season keeps its stock
+out of the first two without anybody remembering a second place to edit. Only the holidays with
+no guide of their own (`easter`, `valentine`, `thanksgiving`, …) are still written out.
+
+**Two seasons share vocabulary, and the overlap is real stock rather than a corner case.**
+sugarhai sells a "Christmas Spider", a "Gingerbread Skeleton", a "Witchy Holiday" and a
+"Yule Be Eaten" (a Creepmas line, spooky in the blurb and Christmas in the name). So
+`offSeason()` compares how strongly each season owns the product instead of asking one
+yes/no question: **the name outranks the blurb, and when both seasons are in the name the one
+written first wins.** Reading left to right is how a person settles it. Without the first
+rule the Halloween guide's kid-safe section shipped a shirt saying "Merry Everything and
+Happy Always"; without the second, "Halloween Pumpkin Ceramic Mug … with Festive Pumpkin
+Pattern" sat in the Christmas guide.
+
+**Halloween is a season that sets `words`, and Christmas is not.** That is the interesting
+half. In December anything cute is a present, so the Christmas guide takes the whole
+catalogue and lets its price bands sort it out. October is not like that — nobody searches
+Pinterest for a kawaii pencil case in Halloween week — so this board narrows to the 135
+products that are actually Halloween, and every tile earns its place by being on theme
+rather than by being cute and cheap. 135 fills round 0 outright (49 tiles) and carries the
+shuffle several rounds deep.
+
+The same reasoning flips `pinTags`. A season normally omits them because it holds every
+category at once; a narrow season must set them, and the feed proved it — a "Personalized
+Corduroy Trick or Treat Bag" went out tagged `#MontessoriToys #WoodenToys`, because the bag
+is categorised `learning`, and three Halloween mugs came out `#KawaiiBento #CuteLunchBox`.
+Measured after: 49 of 49 Pins carry Halloween tags, none carries another category's pool.
+
+**Terms rejected are worth more than terms kept**, and all four failed the same way — they
+describe an aesthetic this catalogue wears all year rather than a holiday. `monster` (20 name
+hits, every one a Cookie Monster Snugible), `skull` (6, all pastel-goth apparel), `goth` (19,
+and pastel goth is the single largest aesthetic here, so it would have taken the page),
+`bone` (10, dog-bone chokers and band logos). `mummy` was never a candidate: MamaRaya sells
+gifts for mums. One false-positive class is knowingly accepted — Sydney Sock Project's six
+real-spider socks, Australian wildlife rather than Halloween — because they are untracked and
+already rank last, and narrowing `spider` would cost the four tracked Plushible Halloween
+spiders that are the best stock the guide has.
+
+`TOO_EDGY_FOR_A_BOARD` came out of the same read: "Stab Bishes", a "Chainsaw Bunny Hoodie"
+reading "I'll End You", and two pinup dresses. Five terms, eight rows in 4,426, checked on
+every board. `knife` was the obvious sixth and is deliberately absent, because it catches a
+"Joke Knife Halloween Hair Clip" — exactly the cute-macabre thing this board is for. The
+line is at violence-as-a-punchline and at adult framing, not at the colour black.
+
+**The feeds now honour the curator's exclusions, and never did before.** The guide pages have
+always filtered on the list from `/api/exclusions`; `app/feeds/[slug]/route.ts` read the raw
+catalogue, so a product Ada hid was still published to Pinterest under our own account. It
+was being read on the one surface where it did not matter. The route reads the table directly
+rather than fetching its own API, because it runs during a prerender, and it fails open with
+a warning so a missing `DATABASE_URL` cannot break the build (§5).
+
 ### The six themes were chosen on tracking, not on taste
 
 Measured against the live catalogue before any were written. **Four obvious-looking themes

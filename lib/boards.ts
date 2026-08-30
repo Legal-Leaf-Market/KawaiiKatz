@@ -39,7 +39,7 @@ export type BoardSection = {
   title: string
   blurb: string
   max: number
-  match: (p: Product, festive: number) => boolean
+  match: (p: Product, seasonal: number) => boolean
 }
 
 export type Board = {
@@ -90,13 +90,35 @@ export type Board = {
    * feed published Pins that said "a kawaii plushie pick" and were tagged
    * #BlindBoxUnboxing.
    *
-   * Absent on a season, on purpose: a Christmas guide carries every category at
-   * once and `hashtag` already leads every Pin, so the product's own tags are
-   * the accurate ones underneath it.
+   * Absent on the CHRISTMAS season, on purpose: that guide takes the whole
+   * catalogue, so its Pins really are a mug and a plushie and a puzzle, and
+   * `hashtag` already leads every one of them. The product's own tags are the
+   * accurate ones underneath it.
+   *
+   * The Halloween season sets them, and the difference is that it is narrow.
+   * Its 135 products are one holiday rather than every category, and without a
+   * pool the feed tagged a "Personalized Corduroy Trick or Treat Bag" with
+   * #MontessoriToys #WoodenToys #EducationalToys, because the bag is
+   * categorised `learning`; three Halloween mugs came out as #KawaiiBento
+   * #CuteLunchBox #BentoBox. Caption says Halloween, tags say Montessori: the
+   * exact mismatch section 4f records, arriving by the other route.
    */
   pinTags?: string[]
   /** Months (0-indexed) when a season guide peaks. Display only; empty for a theme. */
   season: number[]
+  /**
+   * Season only: the words that make a product THIS season's.
+   *
+   * Two things read it. It is the whole of the season's relevance score, so a
+   * genuinely Christmassy thing leads the Christmas guide; and every OTHER
+   * season screens its stock out by it, which is why a season board declares
+   * its vocabulary here rather than in a list beside the machinery. Adding a
+   * season stays what section 4e promises it is: one BOARDS entry.
+   *
+   * Word-anchored, like every term list on this page. `bat` is a substring of
+   * BATH, `elf` of SHELF, `advent` of ADVENTURE.
+   */
+  seasonTerms?: string[]
   /**
    * What belongs on this page at all. A season takes the whole catalogue and
    * lets its sections sort it out; a theme is narrower than that, so `cats` and
@@ -190,7 +212,7 @@ export type Board = {
  * `stocking` is deliberately absent as a bare term: it is hosiery far more
  * often than it is a Christmas stocking. The qualified forms are listed instead.
  */
-const FESTIVE_TERMS = [
+const CHRISTMAS_TERMS = [
   'christmas', 'xmas', 'santa', 'reindeer', 'rudolph', 'gingerbread', 'snowman',
   'snowflake', 'snow globe', 'advent', 'advent calendar', 'holiday', 'festive',
   'yule', 'noel', 'mistletoe', 'candy cane', 'nutcracker', 'elf', 'sleigh',
@@ -199,9 +221,41 @@ const FESTIVE_TERMS = [
 ]
 
 /**
- * Other people's holidays, kept out of this one.
+ * What makes a product Halloween's, measured against the live catalogue rather
+ * than listed from memory. 236 products match, and the four terms that were
+ * tried and thrown out matter more than the ones kept:
  *
- * Measured, not guessed: the first run of this guide against the live
+ *   `monster`  20 name hits, every one a Sesame Street Cookie Monster Snugible.
+ *   `skull`     6 name hits, every one pastel-goth apparel that is worn all
+ *               year — a knitted skull sweater is not a Halloween gift.
+ *   `goth`     19 name hits, same reason, and pastel goth is this catalogue's
+ *               single largest aesthetic. It would have taken the whole page.
+ *   `bone`     10 name hits, all dog-bone chokers and band logos.
+ *
+ * `mummy` was never a candidate: MamaRaya sells gifts for mums.
+ *
+ * The one false-positive class knowingly accepted is Sydney Sock Project's six
+ * real-spider socks (Redback, Peacock) — Australian wildlife rather than
+ * Halloween. They are untracked, so score() already ranks them behind
+ * everything that pays, and narrowing `spider` would cost the four tracked
+ * Plushible Halloween spiders that are the best stock this guide has.
+ */
+const HALLOWEEN_TERMS = [
+  'halloween', 'spooky', 'pumpkin', 'jack o lantern', 'trick or treat', 'ghost',
+  'skeleton', 'witch', 'vampire', 'zombie', 'creepy', 'haunted', 'bat', 'spider',
+  'spider web', 'cauldron', 'candy corn', 'grim reaper', 'coffin', 'werewolf',
+  'frankenstein', 'cobweb', 'broomstick', 'tombstone',
+]
+
+/**
+ * Holidays with no guide of their own, kept off every season guide.
+ *
+ * The seasons themselves are NOT listed here — they are read off the BOARDS
+ * entries by otherSeasonTerms(), so adding a season board automatically keeps
+ * its stock out of the other seasons and nothing has to be maintained twice.
+ * This list is only for the holidays we do not publish a guide for.
+ *
+ * Measured, not guessed: the first run of the Christmas guide against the live
  * catalogue put a "Halloween Ghost Ceramic Mug" and "Halloween Creepy Cutie
  * Keychains" in the "Under the tree" band. Nothing was wrong with the scoring —
  * they are cute, well-priced, tracked products — but a Christmas guide that
@@ -210,11 +264,9 @@ const FESTIVE_TERMS = [
  *
  * Word-anchored like everything else here: `witch` is a substring of SWITCH.
  */
-const OFF_SEASON_TERMS = [
-  'halloween', 'spooky', 'pumpkin', 'jack o lantern', 'trick or treat', 'ghost',
-  'skeleton', 'witch', 'vampire', 'zombie', 'creepy', 'easter', 'valentine',
-  'thanksgiving', 'lunar new year', 'chinese new year', 'ramadan', 'diwali',
-  'st patrick', 'graduation',
+const OTHER_HOLIDAY_TERMS = [
+  'easter', 'valentine', 'thanksgiving', 'lunar new year', 'chinese new year',
+  'ramadan', 'diwali', 'st patrick', 'graduation',
 ]
 
 /**
@@ -283,6 +335,30 @@ const NEVER_ON_A_BOARD = [
   'route protection', 'donation', 'deposit', 'store credit', 'test product',
 ]
 
+/**
+ * Never on any guide either, for tone rather than for not being a product.
+ *
+ * Every one of these was a real tile on the first fill of the Halloween board:
+ * "Stab Bishes" (a spider sticker captioned "I can stab 8 bishes at once"), a
+ * "Chainsaw Bunny Hoodie" reading "I'll End You", and two pinup dresses. All
+ * four are genuine, well-photographed products that their shops are right to
+ * sell, and none of them is what a board pinned to a public Pinterest account
+ * should open with.
+ *
+ * Matched against the blurb as well as the name, because sugarhai's whole line
+ * is named in jokes and described in plain English: the sticker is called "Stab
+ * Bishes" and the thing that makes it unpinnable is in the description.
+ *
+ * NARROW ON PURPOSE, five terms and eight rows in 4,426. `knife` was the
+ * obvious sixth and is deliberately absent: it catches 25 rows, among them a
+ * "Joke Knife Halloween Hair Clip", which is exactly the sort of cute-macabre
+ * accessory this board exists to show. Pastel goth is one of the largest
+ * aesthetics in this catalogue, so `occult`, `ouija` and `pentagram` are not
+ * here either. The line is drawn at violence-as-a-punchline and at adult
+ * framing, not at the colour black.
+ */
+const TOO_EDGY_FOR_A_BOARD = ['stab', 'bishes', 'chainsaw', 'pinup', 'pin up']
+
 export const PLUSH_NOT_A_TOY_TERMS = [
   // Bags and carriers.
   'backpack', 'backpacks', 'bookbag', 'bag', 'bags', 'purse', 'handbag',
@@ -345,14 +421,97 @@ function haystack(p: Product): string {
   return `${p.name} ${p.blurb ?? ''} ${p.character ?? ''}`.toLowerCase()
 }
 
-/** How Christmassy a product actually is. 0 means "not, at all". */
-export function festiveScore(p: Product): number {
-  return hasWord(haystack(p), FESTIVE_TERMS) ? 6 : 0
+/**
+ * How seasonal a product is FOR THIS BOARD. 0 means "not, at all".
+ *
+ * Takes the board rather than reading one hardcoded list, because there is now
+ * more than one season. A theme has no `seasonTerms` and scores 0 here, which
+ * is what relevance() already assumed.
+ */
+export function seasonScore(b: Board, p: Product): number {
+  return b.seasonTerms?.length && hasWord(haystack(p), b.seasonTerms) ? 6 : 0
 }
 
-/** True when a product belongs to a different holiday than this guide's. */
-export function offSeason(p: Product): boolean {
-  return hasWord(haystack(p), OFF_SEASON_TERMS)
+/**
+ * Every OTHER season's words, plus the holidays that have no guide.
+ *
+ * Derived from BOARDS rather than written out, so a new season board keeps its
+ * stock out of the existing ones without anybody remembering to add it in a
+ * second place. That mattering is not hypothetical: the Halloween list is 24
+ * terms, and a Christmas guide showing spiders is the exact failure the
+ * original hardcoded list was written to stop.
+ */
+function otherSeasonTerms(b: Board): string[] {
+  const out = [...OTHER_HOLIDAY_TERMS]
+  for (const other of BOARDS) {
+    if (other.slug === b.slug || !other.seasonTerms?.length) continue
+    out.push(...other.seasonTerms)
+  }
+  return out
+}
+
+/**
+ * How strongly a set of season words describes a product: 2 in the name, 1
+ * anywhere, 0 not at all.
+ *
+ * The name is worth more than the blurb and the gap is what settles a product
+ * that reads as two holidays at once. It is not a tidy distinction to have: on
+ * a shelf this size, seasons genuinely overlap.
+ */
+function firstWordAt(hay: string, terms: string[] | undefined): number {
+  let best = -1
+  for (const t of terms ?? []) {
+    const m = new RegExp('(^|[^a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+') + 's?([^a-z0-9]|$)').exec(hay)
+    if (m && (best < 0 || m.index < best)) best = m.index
+  }
+  return best
+}
+
+function seasonRank(p: Product, terms: string[] | undefined): number {
+  if (!terms?.length) return 0
+  if (hasWord(String(p.name || '').toLowerCase(), terms)) return 2
+  return hasWord(haystack(p), terms) ? 1 : 0
+}
+
+/**
+ * True when a product belongs to a different holiday than this guide's.
+ *
+ * The comparison is between how much this season owns the product and how much
+ * another one does, and BOTH halves are load-bearing now that two seasons share
+ * vocabulary:
+ *
+ *   sugarhai's "Christmas Spider" and "Gingerbread Skeleton" match Halloween's
+ *   `spider` and `skeleton`. Without the own-season half, the Christmas guide
+ *   would throw out two products that say Christmas in the first word.
+ *
+ *   sugarhai's "Witchy Holiday" and "Yule Be Eaten" are Creepmas shirts: spooky
+ *   in the blurb, Christmas in the name. Without the name/blurb ranking, the
+ *   first of them shipped in the Halloween guide's kid-safe section carrying
+ *   the words "Merry Everything and Happy Always".
+ *
+ * A genuine tie — Krampus, Mari Lwyd, both of which are a Christmas monster
+ * described as spooky — stays on both boards, which is the honest answer for a
+ * product that really is both.
+ */
+export function offSeason(b: Board, p: Product): boolean {
+  const other = otherSeasonTerms(b)
+  const ownRank = seasonRank(p, b.seasonTerms)
+  const otherRank = seasonRank(p, other)
+  if (otherRank !== ownRank) return otherRank > ownRank
+  // A tie below the name tier is a product described as two seasons and named
+  // as neither. Krampus is genuinely both; leave it on both.
+  if (ownRank !== 2) return false
+  /**
+   * Both seasons are in the NAME, and then the one named FIRST is what the
+   * product is. Two real rows need this and they point opposite ways:
+   * "Christmas Spider" and "Halloween Pumpkin Ceramic Mug 400ml - Cute Coffee
+   * Cup with Festive Pumpkin Pattern". Reading left to right is how a person
+   * settles it, so it is how this does.
+   */
+  const name = String(p.name || '').toLowerCase()
+  const ownAt = firstWordAt(name, b.seasonTerms)
+  const otherAt = firstWordAt(name, other)
+  return otherAt >= 0 && (ownAt < 0 || otherAt < ownAt)
 }
 
 /**
@@ -387,6 +546,7 @@ function tiebreak(id: string): number {
 /** Does this product belong on this page at all? */
 function belongs(b: Board, p: Product): boolean {
   if (hasWord(String(p.name || '').toLowerCase(), NEVER_ON_A_BOARD)) return false
+  if (hasWord(haystack(p), TOO_EDGY_FOR_A_BOARD)) return false
   if (b.notCats?.length && b.notCats.includes(p.cat)) return false
   if (b.notVendors?.length && b.notVendors.includes(p.vendor)) return false
   if (b.notWords?.length && hasWord(String(p.name || '').toLowerCase(), b.notWords)) return false
@@ -408,7 +568,7 @@ function belongs(b: Board, p: Product): boolean {
 function relevance(b: Board, p: Product): number {
   const name = String(p.name || '').toLowerCase()
   let r = 0
-  if (b.kind === 'season') r = festiveScore(p)
+  if (b.kind === 'season') r = seasonScore(b, p)
   else if (b.words?.length && hasWord(name, b.words)) r = 3
   if (b.demote?.length && hasWord(name, b.demote)) r -= 4
   return r
@@ -478,13 +638,14 @@ export const BOARDS: Board[] = [
     notWords: SPORTS_LICENCE_TERMS,
     notVendors: ['Autoplush'],
     season: [8, 9, 10, 11], // Sept–Dec; Pinterest searches Christmas from September
+    seasonTerms: CHRISTMAS_TERMS,
     sections: [
       {
         key: 'festive',
         title: 'Actually Christmassy',
         blurb: 'Santas, snowmen and advent calendars, the ones that only make sense in December.',
         max: 12,
-        match: (_p, festive) => festive > 0,
+        match: (_p, seasonal) => seasonal > 0,
       },
       {
         key: 'littles',
@@ -511,6 +672,98 @@ export const BOARDS: Board[] = [
         key: 'showstopper',
         title: 'The one they open last · over $40',
         blurb: 'For the person you actually planned ahead for.',
+        max: 8,
+        match: (p) => p.price > 40,
+      },
+    ],
+  },
+
+  /**
+   * The second season, and it is deliberately NOT shaped like the first.
+   *
+   * Christmas takes the whole catalogue, because in December anything cute is a
+   * present. October is not like that: nobody searches Pinterest for a kawaii
+   * pencil case in Halloween week. So this board sets `words`, which makes
+   * belongs() narrow it to the 236 products that are actually Halloween, and
+   * every tile on the page earns its place by being on theme rather than by
+   * being cute and cheap.
+   *
+   * 236 products across five sections fills round 0 (56 tiles) outright and
+   * carries the shuffle several rounds deep, which is the number that decided
+   * it. A whole-catalogue Halloween guide would have been four spiders followed
+   * by fifty things that have nothing to do with Halloween, and that is the
+   * automated-dump impression a curated guide exists to avoid.
+   *
+   * The stock behind it is the best-shaped of any board here: Plushible's
+   * Halloween plush line (Wanda the Witch Cat, Viktor the Vampire Cat, Wicked
+   * the Witch Spider, Fonzie the Fuzzy Spider and two Gitzy spiders) is tracked,
+   * on theme, and photographs well, which is exactly what a lead section needs.
+   */
+  {
+    slug: 'halloween',
+    emoji: '🎃',
+    kind: 'season',
+    title: 'Kawaii Halloween',
+    tagline: 'Spooky but cute: plush, decor and dress-up that is more sweet than scary',
+    intro:
+      'Halloween that a small child will not have nightmares about. Plush witches and ' +
+      'friendly ghosts, pastel pumpkins, bat wings and enough black cats to fill a shelf, ' +
+      'pulled from every shop we carry so you can see them side by side. Sorted by price, ' +
+      'because the good stuff sells out and the cheap stuff is where the fun is. You check ' +
+      'out on the shop\'s own site, never ours.',
+    hashtag: 'KawaiiHalloween',
+    catLead: 'Halloween',
+    // Aug to Oct. Pinterest runs about three months ahead of a season, so a
+    // Halloween guide is worth pinning from the start of August and is finished
+    // by the 1st of November.
+    season: [7, 8, 9],
+    seasonTerms: HALLOWEEN_TERMS,
+    words: HALLOWEEN_TERMS,
+    // Set, unlike Christmas, and the note on `pinTags` says why: this season is
+    // one holiday rather than every category, so the product's own pool is the
+    // wrong one. #KawaiiHalloween is not repeated here — `hashtag` already
+    // leads every Pin with it and pinHashtags() dedupes.
+    pinTags: ['HalloweenDecor', 'SpookyCute', 'CuteHalloween', 'PastelHalloween', 'HalloweenAesthetic'],
+    // Both of these travel from the Christmas board for the same reason given
+    // there: the exclusions that carry across every guide are the ones about
+    // MARKET rather than category. A college mascot and a plush Ford F150 are
+    // not kawaii Halloween either.
+    notWords: SPORTS_LICENCE_TERMS,
+    notVendors: ['Autoplush'],
+    sections: [
+      {
+        key: 'best',
+        title: 'The properly spooky ones',
+        blurb: 'Witch cats, plush spiders and friendly ghosts. Start here.',
+        max: 8,
+        match: () => true,
+      },
+      {
+        key: 'littles',
+        title: 'Cute, not scary',
+        blurb:
+          'Screened as kid-appropriate, so you can shop for a five-year-old without reading every listing.',
+        max: 12,
+        match: (p) => p.kidSafe === true,
+      },
+      {
+        key: 'treats',
+        title: 'Trick-or-treat fillers under $15',
+        blurb: 'Small, cheap and easy to buy a handful of.',
+        max: 12,
+        match: (p) => p.price > 0 && p.price <= 15,
+      },
+      {
+        key: 'party',
+        title: 'Dress-up and decor · $15 to $40',
+        blurb: 'Bat wings, cloaks, mugs and the things that make a room look like October.',
+        max: 12,
+        match: (p) => p.price > 15 && p.price <= 40,
+      },
+      {
+        key: 'centrepiece',
+        title: 'The centrepiece · over $40',
+        blurb: 'One big one, for the shelf everybody photographs.',
         max: 8,
         match: (p) => p.price > 40,
       },
@@ -908,7 +1161,7 @@ export function fillBoardPages(b: Board, products: Product[], maxPages = 6): Boa
     .filter((p) => p && p.id && p.name && p.price > 0 && String(p.image || '').trim())
     // Only a season screens out other holidays. A Halloween plush belongs on
     // the plushies page; it does not belong in a Christmas price band.
-    .filter((p) => b.kind !== 'season' || !offSeason(p))
+    .filter((p) => b.kind !== 'season' || !offSeason(b, p))
     .filter((p) => belongs(b, p))
     .map((p) => ({ p, rel: relevance(b, p) }))
     .map((x) => ({ ...x, s: score(x.p, x.rel) }))
