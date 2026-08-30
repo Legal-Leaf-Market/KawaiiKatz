@@ -115,9 +115,9 @@ export const DECORA_SEARCH_NOTE =
   'across 20,000 advertisers, searched 2026-08-30). Do not re-run the AWIN hunt.'
 
 /*
- * Kawaii Unicorn, KawaiiMoriStore and Kawaii mood moved OUT of this table on
- * 2026-08-30: Jacob joined its
- * Jacob joined all three GoAffPro programmes and every tracking link came back
+ * Kawaii Unicorn, KawaiiMoriStore, Kawaii mood and Egirldoll moved OUT of this
+ * table on 2026-08-30: Jacob joined its
+ * Jacob joined all four GoAffPro programmes and every tracking link came back
  * real, so they are rows in VENDORS now (pending, awaiting a feed read) rather
  * than leads. A merchant belongs in one place or the other, never both, or the next
  * person chasing this list re-applies to a shop we already have.
@@ -141,15 +141,6 @@ export const PARTNER_PROSPECTS: PartnerProspect[] = [
     cookie: 'unstated',
     fit: 'Harajuku by name on its own domain, which is a better sign of a real shop than a myshopify subdomain.',
     blocker: 'Unprobed.',
-  },
-  {
-    merchant: 'Egirldoll',
-    domain: 'https://egirldoll.com',
-    network: 'goaffpro',
-    rate: '10%',
-    cookie: 'unstated',
-    fit: 'E-girl and alt fashion, adjacent to the decora room rather than in it. Worth a look for the same tween audience.',
-    blocker: 'Unprobed, and the aesthetic needs Ada\'s eye before it goes near a page aimed at tweens.',
   },
   {
     // Ada asked for this one by name, so it gets the most careful note.

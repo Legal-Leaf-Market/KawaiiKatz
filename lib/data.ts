@@ -472,6 +472,21 @@ export const VENDORS: VendorConfig[] = [
   // (https://kawaiimood.com/?ref=kawaiikatz). Same pending rule.
   { vendor: 'Kawaii mood', domain: 'https://kawaiimood.com', prefix: 'kmood', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
 
+  // Egirldoll. Fourth of the sitting, tracking real
+  // (https://egirldoll.com/?ref=kawaiikatz).
+  //
+  // THIS ONE NEEDS A JUDGEMENT AND NOT JUST A PROBE, and the prospect note said
+  // so before it was signed: "the aesthetic needs Ada's eye before it goes near
+  // a page aimed at tweens". E-girl and alt fashion sit next to the decora room
+  // rather than in it, and this site's own kid-safe toggle exists because a
+  // parent is trusting it.
+  //
+  // So the probe answers whether it is INGESTABLE. Whether it belongs is Ada
+  // and Jacob's call on the actual photographs, the way Autoplush was decided
+  // (§4f-b): a brand question, not a technical one, and the highest commission
+  // rate on the site did not save that one.
+  { vendor: 'Egirldoll', domain: 'https://egirldoll.com', prefix: 'egd', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+
   // Fifth of the batch (2026-08-30), and the one whose name promises the best
   // fit of all of them. Which is worth being slightly suspicious of.
   //
