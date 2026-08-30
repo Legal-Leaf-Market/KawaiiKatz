@@ -306,21 +306,26 @@ export const getCatalog = cache((): Promise<CatalogResult> => buildCatalog())
  * of the catalogue.
  *
  * -----------------------------------------------------------------------------
- * THE SCREENING IS STRONGER HERE, NOT WEAKER
+ * IT DOES NOT SCAN, AND THE FIRST VERSION OF THIS DID
  *
- * The bulk scan is budgeted and fails open: "anything not reached within the
- * budget is simply omitted (kept)". On a cold lambda it therefore screened a
- * few hundred of two thousand images and kept the rest unscanned anyway. This
- * screens exactly the seven products the page renders, with no budget at all,
- * so every item on the page is genuinely checked rather than probably checked.
+ * The obvious move was to screen the seven products this page renders with the
+ * coco-ssd scan and no budget: cheap, and a stronger guarantee per item than
+ * the bulk pass, which is budgeted and fails open ("anything not reached within
+ * the budget is simply omitted"). It shipped that way and 404'd on the first
+ * product tried — `gbun-acdc-rag-trousers`, an ACDC RAG harness skirt that
+ * /feeds/decora-fits.xml publishes and /decora shows a tile for.
  *
- * The text filter (§4, isAdultApparelByText) runs identically either way; it is
- * inside buildCatalog and no caller can reach past it.
- */
-/*
- * react-cached on (id, similarCount), which matters more here than anywhere:
- * generateMetadata and the page component both need this, and without the
- * dedupe a single product view builds the catalogue twice.
+ * That is worse than what it fixed. A page that filters MORE than the catalogue
+ * that linked to it turns every one of those links into a dead end, and the
+ * links here are Pins: public, durable, and pointed at us by our own feeds.
+ *
+ * So the rule is that this page renders what the catalogue contains, no more
+ * and no less. That is not a hole in the safety filter, it is the filter's
+ * stated contract (§4): the text filter runs on every category inside
+ * buildCatalog where no caller can reach past it, the image scan is explicitly
+ * best-effort, and "unscanned items stay" is the documented behaviour rather
+ * than an accident. Anything genuinely adult-model has to be caught where the
+ * catalogue is built, because that is the one place every surface agrees on.
  */
 export const getProductPageData = cache(async (
   id: string,
@@ -330,23 +335,10 @@ export const getProductPageData = cache(async (
   const target = products.find((p) => p.id === id)
   if (!target) return null
 
-  const ranked = rankSimilar(target, products.filter((p) => p.image), similarCount)
-
-  // No budget: this is at most seven images, and a page that renders an item is
-  // the moment to be certain about it.
-  const candidates = [target, ...ranked].filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image)
-  let flagged = new Set<string>()
-  if (candidates.length) {
-    try {
-      flagged = await scanForBodyModels(candidates.map((p) => p.image), { concurrency: 4 })
-    } catch {
-      // Scan unavailable — the text filter is the backstop, as everywhere else.
-    }
+  return {
+    product: target,
+    similar: rankSimilar(target, products.filter((p) => p.image), similarCount),
   }
-  const blocked = (p: Product) => MODEL_SCAN_CATS.has(p.cat) && flagged.has(p.image)
-
-  if (blocked(target)) return null
-  return { product: target, similar: ranked.filter((p) => !blocked(p)) }
 })
 
 /**

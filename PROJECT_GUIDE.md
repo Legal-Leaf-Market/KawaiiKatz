@@ -314,16 +314,27 @@ every apparel photograph in the shop: load TensorFlow.js in a cold lambda, then 
 to 35 seconds, to render one product. Following a tile off `/decora` took tens of seconds.
 Jacob's report was "it's like it's building each one", which is what it was doing.
 
-`getProductPageData()` screens the seven products the page renders instead, and it is a
-**stronger** guarantee rather than a weaker one: the bulk scan is budgeted and fails open
-("anything not reached within the budget is simply omitted"), so a cold lambda checked a few
-hundred of two thousand images and kept the rest unscanned anyway. Seven images with no
-budget means every item on the page is actually checked. The text filter is untouched and
-runs inside `buildCatalog` where no caller can reach past it.
+`getProductPageData()` builds the catalogue without the bulk scan and renders the product.
+This is §4b's own rule arriving on the route nobody had applied it to.
 
-This is §4b's own rule arriving on the route nobody had applied it to. The `bulkScan: false`
-flag has exactly one caller and that function does the screening itself; it is not an escape
-hatch, because a safety filter a caller can skip is a safety filter with a hole in it.
+**The first version of it screened the seven products the page renders, and that was wrong
+in a way worth writing down.** It looked like a strictly stronger guarantee: the bulk scan
+is budgeted and fails open, so a cold lambda checked a few hundred of two thousand images
+and kept the rest, where seven images with no budget checks every one. It shipped and
+**404'd on the first product tried** — `gbun-acdc-rag-trousers`, an ACDC RAG harness skirt
+that `/feeds/decora-fits.xml` publishes and `/decora` shows a tile for.
+
+A page that filters MORE than the catalogue that linked to it turns every one of those links
+into a dead end, and the links here are Pins: public, durable, and pointed at us by our own
+feeds. **A product page renders what the catalogue contains, no more and no less.** That is
+not a hole in the safety filter, it is the filter's stated contract: the text filter runs on
+every category inside `buildCatalog` where no caller can reach past it, and "unscanned items
+stay" is documented behaviour rather than an accident. Anything genuinely adult-model has to
+be caught where the catalogue is built, because that is the one place every surface agrees
+on.
+
+The `bulkScan: false` flag has exactly one caller and exists only so a one-product render
+does not pay for a two-thousand-image scan.
 
 ---
 
