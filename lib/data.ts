@@ -986,13 +986,3 @@ export type AdaPick = {
   ts: number
 }
 
-/**
- * Curated picks that show in Ada's Picks by default for every visitor.
- * IDs match live catalog handles, so the rail hydrates real images/prices.
- */
-export const DEFAULT_ADA_PICKS: AdaPick[] = [
-  { id: 'kore-spring-bun-buns-meadow-switch-case-ns-oled-ns2', name: 'Kawaii Bunny Meadow Switch Case', vendor: 'Kore Kawaii', cat: 'tech', price: 36.99, image: '', url: 'https://korekawaii.com/products/spring-bun-buns-meadow-switch-case-ns-oled-ns2', ts: 900 },
-  { id: 'plbl-14-inch-brown-plush-bunny', name: '14 Inch Brown Plush Bunny', vendor: 'Plushible', cat: 'plush', price: 12.99, image: '', url: 'https://plushible.com/products/14-inch-brown-plush-bunny', ts: 800 },
-  { id: 'hkc-hello-kitty-glass-cup-with-lid-straw-cute-cartoon-mug', name: 'Hello Kitty Glass Cup with Lid & Straw', vendor: 'Hello Kitty Camp', cat: 'kitchen', price: 17.69, image: '', url: 'https://hellokittycamp.com/products/hello-kitty-glass-cup-with-lid-straw-cute-cartoon-mug', ts: 700 },
-  { id: 'mont-routine-chart-for-toddlers-visual-schedule-board-for-kids', name: 'Routine Chart for Toddlers', vendor: 'Montessori & Me', cat: 'learning', price: 28.99, image: '', url: 'https://montessoriandme.us/products/routine-chart-for-toddlers-visual-schedule-board-for-kids', ts: 500 },
-]

@@ -2,7 +2,7 @@ import { BOARDS, board, fillBoard } from '@/lib/boards'
 import { DECORA_BOARDS, SOURCES, assignDecoraBoards, decoraBoard, decoraPin } from '@/lib/decora'
 import { getCatalog, getVendorCatalog } from '@/lib/catalog-source'
 import { db } from '@/lib/db'
-import { storeExclusions } from '@/lib/db/schema'
+import { storeExclusions, storePicks } from '@/lib/db/schema'
 import { unproxied } from '@/lib/catalog-shared'
 import { pinCaption, type PinContext } from '@/lib/pinterest'
 import { SITE_URL } from '@/lib/site'
@@ -62,7 +62,58 @@ export const dynamicParams = false
  * added should share a route rather than add a pair. Six feeds, no new pages.
  */
 export function generateStaticParams() {
-  return [...BOARDS, ...DECORA_BOARDS].map((b) => ({ slug: `${b.slug}.xml` }))
+  return [...BOARDS, ...DECORA_BOARDS, PICKS].map((b) => ({ slug: `${b.slug}.xml` }))
+}
+
+/**
+ * Ada's Picks, as a feed. Not a BOARDS entry and not a Decora board.
+ *
+ * It is the only list on this site chosen by a person one product at a time,
+ * which makes it the truest thing here to the site's own proposition, and it
+ * had no way of reaching Pinterest at all. Everything else publishes a rule;
+ * this publishes a judgement.
+ *
+ * No `catLead` and no `pinTags`, for the reason section 4f gives for the
+ * Christmas season: this holds every category at once, so its Pins really are a
+ * Switch case and a plushie and a packet of ramen, and the product's own
+ * category tags are the accurate ones underneath the board's lead hashtag.
+ */
+const PICKS = {
+  slug: 'ada-picks',
+  title: "Ada's Picks",
+  tagline: 'The shelf, one product at a time, chosen by a person rather than a rule',
+  hashtag: 'KawaiiFinds',
+}
+
+/**
+ * The picked products, newest pick last.
+ *
+ * Read straight from the table for the same reason `excludedIds` is: this runs
+ * during a prerender, and a route fetching its own API at build time is a
+ * request to a server that is not listening yet.
+ *
+ * FAILS CLOSED, which is the opposite of `excludedIds` and is right in both
+ * cases. An unreachable exclusions table means publishing something that should
+ * have been hidden, so it fails open to keep the build alive. An unreachable
+ * picks table means publishing nothing, which is simply an empty feed. Making
+ * something up here would be the one thing a curated list must never do.
+ */
+async function pickedIds(): Promise<string[]> {
+  try {
+    const rows = await db
+      .select({ productId: storePicks.productId, pickedAt: storePicks.pickedAt })
+      .from(storePicks)
+    return rows
+      .sort((a, b) => {
+        const x = a.pickedAt ? new Date(a.pickedAt).getTime() : 0
+        const y = b.pickedAt ? new Date(b.pickedAt).getTime() : 0
+        return x - y || (a.productId < b.productId ? -1 : 1)
+      })
+      .map((r) => r.productId)
+  } catch (e) {
+    console.warn(`[feeds] picks unavailable, ada-picks is empty: ${(e as Error).message}`)
+    return []
+  }
 }
 
 /** What a feed needs, whichever taxonomy it came from. */
@@ -137,7 +188,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
   const name = slug.replace(/\.xml$/, '')
   const b = board(name)
   const d = b ? undefined : decoraBoard(name)
-  if (!b && !d) return new Response('Not found', { status: 404 })
+  const isPicks = !b && !d && name === PICKS.slug
+  if (!b && !d && !isPicks) return new Response('Not found', { status: 404 })
 
   // A Decora feed publishes one room's shelf, so it builds one room's shelf.
   // The full fan-out plus the coco-ssd scan is around four minutes on a cold
@@ -160,6 +212,20 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
       pin: { tag: b.hashtag, catLead: b.catLead, catTags: b.pinTags },
     }
     picks = fillBoard(b, live).flatMap((s) => s.products)
+  } else if (isPicks) {
+    feed = {
+      title: PICKS.title,
+      tagline: PICKS.tagline,
+      pageUrl: `${SITE_URL}/`,
+      slug: PICKS.slug,
+      pin: { tag: PICKS.hashtag },
+    }
+    // Hydrated against the live catalogue rather than served from the picks
+    // table's own denormalised columns, and ONLY what is still in it. A pick
+    // whose product has left the shop is a Pin at a dead page, and a Pin is
+    // durable and public in a way a stale rail tile is not.
+    const byId = new Map(live.map((p) => [p.id, p]))
+    picks = (await pickedIds()).map((id) => byId.get(id)).filter((p): p is Product => !!p)
   } else {
     const dec = d as NonNullable<typeof d>
     feed = {
@@ -177,15 +243,25 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
     picks = assignDecoraBoards(live).find((x) => x.board.slug === dec.slug)?.products ?? []
   }
 
-  // Stable order — see the note at the top. Ties fall back to id so the result
-  // is fully determined even when two products carry the same `added` date.
-  const items = picks
-    .filter((p) => imageUrl(p))
-    .sort((x, y) => {
-      const a = Date.parse(x.added || '') || 0
-      const c = Date.parse(y.added || '') || 0
-      return a - c || (x.id < y.id ? -1 : 1)
-    })
+  /**
+   * Stable order — see the note at the top. Ties fall back to id so the result
+   * is fully determined even when two products carry the same `added` date.
+   *
+   * The picks feed is deliberately exempt, and the rule is what exempts it. The
+   * point of sorting on `added` is that new items APPEND rather than landing in
+   * the middle and shifting everything after them. For a picked list the date
+   * that behaves that way is the date it was picked, not the date the shop
+   * first stocked it: starring an old product would file it halfway up a feed
+   * Pinterest has already read. `pickedIds()` has already sorted it.
+   */
+  const withImages = picks.filter((p) => imageUrl(p))
+  const items = isPicks
+    ? withImages
+    : withImages.sort((x, y) => {
+        const a = Date.parse(x.added || '') || 0
+        const c = Date.parse(y.added || '') || 0
+        return a - c || (x.id < y.id ? -1 : 1)
+      })
 
   const feedUrl = `${SITE_URL}/feeds/${feed.slug}.xml`
   const pageUrl = feed.pageUrl

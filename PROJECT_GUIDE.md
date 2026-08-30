@@ -800,6 +800,42 @@ and public; ten minutes reading the XML is cheaper than deleting Pins later.
 Pinterest caps at 200 Pins/day across the account, and the seven feeds are ~280 items, so
 connect two or three at a time rather than all of them at once.
 
+### `/feeds/ada-picks.xml`, and the fallback that had to go first
+
+The picks rail is the only list on this site chosen by a person one product at a time, and
+it had no way of reaching Pinterest at all. It does now, at `/feeds/ada-picks.xml`, read
+straight from `store_picks` and hydrated against the live catalogue.
+
+**Two rules it breaks on purpose, and both are the rule applied properly.**
+
+It **fails CLOSED** where `excludedIds()` fails open. An unreachable exclusions table means
+publishing something that should have been hidden, so that one stays open to keep the build
+alive; an unreachable picks table means publishing nothing, which is just an empty feed.
+Inventing content is the one thing a curated list must never do.
+
+It is **not sorted by `added`**. The point of that sort is that new items APPEND rather than
+landing mid-feed and shifting everything Pinterest has already read. For a picked list the
+date that behaves that way is the date it was PICKED: starring an old product would file it
+halfway up. It publishes only products still in the catalogue, because a pick whose product
+has left the shop is a Pin at a dead page.
+
+No `catLead`, no `pinTags` — same reasoning as the Christmas season. The board holds every
+category at once, so the product's own tags are the accurate ones under `#KawaiiFinds`.
+
+**`DEFAULT_ADA_PICKS` is gone, and it had to go before this shipped.** Four products written
+into `lib/data.ts` served whenever the table was empty OR unreachable. That was the right
+trade when the table was new; the table now holds nineteen real picks, so the fallback could
+only fire on a database failure, and what it would then publish to Pinterest is four
+products nobody chose, over our own account, captioned as the curator's picks. It also meant
+Ada could never curate the rail down to nothing. `AdaPicksRail` already had an empty state.
+
+**Reading the feed first caught what unstarring fixes.** A doll desk-and-chair set would be
+the board's first Pin ever (feeds are oldest-first, so a weak pick at the bottom of the list
+is the one Pinterest sees first); a Russ Berrie blankie carries "(Discontinued by
+Manufacturer)" into the Pin title; a paddling pool and a 108-character puzzle table are on a
+board about kawaii. All four are curation, not code: unstarring in Ada Mode fixes the rail
+and the feed together, within the 6h revalidate.
+
 ---
 
 ## 4f-b. Kawaii Katz Goes Decora: a second set of boards over the same shelf

@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { storePicks } from '@/lib/db/schema'
 import { ADA_COOKIE, verifyToken } from '@/lib/ada-auth'
-import { DEFAULT_ADA_PICKS, type AdaPick } from '@/lib/data'
+import { type AdaPick } from '@/lib/data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -81,25 +81,31 @@ function toPick(r: typeof storePicks.$inferSelect): AdaPick {
 /**
  * GET — public. The rail every visitor sees.
  *
- * An EMPTY table serves DEFAULT_ADA_PICKS rather than an empty rail, and that
- * is a deliberate trade with a visible edge: it means the very first deploy,
- * and any environment with no DATABASE_URL, still shows the curated six instead
- * of a blank strip where the editorial voice of the site is supposed to be.
+ * AN EMPTY TABLE NOW SERVES AN EMPTY RAIL, and the hardcoded fallback is gone.
  *
- * The cost is that Ada cannot curate the rail down to nothing — unstarring the
- * last pick reverts to the defaults rather than emptying it. That is the right
- * way round for a rail whose whole job is to never be empty, but it is
- * surprising if you do not know, so: now you know.
+ * It used to serve DEFAULT_ADA_PICKS, four products written into lib/data.ts,
+ * on the reasoning that a blank strip where the editorial voice of the site
+ * lives is worse than a stale one. That was the right trade when the table was
+ * new and empty. It is the wrong one now: the table holds twenty real picks, so
+ * the fallback could only ever fire on a database failure, and what it would
+ * show then is four products nobody chose, presented as the curator's picks.
+ * The rail's whole proposition is that a person chose these.
+ *
+ * It also had a cost that outlived its usefulness: Ada could not curate the
+ * rail down to nothing, because unstarring the last pick reverted to the
+ * defaults instead of emptying it.
+ *
+ * AdaPicksRail already renders an empty state, so this degrades to "nothing is
+ * picked right now" rather than to a lie.
  */
 export async function GET() {
   try {
     await ensureTable()
     const rows = await db.select().from(storePicks).orderBy(desc(storePicks.pickedAt))
-    if (!rows.length) return noStore({ picks: DEFAULT_ADA_PICKS, source: 'default' })
     return noStore({ picks: rows.map(toPick), source: 'db' })
   } catch (err) {
     console.log('[picks] GET error:', (err as Error).message)
-    return noStore({ picks: DEFAULT_ADA_PICKS, source: 'default' })
+    return noStore({ picks: [] as AdaPick[], source: 'unavailable' })
   }
 }
 
