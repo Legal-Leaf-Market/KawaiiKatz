@@ -420,6 +420,33 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Third AWIN partner, and like BRKOX and MamaRaya they approached us
+  // (approved 2026-08-30). GiftLAB sell personalised photo gifts: custom face
+  // socks, photo blankets and tapestries, printed mugs and calendars. AWIN
+  // advertiser 95201, ShopWindow reporting 2,426 products, 10-15% commission
+  // on a 30-day cookie.
+  //
+  // PENDING BECAUSE NOBODY HAS READ THE FEED, which is the whole of §7's rule
+  // and the reason it exists. Two things about this one are unsettled:
+  //
+  //   1. It may not be Shopify at all. Their /collections/<handle> URLs are the
+  //      Shopify pattern, which is encouraging, but this site reads
+  //      products.json and nothing else, and a row that returns zero products
+  //      forever is the Tokyo Tiger failure by construction. The probe settles
+  //      it. If it is not Shopify, the AWIN ShopWindow feed is a real second
+  //      path precisely because we are already on their network — see
+  //      lib/partners.ts on merchants that need an ingest path of their own.
+  //
+  //   2. Whether personalised photo gifts belong here at all is a judgement
+  //      nobody has made yet, and the histogram will not make it. "Custom face
+  //      socks" is a different shelf from a kawaii plushie, and §4e's own rule
+  //      is that a guide which gets pinned is the public face of the brand.
+  //      Worth reading the category split before deciding how they surface.
+  //
+  // commissionPct stays 0 until the rate is confirmed in the dashboard rather
+  // than read off a programme description, the same as MamaRaya and BRKOX.
+  { vendor: 'GiftLAB', domain: 'https://www.giftlab.com', prefix: 'glab', affiliateParam: '', network: 'awin', awinMerchantId: '95201', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // Second AWIN partner, and like BRKOX they came to us (2026-08-24).
   // Personalised baby and nursery goods: custom cotton-rope baskets with a
   // name on them, newborn and baby-shower gifts, kids' backpacks and lunch
