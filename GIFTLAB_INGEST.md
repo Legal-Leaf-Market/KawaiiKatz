@@ -24,8 +24,25 @@ Two steps. Everything in section 3 is blocked until step A is done.
 
 ### A. Get the feed URL
 
+**Already established, 2026-08-30, from the Create-a-Feed advertiser list:**
+
+| Field | Value |
+|---|---|
+| Advertiser | Giftlab |
+| Advertiser ID | 95201 |
+| **Datafeed ID (`fid`)** | **105668** |
+| Datafeed Format | **Awin** (the standard layout, not the Google "Enhanced" one) |
+| Products | 2,426 |
+| Last update | 2026-05-15 |
+
+The `sftp://datafeeds.shareasale.com/Awin/115671/feed.zip` string shown in that table
+is AWIN's **Datafeed Name**, which is where they stage the file. It is not a download
+URL, it carries no credentials, and nothing in this stack can speak SFTP. Ignore it.
+
+**What is still needed is the last step of Create-a-Feed:**
+
 1. AWIN → **Toolbox → Product Feeds → Create-a-Feed**
-2. Select advertiser **Giftlab (95201)**
+2. Tick **Giftlab (95201)**, datafeed 105668. Continue.
 3. On the column selection page, tick exactly these:
 
    ```
@@ -36,7 +53,13 @@ Two steps. Everything in section 3 is blocked until step A is done.
    ```
 
 4. Format **CSV**, delimiter **comma**, compression **gzip** if offered
-5. Copy the generated download URL
+5. Copy the **generated download URL** on the final screen. That is the artefact this
+   whole task is waiting on: it is an `https://productdata.awin.com/...` URL with the
+   publisher's API key embedded in the path.
+
+**The last step is the one that keeps being missed.** Selecting the advertiser only
+identifies the feed; the download URL is produced at the end of the wizard, and without
+it there is no way to fetch anything.
 
 The URL contains an API key. **Do not paste it into a chat and do not commit it.**
 
@@ -55,12 +78,12 @@ differs from the list above.
 
 ### C. One thing to check while you are in there
 
-The SFTP path you found was `sftp://datafeeds.shareasale.com/Awin/115671/feed.zip`.
-115671 is neither GiftLAB's advertiser id (95201) nor your publisher id (3022399), so it
-is probably your ShareASale account id, and an account-level `feed.zip` is usually **every
-merchant you have joined**, not just GiftLAB. If Create-a-Feed offers a combined feed
-across advertisers, say so: the same reader would then cover MamaRaya and BRKOX too and
-could replace scraping them with a source the merchant maintains.
+115671 in the staging path is neither GiftLAB's advertiser id (95201) nor the publisher id
+(3022399), so it is most likely an account-level directory, and an account-level
+`feed.zip` would be **every merchant joined**, not just GiftLAB. Create-a-Feed can select
+several advertisers into one download. If MamaRaya and BRKOX can be ticked alongside
+GiftLAB, do it: the same reader would then cover all three, and for MamaRaya and BRKOX it
+would replace scraping with a source the merchant maintains.
 
 ---
 
@@ -237,7 +260,7 @@ From PROJECT_GUIDE section 7, all of which this task can trip over:
 
 ## 7. Definition of done
 
-- [ ] `AWIN_FEED_GIFTLAB` set in Vercel, production and preview
+- [ ] `AWIN_FEED_GIFTLAB` set in Vercel, production and preview (feed 105668)
 - [ ] `lib/awin-feed.ts` reads, parses and maps the feed
 - [ ] `aw_deep_link` is not double-wrapped by `affiliateUrl()`
 - [ ] Cache key bumped to `v8` in the same commit as the mapping change
