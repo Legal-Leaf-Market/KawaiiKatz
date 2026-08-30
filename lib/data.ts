@@ -604,6 +604,56 @@ export const VENDORS: VendorConfig[] = [
     ],
   },
 
+  // Third AWIN partner (approved 2026-08-30). Personalised photo gifts: custom
+  // face socks and aprons, photo AirPod cases, printed blankets and puzzles.
+  //
+  // ON ITS OWN PAGE, AND THAT IS THE WHOLE REASON IT IS HERE AT ALL.
+  //
+  // The feed was read in full before this row existed, and on kawaii signal it
+  // fails outright: of 2,387 mapped products, ZERO contain "kawaii", zero
+  // "plush", zero "Sanrio", and 31 contain "cute". 699 land in `other` because
+  // categorize() has no rule for personalised photo gifts. Dropped into the
+  // main grid it would make a third of the catalogue not-kawaii.
+  //
+  // So it does not go in the main grid. It gets a showcase, for exactly the
+  // reason BRKOX has one: a real partner whose stock is a different shape from
+  // the shelf, given a room of its own rather than scattered through a grid of
+  // plushies where it would help nobody. BRKOX is currently the best-performing
+  // thing this site puts on Pinterest, which is the evidence that the shape
+  // works.
+  //
+  // It cannot be trimmed with `include`: product_type is EMPTY on all 2,426
+  // feed rows (§4), so an allow-list can reach none of them.
+  //
+  // STILL `pending` UNTIL THE FEED ACTUALLY FETCHES FROM A SERVER. It shipped
+  // once already on 2026-08-30 and produced `fetched: 0`, because the URLs
+  // supplied were ui.awin.com/productdata-darwin-download/..., and ui.awin.com
+  // is the logged-in dashboard. The API host is productdata.awin.com. The
+  // reader itself is proven: handed the real 2,426-row file it parsed every row
+  // and mapped 2,387. Only the URL is unresolved.
+  {
+    vendor: 'GiftLAB',
+    domain: 'https://www.giftlab.com',
+    prefix: 'glab',
+    affiliateParam: '',
+    network: 'awin',
+    awinMerchantId: '95201',
+    commissionPct: 0,
+    couponCode: '',
+    couponPct: 0,
+    pending: true,
+    showcase: {
+      slug: 'giftlab',
+      emoji: '🎁',
+      tagline: 'Put a face on it: personalised photo gifts, printed to order',
+      intro:
+        'GiftLAB print your photos onto things people actually use. Custom face socks and aprons, ' +
+        'photo AirPod cases, printed blankets, puzzles and keyrings. Not kawaii, and not pretending ' +
+        'to be, which is why it has a room of its own: this is the shelf for the gift that only ' +
+        'works because it is unmistakably about one person.',
+    },
+  },
+
   // Second AWIN partner, and like BRKOX they came to us (2026-08-24).
   // Personalised baby and nursery goods: custom cotton-rope baskets with a
   // name on them, newborn and baby-shower gifts, kids' backpacks and lunch
