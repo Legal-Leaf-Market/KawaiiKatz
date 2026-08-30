@@ -22,9 +22,15 @@ import { useCallback, useEffect, useState } from 'react'
  * THE CEILING ON EVERY NUMBER
  *
  * We never take payment, so nothing here is sales. The furthest we can see is
- * the moment someone leaves for a vendor. "Popular" means most clicked on this
- * site, and the banner says so, because a dashboard that lets its reader assume
+ * the moment someone reaches a shop. "Popular" means most clicked on this site,
+ * and the banner says so, because a dashboard that lets its reader assume
  * otherwise is worse than no dashboard.
+ *
+ * That ceiling is a limit on what we KNOW, not a limit on what is good. An
+ * outbound click is the only event on this site that can earn anything, so it
+ * is the goal of every funnel here and is drawn as one. The page previously
+ * annotated it "lost N here" in alarm pink, which read as attrition and had it
+ * exactly backwards.
  */
 
 const INK = '#4f4550'
@@ -32,6 +38,16 @@ const MUTED = '#9a8fa3'
 const LINE = '#ffe6d9'
 /** The one accent. Every bar on the page is this colour. */
 const BAR = '#6495ED'
+/**
+ * Used in exactly one place: the note under a funnel's goal step.
+ *
+ * It is not a second series and does not break the one-hue rule above, because
+ * it colours a sentence rather than a mark. The reason it exists is that the
+ * page used to print "lost N here" in alarm pink under "Left for a vendor",
+ * which read as a leak. An outbound click is the only thing on this site that
+ * can earn anything. It is the goal, and it should look like one.
+ */
+const WIN = '#2e8b6b'
 
 type Stats = {
   days: number
@@ -45,7 +61,7 @@ type Stats = {
   zeroSearches: { term: string; count: number }[]
   disliked: { productId: string; vendor: string; downs: number }[]
   daily: { day: string; sessions: number; clicks: number }[]
-  funnels: { key: string; title: string; note: string; steps: { label: string; sessions: number }[] }[]
+  funnels: { key: string; title: string; note: string; steps: { label: string; sessions: number; goal?: boolean }[] }[]
 }
 
 const RANGES = [
@@ -180,8 +196,10 @@ export default function AdminDashboard() {
       <p className="text-[12.5px] font-semibold leading-relaxed max-w-[75ch] bg-[#f4efff] border-2 border-dashed rounded-[14px] px-3.5 py-2.5"
          style={{ color: INK, borderColor: '#b79cff' }}>
         These are <strong>our clicks, not vendor sales.</strong> We never take payment, so the furthest
-        thing measurable is the moment someone leaves for a shop. Read every ranking as most clicked
-        here, never as most bought. Sessions are per browser tab, so one person over two visits counts twice.
+        thing measurable is the moment someone reaches a shop. That moment is the goal rather than a
+        leak: it is the only thing here that can earn. Whether any of them then bought is in the
+        network dashboard and never in this one, so read every ranking as most clicked rather than
+        most bought. Sessions are per browser tab, so one person over two visits counts twice.
       </p>
 
       {err && err !== 'unauthorized' && (
@@ -192,14 +210,16 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Tile label="Sessions" value={t.sessions.toLocaleString()} />
           <Tile label="Page views" value={t.views.toLocaleString()} />
-          <Tile label="Clicks out" value={t.outbound.toLocaleString()} sub="to a vendor" />
-          <Tile label="Click rate" value={ctr} sub="sessions that left" />
+          <Tile label="Clicks out" value={t.outbound.toLocaleString()} sub="handed to a shop" />
+          <Tile label="Click rate" value={ctr} sub="sessions that reached one" />
           <Tile label="Added to cart" value={t.carted.toLocaleString()} />
           <Tile label="Comments" value={t.comments.toLocaleString()} />
         </div>
       )}
 
-      {/* Workflows. This is the "where do people give up" half of the page. */}
+      {/* Workflows: how far a session gets, and where the rest stop.
+          A step marked `goal` is the point of the funnel rather than another
+          rung on it, and is annotated as a win rather than as attrition. */}
       {data && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {data.funnels.map((f) => {
@@ -214,15 +234,26 @@ export default function AdminDashboard() {
                     const drop = prev && prev > 0 ? prev - s.sessions : 0
                     return (
                       <div key={s.label}>
+                        {/* ABOVE the bar, not below it. The gap belongs between
+                            two steps, and printing it underneath made it read as
+                            a property of the step it sits under: the line under
+                            "Left for a vendor" looked like a count of people
+                            lost BY leaving, when it is the count that never got
+                            there. */}
+                        {prev !== null && drop > 0 && (
+                          <div className="text-[11.5px] font-bold pl-[46%] ml-3 mt-[2px] mb-[1px]" style={{ color: MUTED }}>
+                            {drop.toLocaleString()} did not get this far
+                          </div>
+                        )}
                         <Bar
                           label={s.label}
                           value={s.sessions}
                           max={top}
                           note={i > 0 ? pct(s.sessions, top) : undefined}
                         />
-                        {prev !== null && drop > 0 && (
-                          <div className="text-[11.5px] font-bold pl-[46%] ml-3 -mt-[3px] mb-[3px]" style={{ color: '#e0227a' }}>
-                            lost {drop.toLocaleString()} here
+                        {s.goal && s.sessions > 0 && (
+                          <div className="text-[11.5px] font-bold pl-[46%] ml-3 -mt-[3px] mb-[3px]" style={{ color: WIN }}>
+                            handed to a shop, so every one of these can earn
                           </div>
                         )}
                       </div>
@@ -254,7 +285,7 @@ export default function AdminDashboard() {
           </Panel>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel title="Vendors" blurb="Which shops people actually leave for.">
+            <Panel title="Vendors" blurb="Which shops we actually send people to.">
               {data.topVendors.length === 0 ? <Empty what="vendor activity" /> : data.topVendors.map((v) => (
                 <Bar key={v.vendor} label={v.vendor} value={v.clicks} max={data.topVendors[0].clicks || 1} note={`/ ${v.views}v`} />
               ))}

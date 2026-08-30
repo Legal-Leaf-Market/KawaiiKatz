@@ -223,11 +223,19 @@ export async function GET(req: NextRequest) {
         {
           key: 'browse',
           title: 'Browse to vendor',
-          note: 'Coverage, not a strict pipeline: a visitor can click through from the home grid without opening a product page.',
+          note:
+            'Coverage, not a strict pipeline: a visitor can click through from the home grid without ' +
+            'opening a product page. The last step is the goal. Whether any of them bought is only ' +
+            'visible in the network dashboard, never here.',
           steps: [
             { label: 'Visited', sessions: sAny },
             { label: 'Opened a product page', sessions: sProdView },
-            { label: 'Left for a vendor', sessions: sOut },
+            // `goal` marks the step that is the POINT of the funnel rather than
+            // another rung on it. Without it the dashboard drew a drop-off note
+            // under this bar in alarm pink and called it "lost", which is
+            // exactly backwards: a session that leaves for a shop is the one
+            // that can earn. See the note in AdminDashboard.tsx.
+            { label: 'Reached a shop', sessions: sOut, goal: true },
           ],
         },
         {
@@ -237,7 +245,7 @@ export async function GET(req: NextRequest) {
           steps: [
             { label: 'Added to cart', sessions: sCart },
             { label: 'Opened the cart', sessions: sCartOpen },
-            { label: 'Tapped check out', sessions: sCheckout },
+            { label: 'Tapped check out', sessions: sCheckout, goal: true },
           ],
         },
         {
