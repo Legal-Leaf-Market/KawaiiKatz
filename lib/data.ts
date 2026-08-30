@@ -443,6 +443,35 @@ export const VENDORS: VendorConfig[] = [
   // rather than the category split, for the reason above.
   { vendor: 'Kawaii Fashion Store', domain: 'https://kawaiifashionstore.com', prefix: 'kfs', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
+  // Kawaii Unicorn. Joined GoAffPro 2026-08-30, and the tracking value is REAL:
+  // Jacob's own link is https://kawaii-unicorn.com/?ref=kawaiikatz.
+  //
+  // Still `pending: true`, and §7 is why: clearing the flag needs BOTH halves,
+  // a tracking value AND a feed somebody has read. This has the first. The
+  // second cannot be done from a Claude Code container - the proxy refuses
+  // merchant hosts - so it goes through §4's build-log probe recipe, and the
+  // flag comes off in the commit that reads the numbers.
+  //
+  // The number to read first is the kid-safety drop count, not the category
+  // split. This came off the decora shortlist, and §4 records what that filter
+  // does to a decora wardrobe: `pleated skirt`, `thigh high`, `lace up`,
+  // `chiffon` and `satin` are all in CUT_PHRASES and are also the plain
+  // vocabulary of the clothes we signed them for.
+  { vendor: 'Kawaii Unicorn', domain: 'https://kawaii-unicorn.com', prefix: 'kuni', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+
+  // KawaiiMoriStore. Joined GoAffPro the same sitting, same real tracking value
+  // (https://shop.kawaiimoristore.com/?ref=kawaiikatz). Same pending rule.
+  //
+  // NOTE the `shop.` subdomain: that is where its storefront lives, so it is
+  // where products.json must be read from, and the apex would answer for a
+  // different site. §4c's lesson about reading the response body rather than
+  // the status applies here more than usual.
+  { vendor: 'KawaiiMoriStore', domain: 'https://shop.kawaiimoristore.com', prefix: 'kmori', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+
+  // Kawaii mood. Third of the same sitting, same real tracking value
+  // (https://kawaiimood.com/?ref=kawaiikatz). Same pending rule.
+  { vendor: 'Kawaii mood', domain: 'https://kawaiimood.com', prefix: 'kmood', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+
   // Fifth of the batch (2026-08-30), and the one whose name promises the best
   // fit of all of them. Which is worth being slightly suspicious of.
   //

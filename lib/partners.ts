@@ -114,6 +114,14 @@ export const DECORA_SEARCH_NOTE =
   'GoAffPro has the decora shelf; AWIN has none (0 kawaii, 0 harajuku, 0 j-fashion ' +
   'across 20,000 advertisers, searched 2026-08-30). Do not re-run the AWIN hunt.'
 
+/*
+ * Kawaii Unicorn, KawaiiMoriStore and Kawaii mood moved OUT of this table on
+ * 2026-08-30: Jacob joined its
+ * Jacob joined all three GoAffPro programmes and every tracking link came back
+ * real, so they are rows in VENDORS now (pending, awaiting a feed read) rather
+ * than leads. A merchant belongs in one place or the other, never both, or the next
+ * person chasing this list re-applies to a shop we already have.
+ */
 export const PARTNER_PROSPECTS: PartnerProspect[] = [
   /* ---- The decora shortlist, GoAffPro, 2026-08-30. Unprobed. ---- */
   {
@@ -132,33 +140,6 @@ export const PARTNER_PROSPECTS: PartnerProspect[] = [
     rate: '10%',
     cookie: 'unstated',
     fit: 'Harajuku by name on its own domain, which is a better sign of a real shop than a myshopify subdomain.',
-    blocker: 'Unprobed.',
-  },
-  {
-    merchant: 'Kawaii Unicorn',
-    domain: 'https://kawaii-unicorn.com',
-    network: 'goaffpro',
-    rate: '15%',
-    cookie: 'unstated',
-    fit: 'Highest rate of the kawaii cluster. Own domain.',
-    blocker: 'Unprobed, and the name suggests general kawaii rather than decora, so it may be a main-grid vendor rather than a /decora source.',
-  },
-  {
-    merchant: 'KawaiiMoriStore',
-    domain: 'https://shop.kawaiimoristore.com',
-    network: 'goaffpro',
-    rate: '10%',
-    cookie: 'unstated',
-    fit: 'Kawaii on its own domain.',
-    blocker: 'Unprobed.',
-  },
-  {
-    merchant: 'Kawaii mood',
-    domain: 'https://kawaiimood.com',
-    network: 'goaffpro',
-    rate: '10%',
-    cookie: 'unstated',
-    fit: 'Kawaii on its own domain.',
     blocker: 'Unprobed.',
   },
   {
