@@ -420,6 +420,29 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // GoAffPro, and Jacob believes the approval landed without him noticing
+  // (surfaced 2026-08-30). GoAffPro attributes on a query param like Refersion
+  // and Impact, so approval really is a one-line change here (§4c) and there is
+  // no awin1.com redirect to build.
+  //
+  // *** THE REF VALUE IS ALMOST CERTAINLY A TYPO AND MUST BE CONFIRMED. ***
+  //
+  // The link supplied was https://cozykawaii.shop/?ref=kawaittkatz — "kawaitt",
+  // with two t's, where all eight other tracked vendors use `ref=kawaiikatz`.
+  // It is recorded here EXACTLY as supplied rather than silently corrected,
+  // because only the GoAffPro dashboard knows which is real: if the affiliate
+  // account was created under a misspelled handle then kawaittkatz is the
+  // working code and "fixing" it would break the tracking.
+  //
+  // This is precisely the failure §4 warns about. A wrong ref is not an error
+  // anyone sees: the link resolves, the shopper buys, the merchant keeps the
+  // commission, and nothing on this site or in any dashboard says a word. The
+  // Sydney Sock Project has been live and untracked since 2026-08-11 for a
+  // related reason. Confirm the code in GoAffPro before `pending` comes off.
+  //
+  // The feed has not been read either, so both halves of §7's rule are open.
+  { vendor: 'CozyKawaii', domain: 'https://cozykawaii.shop', prefix: 'cozy', affiliateParam: 'ref=kawaittkatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // Third AWIN partner, and like BRKOX and MamaRaya they approached us
   // (approved 2026-08-30). GiftLAB sell personalised photo gifts: custom face
   // socks, photo blankets and tapestries, printed mugs and calendars. AWIN
