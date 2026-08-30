@@ -882,6 +882,24 @@ list for when the category has given up, and three nouns added to existing lists
 saying "a Harajuku top pick #DecoraKei" and the button saying "a kawaii apparel pick
 #KidsFashion", both landing on the same board.
 
+**Pin this shelf, and Pin this room.** Pinterest takes 24 to 48 hours to publish the first
+item from a new feed, so six boards created today sit empty today, which looks like a
+broken feed and is not one. `pinCollection()` seeds them by hand: one button per section on
+`/decora` plus one for the room, each pinning a COLLECTION url rather than a product, which
+is the Pin worth making anyway (§4e).
+
+`pinCollection()` is `pinGuide()` generalised, because the Decora shelves needed the same
+Pin at a different path with a different vocabulary and a second copy would have drifted.
+Two things it fixes that only showed up on reading the output: a board's lead hashtag is
+usually inside its own pool, so every caption said `#DecoraKei ... #DecoraKei`; and section
+blurbs are written as sentences, so the template's own full stop made "shipped by the
+shop..".
+
+**The shelf Pins use the lead product photo and the room Pin uses the mascot art**, and
+that is the split rather than a preference. Pinterest reads the image to decide a Pin's
+topic: somebody searching Harajuku fashion wants the clothes. The one Pin whose subject
+really is the room gets the cast.
+
 **Grumpy Bunny is still untracked.** All 437 of these Pins send traffic that earns nothing
 until `affiliateParam` is filled in. It is one string in `VENDORS` and needs no code change.
 

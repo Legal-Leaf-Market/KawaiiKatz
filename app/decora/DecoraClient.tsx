@@ -6,7 +6,15 @@ import Link from 'next/link'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
 import { useStore } from '@/lib/store'
-import { fillDecora, decoraPool, decoraBoardIndex, decoraPin, SHOPS } from '@/lib/decora'
+import {
+  fillDecora,
+  decoraPool,
+  decoraBoardIndex,
+  decoraPin,
+  decoraSectionPin,
+  SHOPS,
+} from '@/lib/decora'
+import { pinCollection } from '@/lib/pinterest'
 import { money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
 import ProductCard from '@/components/ProductCard'
@@ -299,6 +307,37 @@ export default function DecoraClient({
                 </p>
               )}
 
+              {/*
+                THE ROOM PIN, and the one place the mascot art is the right
+                cover image.
+
+                A shelf Pin shows the clothes, because that is what somebody
+                searching Harajuku fashion wants to see. This Pin's subject IS
+                the room, so the cast is the honest picture of it, and it is
+                original art rather than a photograph a hundred other affiliates
+                are also pinning.
+              */}
+              <button
+                type="button"
+                onClick={() => {
+                  logEvent('pin_click', { meta: 'decora-room' })
+                  pinCollection({
+                    path: '/decora',
+                    title: 'Kawaii Katz Goes Decora',
+                    tagline:
+                      'Harajuku and J-fashion picked one shelf at a time: tops, skirts, bags, clips and Sanrio',
+                    image: `${IMG}trio.webp`,
+                    tag: 'DecoraKei',
+                    tags: ['HarajukuFashion', 'JapaneseStreetFashion', 'JFashion', 'DecoraFashion', 'KawaiiKatz'],
+                    tail: 'Japanese street style, curated on Kawaii Katz.',
+                  })
+                }}
+                className="mt-5 inline-flex items-center gap-2 rounded-full border-[3px] border-[#e60023] bg-[#e60023] px-5 py-2.5 font-display text-[14px] font-extrabold text-white transition-opacity hover:opacity-90"
+                title="Pin the whole Decora room to one of your boards"
+              >
+                📌 Pin this room
+              </button>
+
               <div className="flex gap-2.5 flex-wrap mt-5">
                 {/* EACH POSE SITS ON A CHIP, and that is not decoration.
                     Katz is a black cat, so every pose of him is dark, and on a
@@ -482,9 +521,46 @@ export default function DecoraClient({
                     backgroundSize: 'auto 100%',
                   }}
                 />
-                <p className="text-[14.5px] font-semibold text-[#c9b4e8] mt-2 mb-5 max-w-[62ch] leading-relaxed">
+                <p className="text-[14.5px] font-semibold text-[#c9b4e8] mt-2 mb-3 max-w-[62ch] leading-relaxed">
                   {section.blurb}
                 </p>
+                {/*
+                  PIN THE SHELF, NOT THE PRODUCT.
+
+                  The Decora boards are fed by RSS, and Pinterest takes 24 to 48
+                  hours to publish the first item from a new feed, which leaves
+                  six boards sitting empty on the day they are created. This is
+                  what seeds them, and it is the Pin worth making anyway: a
+                  shelf URL holds dozens of products behind one click and keeps
+                  working, where a Pin per product made in volume is the shape
+                  their community guidelines limit (section 4e).
+
+                  The cover is the shelf's lead product rather than the room's
+                  artwork. Pinterest reads the image to decide what a Pin is
+                  about, and a photograph of the actual clothes is what somebody
+                  searching Harajuku fashion is looking for. The mascot art
+                  leads the room Pin at the top, where the subject really is the
+                  room.
+                */}
+                {products[0] && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logEvent('pin_click', { cat: section.key, meta: 'decora-shelf' })
+                      pinCollection({
+                        path: `/decora#${section.key}`,
+                        title: section.title,
+                        tagline: section.blurb,
+                        image: products[0].image,
+                        ...decoraSectionPin(section.key),
+                      })
+                    }}
+                    className="mb-5 inline-flex items-center gap-2 rounded-full border-[3px] border-[#e60023] bg-[#e60023] px-4 py-2 font-display text-[13px] font-extrabold text-white transition-opacity hover:opacity-90"
+                    title={`Pin the whole "${section.title}" shelf to one of your boards`}
+                  >
+                    📌 Pin this shelf
+                  </button>
+                )}
                 <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
                   {products.map((p) => (
                     <ProductCard key={p.id} product={p} pin={pinFor(p)} />

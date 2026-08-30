@@ -591,3 +591,33 @@ export function decoraBoardIndex(all: Product[]): Map<string, DecoraBoard> {
   }
   return out
 }
+
+/**
+ * The Pin vocabulary for one shelf on /decora.
+ *
+ * A shelf is not a board: there are seven sections on the page and six boards,
+ * because the boards are a Pinterest taxonomy and the page is a wardrobe. Where
+ * a board lands on this section, its voice is the right one and reusing it is
+ * what keeps a hand-made Pin and a feed-made Pin agreeing. Where none does (the
+ * "new in" shelf, which is a slice of everything), the room's own vocabulary is
+ * the honest answer rather than borrowing a board that only covers part of it.
+ */
+export function decoraSectionPin(sectionKey: string): {
+  tag: string
+  tags: string[]
+  tail: string
+} {
+  // "Room loot" has no board of its own: the desk board publishes the whole of
+  // ROOM_CATS, which is both shelves. Sending a room Pin out under the room's
+  // generic vocabulary while its stock is published under the desk board's is
+  // the two halves disagreeing again, one alias away from not doing so.
+  const key = sectionKey === 'room' ? 'desk' : sectionKey
+  const b = DECORA_BOARDS.find((x) => x.anchor === key)
+  return {
+    tag: b ? b.hashtag : 'DecoraKei',
+    tags: b
+      ? b.pinTags
+      : ['HarajukuFashion', 'JapaneseStreetFashion', 'JFashion', 'DecoraKei', 'KawaiiKatz'],
+    tail: DECORA_TAIL,
+  }
+}

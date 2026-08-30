@@ -311,15 +311,77 @@ export function pinProductPage(
 }
 
 /**
+ * Pins a COLLECTION rather than a product: a gift guide, or a shelf on /decora.
+ *
+ * This is the Pin that is actually worth making. A collection URL keeps working
+ * for a whole season, holds dozens of products behind one click, and is the
+ * shape of thing Pinterest search rewards, where a Pin per product made in
+ * volume is the shape its community guidelines limit.
+ *
+ * Generalised out of pinGuide, which was hardcoded to `/gifts/<slug>` and to
+ * the gift-guide hashtag set. The Decora shelves need the same Pin at a
+ * different path with a different vocabulary, and a second copy of this would
+ * have drifted the moment one of them was fixed.
+ *
+ * `image` may be a product's proxied `/api/img` path, a site-relative asset, or
+ * an absolute URL. The first is unproxied because robots.txt disallows `/api/`,
+ * so Pinterest is not permitted to fetch it. That trap has now been hit four
+ * times: the Pin button, og:image, the RSS feeds, and this.
+ */
+export function pinCollection(o: {
+  /** Site-relative destination, e.g. `/gifts/christmas` or `/decora#bags`. */
+  path: string
+  title: string
+  tagline: string
+  /** Leads the hashtags, overriding the month-based seasonalTag(). */
+  tag: string
+  /** The pool under it. Defaults to the gift-guide set. */
+  tags?: string[]
+  /** Closing sentence. Defaults to the storefront's. */
+  tail?: string
+  image: string
+  origin?: string
+}): void {
+  const base = o.origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  const raw = unproxied(o.image || '')
+  const abs = /^https?:\/\//i.test(raw) ? raw : raw.startsWith('/') ? `${base}${raw}` : ''
+  const media = abs ? '&media=' + encodeURIComponent(abs) : ''
+  const pool = o.tags?.length ? o.tags : ['KawaiiGifts', 'KawaiiKatz', 'GiftGuide']
+  // Deduped, because a board's lead hashtag is usually in its own pool too and
+  // "#DecoraKei ... #DecoraKei" in one caption reads as a script wrote it.
+  // pinHashtags() already does this for product Pins; this is the same rule.
+  const seen = new Set<string>()
+  const tags = ['#ad']
+  for (const t of [o.tag, ...pool]) {
+    const tok = tagToken(t)
+    if (!tok || seen.has(tok.toLowerCase())) continue
+    seen.add(tok.toLowerCase())
+    tags.push('#' + tok)
+  }
+  const tail = o.tail || 'Curated on Kawaii Katz.'
+  // A tagline that already ends in a full stop does not need the one the
+  // template adds. Section blurbs are written as sentences; guide taglines are
+  // not, and stripping one that is not there is a no-op.
+  const line = String(o.tagline || '').replace(/[.\s]+$/, '')
+  const desc = `${o.title}: ${line}. ${tail} ${tags.join(' ')}`.slice(0, 480)
+  const u =
+    'https://www.pinterest.com/pin/create/button/?url=' +
+    encodeURIComponent(`${base}${o.path}`) +
+    media +
+    '&description=' +
+    encodeURIComponent(desc)
+  try {
+    window.open(u, '_blank', 'noopener,width=760,height=680')
+  } catch {
+    window.location.href = u
+  }
+}
+
+/**
  * Pins a gift guide itself rather than one product in it.
  *
- * This is the Pin that is actually worth making. A guide URL keeps working for
- * a whole season, holds dozens of products behind one click, and is the shape
- * of thing Pinterest search rewards — where a Pin per product, made in volume,
- * is the shape its community guidelines limit.
- *
- * `cover` supplies the image and the price context; without a product there is
- * nothing for the composer to show.
+ * `cover` supplies the image; without a product there is nothing for the
+ * composer to show.
  */
 export function pinGuide(o: {
   slug: string
@@ -329,20 +391,12 @@ export function pinGuide(o: {
   cover: Product
   origin?: string
 }): void {
-  const base = o.origin || (typeof window !== 'undefined' ? window.location.origin : '')
-  const img = unproxied(o.cover.image || '')
-  const media = /^https?:\/\//i.test(img) ? '&media=' + encodeURIComponent(img) : ''
-  const tags = ['#ad', '#' + tagToken(o.tag), '#KawaiiGifts', '#KawaiiKatz', '#GiftGuide']
-  const desc = `${o.title}: ${o.tagline}. Curated on Kawaii Katz. ${tags.join(' ')}`.slice(0, 480)
-  const u =
-    'https://www.pinterest.com/pin/create/button/?url=' +
-    encodeURIComponent(`${base}/gifts/${o.slug}`) +
-    media +
-    '&description=' +
-    encodeURIComponent(desc)
-  try {
-    window.open(u, '_blank', 'noopener,width=760,height=680')
-  } catch {
-    window.location.href = u
-  }
+  pinCollection({
+    path: `/gifts/${o.slug}`,
+    title: o.title,
+    tagline: o.tagline,
+    tag: o.tag,
+    image: o.cover.image || '',
+    origin: o.origin,
+  })
 }
