@@ -18,7 +18,13 @@ import { MODEL_SCAN_CATS, adultApparelHit } from '@/lib/adult-apparel'
  */
 export const dynamic = 'force-static'
 
-const TARGETS = ['CozyKawaii', 'BerryKawaii', 'Tabletop Item Shop', 'Minecraft Plushies', 'Best of Kawaii']
+/**
+ * Only the ones still unread. CozyKawaii, BerryKawaii and Tabletop Item Shop
+ * were measured on c87802a and their results are recorded in lib/data.ts, so
+ * re-probing them only pushes the output of the vendors we still need off the
+ * top of the log window.
+ */
+const TARGETS = ['Minecraft Plushies', 'Best of Kawaii', 'Kawaii Fashion Store']
 const PER_PAGE = 250
 const MAX_PAGES = 5
 const UA = 'Mozilla/5.0'

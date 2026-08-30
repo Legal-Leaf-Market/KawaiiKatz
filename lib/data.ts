@@ -420,6 +420,22 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Sixth of the batch (2026-08-30). Apparel-led by name, which is the one
+  // category on this site with a filter in front of it: lib/adult-apparel.ts
+  // drops adult-model and suggestive-cut clothing, and §4 records that its
+  // CUT_PHRASES list is also, word for word, the vocabulary of a fairy-kei
+  // wardrobe. On a sample of twelve typical decora items, seven were dropped.
+  //
+  // So the number to read first for this vendor is not the category split but
+  // the kid-safety drop count. A high number is the filter working as written,
+  // not a bug, and the fix for a genuine false positive is a narrow KID_SAFE
+  // entry and never a loosened CUT_PHRASES (§7).
+  //
+  // If most of the shelf is women's fashion rather than kawaii accessories,
+  // that is a different question again: this site's apparel is a minority
+  // category and a clothing-led vendor changes what the grid looks like.
+  { vendor: 'Kawaii Fashion Store', domain: 'https://kawaiifashionstore.com', prefix: 'kfs', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // Fifth of the batch (2026-08-30), and the one whose name promises the best
   // fit of all of them. Which is worth being slightly suspicious of.
   //
@@ -485,6 +501,13 @@ export const VENDORS: VendorConfig[] = [
   // to the gaming site and not dilute this one. §4e's rule applies: a page that
   // gets pinned is the public face of the brand.
   //
+  // MEASURED 2026-08-30 (build log, §4): products.json answers HTTP 404 with
+  // {"errors":"Not Found"}. That is Shopify's own response for a store that
+  // does not exist at that subdomain, not a bot block and not a closed
+  // endpoint, so the handle is wrong or the shop is gone. There is nothing to
+  // evaluate and the fit question above was never reached. Ask the merchant for
+  // their real storefront URL before spending anything else on this.
+  //
   // Raw myshopify.com domain again, so the custom-domain note on BerryKawaii
   // below applies here too.
   { vendor: 'Tabletop Item Shop', domain: 'https://tabletop-itemshop.myshopify.com', prefix: 'ttis', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
@@ -507,8 +530,16 @@ export const VENDORS: VendorConfig[] = [
   // finished shop than the merchant actually runs. Squishy Bottle has the same
   // shape (stopshop9.myshopify.com) and nobody has ever checked.
   //
-  // pending until the feed is read. The ref is already plausible here, so this
-  // one may only be one half away from shipping.
+  // MEASURED 2026-08-30 (build log, §4): products.json answers HTTP 402 with
+  // {"errors":"Unavailable Shop"}. 402 Payment Required plus that body is
+  // Shopify's response for a frozen or paused store, so this shop is not
+  // trading. The affiliate approval may well be real; there is currently
+  // nothing behind it, and a live link would send shoppers to a dead
+  // storefront. Ask the merchant before anything else.
+  //
+  // The ref value looked right, which is worth noting: a plausible tracking
+  // code told us nothing about whether the shop was open. Both halves of §7's
+  // rule are separate checks for a reason.
   { vendor: 'BerryKawaii', domain: 'https://berrykawaiiuwu.myshopify.com', prefix: 'berry', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // GoAffPro, and Jacob believes the approval landed without him noticing
@@ -531,7 +562,38 @@ export const VENDORS: VendorConfig[] = [
   // Sydney Sock Project has been live and untracked since 2026-08-11 for a
   // related reason. Confirm the code in GoAffPro before `pending` comes off.
   //
-  // The feed has not been read either, so both halves of §7's rule are open.
+  // MEASURED 2026-08-30 (build log, §4). The feed reads: 719 products, 710
+  // survive mapping, 0 dropped by the adult filter, 616 of 710 kid-safe. Those
+  // numbers are healthy and they are not the story. THE NAMES ARE.
+  //
+  //   1. IT IS SUBSTANTIALLY A PET SHOP. Pet Beds (28), Pet Sweaters (11), Cat
+  //      Scratchers, Cat Trees & Towers, Harnesses, Bolster Beds, Pillow Beds,
+  //      Pet Mat, Floor Rug (23), Bath Mats, Slippers (24). And categorize()
+  //      files most of it as `plush`: "Kawaii Winter Warm Cushion Bed for Cats
+  //      & Puppies" comes back plush, at $73.50. That is precisely the defect
+  //      removed from the plushies board on this same day, and
+  //      PLUSH_NOT_A_TOY_TERMS would not catch these because they are worded
+  //      "Cushion Bed", not "pet bed". Taking this vendor re-opens a bug that
+  //      took a full pass to close.
+  //
+  //   2. THE STOCK IS OTHER PEOPLE'S CHARACTERS. Duolingo Owl, Snoopy tote and
+  //      shoulder bags, Rilakkuma, Hangyodon, SKZOO, "Love & Deepspace". No
+  //      dropshipper holds those four licences at once. Same concern as
+  //      Minecraft Plushies above, and it lands harder here because /learn
+  //      carries two articles teaching people to spot counterfeits.
+  //
+  //   3. THE PRICES ARE WRONG FOR THIS SHELF. A $73.50 pet bed, a $130 ride-on
+  //      car, and a $2,545.32 humanoid dance robot, against a catalogue median
+  //      nearer $25.
+  //
+  //   4. THE TITLES ARE THE DROPSHIP SIGNATURE. Every one is "Kawaii X - Soft
+  //      Stuffed Y", generated, em dash included.
+  //
+  // RECOMMENDATION: decline, or take an include list of the genuine plush types
+  // only ("Stuffed Animals", "Stuffed Animals (Giant)", "Stuffed Animals 1/2/3",
+  // "Plush Toy"), which is roughly 456 of 719 and still carries the licensing
+  // question. Do NOT paste the probe's suggested include list: it happily
+  // includes Pet Beds, Cat Trees, Floor Rug and Harnesses.
   { vendor: 'CozyKawaii', domain: 'https://cozykawaii.shop', prefix: 'cozy', affiliateParam: 'ref=kawaittkatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
 
   // Third AWIN partner, and like BRKOX and MamaRaya they approached us
