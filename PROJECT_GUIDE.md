@@ -1038,6 +1038,23 @@ randomly, or restoring it from storage, would be a hydration mismatch on a prere
 Reachable per shelf, measured 2026-08-30: new 96, fit 96, more 96, anime 89, room 49, bags
 45, desk 31. **502 tiles against 72.**
 
+**The server has to inline more than one page, and shipping it with one was a real bug.**
+Both controls only render when a shelf has more than one page behind it, and a shelf dealt
+from the ~76 products the first version inlined has exactly one. Measured on the live
+catalogue: at one page, **0 of 7 shelves showed a button**; at three, 7 of 7. So the buttons
+were absent from the served HTML and appeared a second later when the live catalogue landed,
+which reads to a visitor as them not existing. Three pages is the trade: 220 products and
+228KB, against 505 and 548KB for all eight, and §4b is explicit that putting the whole shelf
+in the document trades a fast background fetch for a slow first byte.
+
+**The card flip works here too, and did not until the same fix.** `ProductCard` has offered a
+flip side since the home grid: hover the photo and a cornflower-blue wash
+(`rgba(100,149,237,.44)`) reads "Flip for more gift options", and the back holds two picks
+with a shuffle between them. It renders only when `similarPool` has more than one product,
+and `/decora` never passed one, so the room silently had no flips. It now passes the ROOM's
+pool rather than the whole shop's: a Lolita JSK flipping over to a Plushible teddy would be
+the kawaii and decora sides blending on the one surface built to keep them apart.
+
 **`load_more` had to be added in two places.** `EventName` in `lib/site-events.ts` and the
 `ALLOWED` set in `app/api/events/route.ts`, which drops anything it does not recognise. The
 comment there says "must stay in step" and it means it: miss the second and the button works,

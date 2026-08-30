@@ -246,6 +246,12 @@ export default function DecoraClient({
       return { ...s, [key]: { ...cur, start: (cur.start + cur.count) % total } }
     })
   }
+  /**
+   * Also the flip side's "more like this" pool, and the ROOM's pool rather than
+   * the whole shop's on purpose. A Lolita JSK flipping over to reveal a
+   * Plushible teddy would be the kawaii and decora sides blending on the one
+   * surface built to keep them apart.
+   */
   const pool = useMemo(() => decoraPool(visible), [visible])
 
   /**
@@ -687,6 +693,7 @@ export default function DecoraClient({
                       key={p.id}
                       product={p}
                       pin={pinFor(p)}
+                      similarPool={pool}
                       isPicked={pickedIds.has(p.id)}
                       isExcluded={excludedIds.has(p.id)}
                       isAdaMode={state.adaMode}
@@ -791,6 +798,7 @@ export default function DecoraClient({
                         key={`edit-${p.id}`}
                         product={p}
                         pin={pinFor(p)}
+                        similarPool={pool}
                         isPicked={pickedIds.has(p.id)}
                         isExcluded={excludedIds.has(p.id)}
                         isAdaMode={state.adaMode}

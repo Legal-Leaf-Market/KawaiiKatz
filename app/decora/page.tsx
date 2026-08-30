@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getVendorCatalog } from '@/lib/catalog-source'
-import { SOURCES, decoraPool, fillDecora } from '@/lib/decora'
+import { SOURCES, decoraPool, fillDecoraPages } from '@/lib/decora'
 import { SITE_URL } from '@/lib/site'
 import { pageNode } from '@/lib/schema'
 import JsonLd from '@/components/JsonLd'
@@ -66,6 +66,9 @@ export const maxDuration = 60
  * nothing else moves.
  */
 
+/** Pages per shelf inlined into the HTML. See the note in Page(). */
+const FIRST_PAINT_PAGES = 3
+
 const TITLE = 'Kawaii Katz Goes Decora: Harajuku and J-fashion'
 const DESC =
   'Japanese street fashion, decora accessories and character collabs. Tops, skirts, bags, ' +
@@ -92,9 +95,26 @@ export default async function Page() {
   // request and it is not on the build's clock.
   const { products } = await getVendorCatalog(SOURCES)
   const pool = decoraPool(products)
-  const { sections, edit } = fillDecora(products)
+
+  /**
+   * FIRST PAINT CARRIES SEVERAL PAGES PER SHELF, NOT JUST THE FIRST.
+   *
+   * It carried one, and that quietly broke the two controls it was supposed to
+   * support. Shuffle and Load more only render when a shelf has more than one
+   * page behind it, and a shelf dealt from ~80 inlined products has exactly
+   * one. So the buttons were absent on the served HTML and appeared a second
+   * later when the live catalogue arrived, which reads as them not existing.
+   *
+   * Three pages is the trade. One is broken, all eight would serialise ~500
+   * products into the document, and section 4b is explicit about why that is
+   * the wrong direction: FIRST_PAINT_COUNT exists because ~1,600 products put
+   * 1.9MB in the HTML and traded a fast background fetch for a slow first byte.
+   * Three gives the controls something real to do on arrival and the live
+   * fetch then extends every shelf to its full depth.
+   */
+  const { sections, edit } = fillDecoraPages(products, FIRST_PAINT_PAGES)
   const seen = new Set<string>()
-  const initialProducts = [...sections.flatMap((s) => s.products), ...edit].filter((p) => {
+  const initialProducts = [...sections.flatMap((s) => s.pages.flat()), ...edit].filter((p) => {
     if (seen.has(p.id)) return false
     seen.add(p.id)
     return true
