@@ -224,3 +224,72 @@ a { color: inherit; text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .kk-view-pulse { animation: none !important; }
 }
+
+/* ============================================================
+   THE DECORA ROOM: charms falling, and a cast down the sides.
+   ------------------------------------------------------------
+   Ported in spirit from Nicotia Market's leafFall, which is the
+   animation Jacob asked for by name. Same shape: one keyframe,
+   per-element --drift and --spin so nothing moves in lockstep,
+   and the duration as a variable so a heavy element can fall
+   slower than a light one.
+
+   The page's own rule applies here too - the ChatGPT artwork
+   sits on the TOP layer. These are drawn above the gradients
+   and below the product cards, never over them.
+
+   Everything here is decorative: pointer-events:none so it can
+   never eat a click on a tile, and aria-hidden in the markup so
+   a screen reader is not read a list of bows.
+   ============================================================ */
+
+@keyframes kkCharmFall {
+  0%   { transform: translate(0, -12vh) rotate(0deg); }
+  25%  { transform: translate(calc(var(--drift, 60px) * .4), 22vh) rotate(calc(var(--spin, 240deg) * .3)); }
+  50%  { transform: translate(calc(var(--drift, 60px) * -.3), 50vh) rotate(calc(var(--spin, 240deg) * .55)); }
+  75%  { transform: translate(calc(var(--drift, 60px) * .75), 78vh) rotate(calc(var(--spin, 240deg) * .8)); }
+  100% { transform: translate(var(--drift, 60px), 112vh) rotate(var(--spin, 240deg)); }
+}
+
+/* A slow hover for the cast in the side rails. Deliberately NOT a
+   fall: the characters are watching the shelf, not dropping past
+   it, and a drifting mascot reads as a bug rather than as motion. */
+@keyframes kkBob {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50%      { transform: translateY(-14px) rotate(calc(var(--tilt, 0deg) * -1)); }
+}
+
+/* The sparkle behind a rail character, so the corner has depth
+   without another PNG. */
+@keyframes kkTwinkle {
+  0%, 100% { opacity: .25; transform: scale(.9); }
+  50%      { opacity: .7;  transform: scale(1.06); }
+}
+
+.kk-charm {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  will-change: transform;
+  animation: kkCharmFall var(--dur, 26s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.kk-bob {
+  animation: kkBob var(--dur, 7s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  will-change: transform;
+}
+
+.kk-twinkle {
+  animation: kkTwinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kk-charm, .kk-bob, .kk-twinkle { animation: none; }
+  /* Falling charms are positioned by their animation, so with the
+     animation off they would all pile at the top. Hide them and
+     keep the static rail cast, which still decorates the page. */
+  .kk-charm { display: none; }
+}

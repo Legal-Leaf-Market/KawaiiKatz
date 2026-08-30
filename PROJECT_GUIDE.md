@@ -980,6 +980,37 @@ that is the split rather than a preference. Pinterest reads the image to decide 
 topic: somebody searching Harajuku fashion wants the clothes. The one Pin whose subject
 really is the room gets the cast.
 
+### Charms falling, a cast down the sides, and why the scenes are blurred
+
+The page opened loud and went quiet: below the hero it was a grid with a pattern strip per
+heading, and by the shops it read as an ordinary catalogue. `components/DecoraDecor.tsx` is
+the fix, in two layers that do different jobs.
+
+**Falling charms** drift the whole height of the page, ported in spirit from Nicotia
+Market's `leafFall` (the animation Jacob asked for by name): one keyframe, per-element
+`--drift` / `--spin` / `--dur` so nothing moves in lockstep. Sixteen on desktop, eight on a
+phone, because sixteen bows across 390px is a screen full of bows with a shop behind it.
+
+**A rail cast** of sixteen poses sits in the outer margins and BOBS rather than falls. A
+mascot drifting past like litter reads as a bug; one leaning in from the edge reads as a
+mascot. `2xl` only, where the margin beside the 1180px shelf is genuinely empty, and `top`
+is a share of the document so a character belongs to a band of content.
+
+**`-z-10` was wrong and the symptom was silent.** It puts a child behind its own parent's
+background, and the page root paints a solid `#12071f`, so the first version rendered seven
+charms into a black hole: in the DOM, animating, invisible. They sit at `z-0` now with the
+header and main at `z-10`, so nothing ever falls across a product photograph. Everything is
+`pointer-events: none` and `aria-hidden` - this page has a Pin button, an exclude control
+and a cart on every tile, and decoration that eats one of those clicks is worse than none.
+
+**The scenes are blurred on purpose, because they are upscales.** `scene-street.webp` is
+900x551 and runs full-bleed; `scene-bedroom.webp` is 800x523 behind a full-width section. On
+any desktop both are stretched past native and no CSS puts the detail back. A half-sharp
+photo reads as a mistake, a deliberately blurred one reads as depth of field, and the sharp
+cutouts in front of it look sharper for it. Replace the treatment only if a wider source
+arrives. The pattern tiles are 180px wide and were tiled 1:1, which asks a 2x display to
+upscale every tile; tiling smaller than native is free sharpness.
+
 ### Ada Mode works on this page, and for a while it did not
 
 `/decora` rendered `ProductCard` with no curator props at all, so a product could be seen

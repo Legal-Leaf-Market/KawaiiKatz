@@ -21,6 +21,7 @@ import { logEvent } from '@/lib/site-events'
 import ProductCard from '@/components/ProductCard'
 import AdaLoginModal, { ADA_SECRET_CODE } from '@/components/AdaLoginModal'
 import CartDrawer from '@/components/CartDrawer'
+import DecoraDecor from '@/components/DecoraDecor'
 import FloatingCart from '@/components/FloatingCart'
 import WishlistDrawer from '@/components/WishlistDrawer'
 
@@ -237,9 +238,10 @@ export default function DecoraClient({
   }, [pool])
 
   return (
-    <div className="min-h-screen bg-[#12071f] text-white">
+    <div className="relative min-h-screen bg-[#12071f] text-white">
+      <DecoraDecor />
       {/* ══════════════════════════════════════════════════ HERO */}
-      <header className="relative overflow-hidden border-b-[5px] border-[#ff2d92]">
+      <header className="relative z-10 overflow-hidden border-b-[5px] border-[#ff2d92]">
         {/* Checkerboard + glow, both pure CSS. The brief lists gingham and
             checkerboard as motifs; baking them into a raster would cost a
             megabyte and would not scale to a phone. */}
@@ -459,7 +461,7 @@ export default function DecoraClient({
       />
 
       {/* ══════════════════════════════════════════════════ SECTIONS */}
-      <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-9">
+      <main className="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-6 py-9">
         {loading && !pool.length ? (
           <p className="text-[#b79cff] font-bold py-12 text-center">Opening the wardrobe...</p>
         ) : !pool.length ? (
@@ -549,7 +551,10 @@ export default function DecoraClient({
                     subject is a bedroom shelf gets to show the bedroom. */}
                 {section.key === 'room' && (
                   <div aria-hidden className="pointer-events-none absolute -inset-x-4 -top-4 bottom-0 -z-10 overflow-hidden rounded-[26px]">
-                    <Image src={`${IMG}scene-bedroom.webp`} alt="" fill sizes="100vw" className="object-cover opacity-[0.16]" />
+                    {/* Same as the street band: 800x523 behind a full-width
+                        section is an upscale, so it is blurred deliberately
+                        and kept at a wash. */}
+                    <Image src={`${IMG}scene-bedroom.webp`} alt="" fill sizes="100vw" className="scale-105 object-cover opacity-[0.16] blur-[2px]" />
                     <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(18,7,31,.4), #12071f 78%)' }} />
                   </div>
                 )}
@@ -664,7 +669,11 @@ export default function DecoraClient({
                   <div
                     aria-hidden
                     className="absolute inset-0 opacity-[0.12] bg-repeat"
-                    style={{ backgroundImage: `url(${IMG}pat-leopard.webp)`, backgroundSize: '180px auto' }}
+                    /* 110px rather than the source's 180px: the file is only
+                       180 wide, so tiling it 1:1 asks a 2x display to upscale
+                       every tile. Tiling it smaller than native is free
+                       sharpness. */
+                    style={{ backgroundImage: `url(${IMG}pat-leopard.webp)`, backgroundSize: '110px auto' }}
                   />
                   <Image
                     src={`${IMG}wreath-heart.webp`}
@@ -726,12 +735,18 @@ export default function DecoraClient({
             one part that must not look decorated. */}
         <section aria-hidden className="relative -mx-4 sm:-mx-6 mt-6 mb-6 overflow-hidden">
           <div className="relative h-[150px] sm:h-[230px]">
+            {/* SOFT ON PURPOSE. The source is 900x551 and this band is
+                full-bleed, so on any desktop it is upscaled and no CSS puts
+                the detail back. A half-sharp photo reads as a mistake; a
+                deliberately blurred one reads as depth of field, and the
+                sharp cutouts in front of it then look sharper by contrast.
+                Replace this treatment only if a wider source arrives. */}
             <Image
               src={`${IMG}scene-street.webp`}
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-center"
+              className="scale-110 object-cover object-center blur-[3px]"
             />
             {/* Fades into the page top and bottom so the band has no hard seam. */}
             <div
