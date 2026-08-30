@@ -906,6 +906,20 @@ of which apply here specifically:
 site's own mascots (`public/brand-cat.png` is the same cat), so seeing them in the margins
 of both rooms is the thing that ties the two together.
 
+**But the poses are split, and that split is the rule.** The asset sheet has two kinds:
+pandas with headphones, boba, a donut, a mug, Katz peeking out of a parcel; and cats and
+bunnies buried under hot-pink decora charms. The second kind is what `/decora` is for. One
+of them (Katz covered in charms) shipped in the top-left corner of the home page and Jacob
+called it in one line: too blinged out for this side. Same characters, same motion, and the
+styling is what tells you which room you are standing in.
+
+**The rail sits at `z-20`, ABOVE the content, which is the opposite of the confetti.** It
+was below, and this page's full-bleed section backgrounds painted straight over it, cutting
+a panda in half. Being on top costs nothing here because the rail only renders at `2xl`,
+where the margin beside the 1180px column is at least 178px and a 120px character pinned
+20px from the edge cannot reach the column. Asserted in a browser at 1900px: 0 of 8
+characters overlap the column.
+
 **Two wrappers on the home page and both are load-bearing.** The outer `relative` is what
 the rail positions against: it spans the document, so `top: 40%` means 40% of the page.
 Without it `absolute` resolves to the initial containing block, which is viewport-sized, and

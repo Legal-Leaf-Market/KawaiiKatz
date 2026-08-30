@@ -122,19 +122,26 @@ const CONFETTI: (Piece & {
 /**
  * The cast, from the decora pack, in the outer margins.
  *
+ * THE CLEAN POSES ONLY, and that is the whole selection rule. The sheet has two
+ * kinds: pandas with headphones, boba, a donut, a mug, Katz peeking out of a
+ * parcel - and bunnies and cats buried under hot-pink decora charms. The second
+ * kind is what /decora is for. One of them (Katz covered in charms) shipped in
+ * the top-left corner here and Jacob called it immediately: too blinged out for
+ * this side. The two rooms share the motion and the characters, not the styling.
+ *
  * `2xl` only, where the margin beside the 1180px column is genuinely empty, and
  * `top` is a share of the document so a character belongs to a band of content
  * rather than following the scroll. Same rules as the decora rail.
  */
 const RAIL = [
-  { src: 'st-katz.webp', w: 351, h: 320, side: 'left', top: '10%', size: 124, tilt: -6, dur: 8, delay: 0 },
-  { src: 'st-panda.webp', w: 320, h: 320, side: 'right', top: '20%', size: 118, tilt: 5, dur: 9, delay: -2 },
-  { src: 'st-donut.webp', w: 320, h: 320, side: 'left', top: '31%', size: 120, tilt: 6, dur: 7.5, delay: -5 },
-  { src: 'st-box.webp', w: 448, h: 320, side: 'right', top: '42%', size: 132, tilt: -4, dur: 8.5, delay: -1 },
-  { src: 'st-katzflower.webp', w: 353, h: 320, side: 'left', top: '53%', size: 126, tilt: -7, dur: 9.5, delay: -7 },
-  { src: 'st-p10.webp', w: 320, h: 320, side: 'right', top: '64%', size: 120, tilt: 6, dur: 8, delay: -3 },
-  { src: 'st-p3.webp', w: 329, h: 320, side: 'left', top: '75%', size: 124, tilt: 4, dur: 8.8, delay: -6 },
-  { src: 'st-panda.webp', w: 320, h: 320, side: 'right', top: '86%', size: 116, tilt: -5, dur: 7.8, delay: -4 },
+  { src: 'st-panda.webp', w: 320, h: 320, side: 'left', top: '10%', size: 124, tilt: -6, dur: 8, delay: 0 },
+  { src: 'st-p3.webp', w: 329, h: 320, side: 'right', top: '20%', size: 120, tilt: 5, dur: 9, delay: -2 },
+  { src: 'st-donut.webp', w: 320, h: 320, side: 'left', top: '31%', size: 122, tilt: 6, dur: 7.5, delay: -5 },
+  { src: 'st-box.webp', w: 448, h: 320, side: 'right', top: '42%', size: 134, tilt: -4, dur: 8.5, delay: -1 },
+  { src: 'st-p9.webp', w: 329, h: 320, side: 'left', top: '53%', size: 126, tilt: -7, dur: 9.5, delay: -7 },
+  { src: 'st-p6.webp', w: 250, h: 320, side: 'right', top: '64%', size: 108, tilt: 6, dur: 8, delay: -3 },
+  { src: 'st-p8.webp', w: 329, h: 320, side: 'left', top: '75%', size: 124, tilt: 4, dur: 8.8, delay: -6 },
+  { src: 'st-p5.webp', w: 338, h: 320, side: 'right', top: '86%', size: 120, tilt: -5, dur: 7.8, delay: -4 },
 ] as const
 
 export default function KawaiiConfetti() {
@@ -168,7 +175,15 @@ export default function KawaiiConfetti() {
         ))}
       </div>
 
-      <div aria-hidden className="pointer-events-none absolute inset-0 hidden 2xl:block">
+      {/*
+        z-20, ABOVE the content, which is the opposite of the confetti and is
+        deliberate. The rail sat below and the full-bleed section backgrounds on
+        this page painted straight over it, clipping a panda in half. It is only
+        rendered at 2xl, where the margin beside the 1180px column is at least
+        178px and a 120px character at 20px from the edge cannot reach the
+        column, so being on top costs nothing. pointer-events-none regardless.
+      */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-20 hidden 2xl:block">
         {RAIL.map((r, i) => (
           <div
             key={`${r.src}-${i}`}

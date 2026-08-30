@@ -74,26 +74,30 @@ const CHARMS = [
  * The cast, alternating sides down the page.
  *
  * `top` is a percentage of the page rather than the viewport, so a character
- * belongs to a band of content instead of following you down the screen. The
- * spares from the asset sheet finally get placed: the donut panda, Katz with
- * flowers, the sleeping bunny, the box peek.
+ * belongs to a band of content instead of following you down the screen.
+ *
+ * THE BEDAZZLED POSES LIVE HERE. The sheet splits cleanly in two: cats and
+ * bunnies buried in hot-pink decora charms, and pandas with headphones, boba
+ * and donuts. This room takes the first kind and the shop floor takes the
+ * second (components/KawaiiConfetti.tsx). Same characters, same motion, and the
+ * styling is what tells you which room you are standing in.
  */
 const RAIL = [
-  { src: 'st-panda.webp', w: 320, h: 320, side: 'left', top: '7%', size: 132, tilt: -6, dur: 8, delay: 0 },
+  { src: 'st-katz.webp', w: 351, h: 320, side: 'left', top: '7%', size: 132, tilt: -6, dur: 8, delay: 0 },
   { src: 'st-katzflower.webp', w: 353, h: 320, side: 'right', top: '13%', size: 138, tilt: 5, dur: 9, delay: -2 },
   { src: 'st-p2.webp', w: 318, h: 320, side: 'left', top: '20%', size: 126, tilt: 7, dur: 7.5, delay: -4 },
-  { src: 'st-donut.webp', w: 320, h: 320, side: 'right', top: '27%', size: 130, tilt: -5, dur: 8.5, delay: -1 },
+  { src: 'st-bunny.webp', w: 419, h: 320, side: 'right', top: '27%', size: 136, tilt: -5, dur: 8.5, delay: -1 },
   { src: 'st-p5.webp', w: 338, h: 320, side: 'left', top: '34%', size: 128, tilt: -7, dur: 9.5, delay: -6 },
-  { src: 'st-p8.webp', w: 329, h: 320, side: 'right', top: '40%', size: 134, tilt: 6, dur: 8, delay: -3 },
+  { src: 'st-bags.webp', w: 386, h: 320, side: 'right', top: '40%', size: 138, tilt: 6, dur: 8, delay: -3 },
   { src: 'st-box.webp', w: 448, h: 320, side: 'left', top: '47%', size: 142, tilt: 4, dur: 7, delay: -5 },
-  { src: 'st-p3.webp', w: 329, h: 320, side: 'right', top: '54%', size: 128, tilt: -6, dur: 8.8, delay: -8 },
-  { src: 'st-p9.webp', w: 329, h: 320, side: 'left', top: '60%', size: 130, tilt: 6, dur: 7.8, delay: -2.5 },
-  { src: 'st-panda.webp', w: 320, h: 320, side: 'right', top: '67%', size: 124, tilt: -4, dur: 9.2, delay: -7 },
-  { src: 'st-p1.webp', w: 324, h: 320, side: 'left', top: '73%', size: 132, tilt: -8, dur: 8.2, delay: -1.5 },
-  { src: 'st-p6.webp', w: 250, h: 320, side: 'right', top: '79%', size: 112, tilt: 7, dur: 7.2, delay: -4.5 },
+  { src: 'st-p1.webp', w: 324, h: 320, side: 'right', top: '54%', size: 128, tilt: -6, dur: 8.8, delay: -8 },
+  { src: 'st-p7.webp', w: 331, h: 320, side: 'left', top: '60%', size: 130, tilt: 6, dur: 7.8, delay: -2.5 },
+  { src: 'st-room.webp', w: 359, h: 320, side: 'right', top: '67%', size: 128, tilt: -4, dur: 9.2, delay: -7 },
+  { src: 'st-p4.webp', w: 351, h: 320, side: 'left', top: '73%', size: 132, tilt: -8, dur: 8.2, delay: -1.5 },
+  { src: 'st-p2.webp', w: 318, h: 320, side: 'right', top: '79%', size: 126, tilt: 7, dur: 7.2, delay: -4.5 },
   { src: 'st-p4.webp', w: 351, h: 320, side: 'left', top: '85%', size: 136, tilt: 5, dur: 9, delay: -9 },
   { src: 'st-p10.webp', w: 320, h: 320, side: 'right', top: '90%', size: 126, tilt: -6, dur: 8.4, delay: -3.5 },
-  { src: 'st-p7.webp', w: 331, h: 320, side: 'left', top: '95%', size: 130, tilt: 4, dur: 7.6, delay: -6.5 },
+  { src: 'st-katzflower.webp', w: 353, h: 320, side: 'left', top: '95%', size: 132, tilt: 4, dur: 7.6, delay: -6.5 },
   { src: 'st-bunny.webp', w: 419, h: 320, side: 'right', top: '98%', size: 140, tilt: -5, dur: 8.6, delay: 0 },
 ] as const
 
