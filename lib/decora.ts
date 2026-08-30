@@ -95,7 +95,7 @@ export const ALL_BRANDS = [...new Set(SHOPS.flatMap((s) => s.brands))]
 const BAG_TERMS = [
   'bag', 'bags', 'handbag', 'backpack', 'rucksack', 'tote', 'pouch', 'pouches',
   'purse', 'wallet', 'crossbody', 'sling bag', 'shoulder bag', 'satchel',
-  'coin case', 'card case', 'phone case',
+  'coin case', 'card case', 'phone case', 'knapsack',
 ]
 
 /**
@@ -280,4 +280,314 @@ export function fillDecora(all: Product[]): { sections: FilledSection[]; edit: P
 /** Everything this room can show, for the first-paint slice and the counts. */
 export function decoraPool(all: Product[]): Product[] {
   return all.filter((p) => SOURCES.includes(p.vendor) && eligible(p)).sort(byNewest)
+}
+
+/* ===========================================================================
+ * THE DECORA BOARDS: a second Pinterest vocabulary, on the same page
+ * ===========================================================================
+ *
+ * Section 4f gives every BOARDS entry a Pinterest board and an RSS feed. Those
+ * boards are the kawaii side of the house and their hashtag pools say so:
+ * #KawaiiPlushies, #CuteLunchBox, #KidsFashion. Pointing a decora shelf at them
+ * would be the exact defect section 4f already records twice, arriving by a
+ * third route: a caption and a set of tags that disagree with the board they
+ * are published to. A Menhera Chan hoodie tagged #KidsFashion is not a near
+ * miss, it is a different shop.
+ *
+ * So this is a SECOND taxonomy over the SAME shelf, with its own board names,
+ * its own hashtag pools and its own caption voice. Jacob's framing, and the
+ * right one: "we don't really want the kawaii and decora sides blending", and
+ * "keep this all on the same pages" — a Kawaii Katz Goes Decora section of
+ * boards, fed from /decora, not a second set of guide pages.
+ *
+ * ---------------------------------------------------------------------------
+ * NO GUIDE PAGES, DELIBERATELY, AND SECTION 4b IS WHY
+ *
+ * Every BOARDS entry generates a guide page AND a feed. Thirty catalogue-backed
+ * prerenders already cost 5.2 minutes of build (measured on be62863), and the
+ * guide's own conclusion is that "the next thing added here should be a shared
+ * route rather than a thirteenth pair". These boards add feeds only: their page
+ * already exists at /decora, and every feed links to a section anchor on it.
+ * Six routes rather than twelve, and no duplicate editorial.
+ *
+ * ---------------------------------------------------------------------------
+ * A PRODUCT BELONGS TO EXACTLY ONE BOARD
+ *
+ * The page's SECTIONS are capped, so a product the cap pushes out is simply not
+ * shown. A feed is not capped: it publishes everything it is given. If two
+ * boards could both claim a Sanrio backpack, Pinterest would receive the same
+ * product twice under our own account, which is duplicate-content behaviour on
+ * the one surface where it is visible to the platform.
+ *
+ * So `assignBoards()` is one pass in declaration order, first claim wins, and
+ * the last board is a catch-all. Order is therefore an editorial decision, and
+ * it is not the page's order:
+ *
+ *   - Objects claim before clothes. A Kuromi pencil case is stationery to
+ *     somebody searching, whatever character is on it.
+ *   - Character goods claim before plain garments, because a licensed hoodie is
+ *     found by the character and not by the word hoodie.
+ *   - Plain garments claim last, split top from bottom, with accessories as the
+ *     catch-all.
+ *
+ * Measured against the live catalogue, 2026-08-30, over Grumpy Bunny's 438:
+ * bags 17, desk 46, anime 95, fits 37, tops 190, clips 52 — 437 of 438, the one
+ * left out being a gift card. Nothing else unassigned.
+ *
+ * Every one of those six was then read line by line before it shipped, which is
+ * what section 4f says to do and what caught the four defects in it: a Listen
+ * Flavor hoodie leading the desk board (categorised `plush`), a kimono and a
+ * pair of arm warmers behind it (categorised `stationery`), a knapsack on the
+ * hair-clip board, and origami paper and a pad of Ghibli Post-its there too.
+ * None of them was visible from /decora, because the page shows the top of a
+ * capped section and a feed carries all of it.
+ */
+
+/**
+ * The caption voice, and the reason it is a field rather than a constant.
+ *
+ * pinCaption() writes "<name>: a kawaii <noun> pick from <vendor>. ... Cute,
+ * clever & kind finds curated on Kawaii Katz." That sentence is correct for the
+ * shop floor and wrong here in both halves. "Kawaii" is the word this room is
+ * deliberately not using — it sells to somebody building an outfit, not to
+ * somebody buying a plushie — and "cute, clever & kind" is the storefront's
+ * promise rather than this room's.
+ *
+ * Both are overrides on PinContext with the old text as the default, so every
+ * existing caller is unchanged.
+ */
+const DECORA_STYLE = 'Harajuku'
+const DECORA_TAIL = 'Japanese street style, curated on Kawaii Katz.'
+
+export type DecoraBoard = {
+  key: string
+  slug: string
+  /**
+   * The section id on /decora a Pin from this board should land on.
+   *
+   * Not the same as `key`, and it cannot be. The boards are a Pinterest
+   * taxonomy over the shelf; the page's SECTIONS are a wardrobe. Three boards
+   * (tops, fits, clips) split what the page shows as two sections, so each
+   * names the shelf a visitor arriving from that Pin should actually see.
+   */
+  anchor: string
+  /** What to call the board in Pinterest itself. Not rendered anywhere. */
+  boardName: string
+  title: string
+  tagline: string
+  /** Leads every Pin, overriding the month-based seasonalTag(). */
+  hashtag: string
+  /** The noun the caption uses: "a Harajuku <catLead> pick from <vendor>". */
+  catLead: string
+  /** This board's hashtag pool, replacing the kawaii per-category pools. */
+  pinTags: string[]
+  match: (p: Product) => boolean
+}
+
+/**
+ * Not pinnable, whatever board would otherwise take it.
+ *
+ * A gift card has a real product page, a real price and a picture of a gift
+ * card. It is also the one row on the shelf that cannot be an outfit, and a
+ * board seeded with one reads as an automated dump on its first Pin — which is
+ * how the plushies feed introduced itself with a Tesla (section 4f).
+ */
+const UNPINNABLE = ['gift card', 'giftcard', 'e-gift', 'gift voucher']
+
+const TOP_TERMS = [
+  'top', 'tops', 'tee', 't-shirt', 'tshirt', 'shirt', 'blouse', 'hoodie', 'hoody',
+  'sweatshirt', 'sweater', 'jumper', 'cardigan', 'crop top', 'tank', 'vest',
+  'pullover', 'knit', 'jacket', 'coat', 'parka', 'windbreaker', 'blazer',
+  'bomber', 'anorak', 'poncho', 'cape', 'kimono', 'yukata', 'haori', 'scarf',
+  'scarves',
+]
+
+const FIT_TERMS = [
+  'skirt', 'skirts', 'trousers', 'pants', 'shorts', 'jeans', 'leggings',
+  'salopette', 'overalls', 'dungarees', 'joggers', 'sweatpants', 'dress',
+  'dresses', 'jsk', 'romper', 'playsuit', 'jumpsuit', 'onepiece', 'socks',
+  'sock', 'tights', 'stockings', 'warmer', 'legwarmers', 'shoes',
+  'sneakers', 'boots', 'platform', 'sandals', 'loafers',
+]
+
+const ROOM_CATS = ['stationery', 'home', 'plush', 'kitchen', 'tech']
+
+/**
+ * Desk nouns, for the rows the category cannot help with.
+ *
+ * `categorize()` files a fair amount of this shop as `other` — the histogram in
+ * section 4 has the general case — so origami paper, a chopsticks set and a pad
+ * of Ghibli Post-its all fell past the category test and were published to a
+ * board about hair clips. Naming the object is the only signal left once the
+ * category has given up.
+ */
+const DESK_TERMS = [
+  'notepad', 'post-it', 'origami', 'chopstick', 'washi tape', 'memo pad',
+  'notebook', 'art book', 'letter set', 'pencil case', 'sticker sheet',
+]
+
+/**
+ * Anything the wardrobe boards name, which the desk board must not take.
+ *
+ * "Plush" is an adjective, and section 4f already paid for learning it: Kore
+ * Kawaii and Kawaii Babe file soft goods as `plush` at the source, so the
+ * plushies feed published handbags, trainers and 24 blanket hoodies as "a
+ * kawaii plushie pick". The same trap is here by a different door — a Listen
+ * Flavor hoodie is categorised `plush`, and because a feed is ordered
+ * oldest-first it was the FIRST Pin the Decora desk board would ever have made.
+ * That is the Tesla, exactly, on a board about washi tape.
+ *
+ * A name-anchored guard rather than a term list of individual offenders: the
+ * boards below already say what a garment is called, so the desk board can just
+ * defer to them.
+ */
+const GARMENT_TERMS = [...TOP_TERMS, ...FIT_TERMS]
+
+/**
+ * `anime` and `manga` are read from the NAME only; the houses and characters
+ * are read from the blurb too.
+ *
+ * A character never says Sanrio in its name, which is why the blurb is read at
+ * all (the note on ANIME_TERMS has the measurement). But a blurb that mentions
+ * anime in passing is describing an influence, not a licence: it put a
+ * "Zetsukigu futuristic collar" at the head of a board called Sanrio, San-X and
+ * anime fits, captioned as a character pick. Two words, one narrower rule.
+ */
+const GENERIC_ANIME = ['anime', 'manga']
+const CHARACTER_TERMS = ANIME_TERMS.filter((t) => !GENERIC_ANIME.includes(t))
+
+export const DECORA_BOARDS: DecoraBoard[] = [
+  {
+    key: 'bags',
+    slug: 'decora-bags',
+    anchor: 'bags',
+    boardName: 'Harajuku bags and ita bags',
+    title: 'Harajuku bags and pouches',
+    tagline: 'Totes, pouches and the bag you pin the rest of your collection to',
+    hashtag: 'HarajukuBags',
+    catLead: 'bag',
+    pinTags: ['ItaBag', 'HarajukuFashion', 'JapaneseStreetFashion', 'DecoraKei', 'JFashion'],
+    match: (p) => hasWord(nameOf(p), BAG_TERMS),
+  },
+  {
+    key: 'desk',
+    slug: 'decora-desk',
+    anchor: 'desk',
+    boardName: 'Decora desk and room',
+    title: 'Decora desk and room',
+    tagline: 'Washi tape, stickers, plushies and everything on the shelf above the desk',
+    hashtag: 'HarajukuRoom',
+    catLead: 'desk',
+    pinTags: ['JapaneseStationery', 'HarajukuRoom', 'MaximalistDecor', 'AnimeRoomDecor', 'DecoraKei'],
+    match: (p) =>
+      (ROOM_CATS.includes(p.cat) || hasWord(nameOf(p), DESK_TERMS)) &&
+      !hasWord(nameOf(p), GARMENT_TERMS),
+  },
+  {
+    key: 'anime',
+    slug: 'decora-anime',
+    anchor: 'anime',
+    boardName: 'Sanrio, San-X and anime fits',
+    title: 'Sanrio, San-X and anime fits',
+    tagline: 'The houses and the characters, worn rather than collected',
+    hashtag: 'SanrioAesthetic',
+    catLead: 'character',
+    pinTags: ['SanrioAesthetic', 'AnimeMerch', 'KuromiAesthetic', 'JapaneseCharacterGoods', 'HarajukuFashion'],
+    match: (p) => hasWord(hay(p), CHARACTER_TERMS) || hasWord(nameOf(p), GENERIC_ANIME),
+  },
+  {
+    key: 'fits',
+    slug: 'decora-fits',
+    anchor: 'fit',
+    boardName: 'Skirts, socks and platform shoes',
+    title: 'Skirts, socks and platform shoes',
+    tagline: 'The bottom half, which is where a decora outfit is actually won',
+    hashtag: 'HarajukuOutfit',
+    catLead: 'fit',
+    pinTags: ['HarajukuOutfit', 'JFashion', 'JapaneseStreetFashion', 'DecoraKei', 'OutfitInspo'],
+    match: (p) => hasWord(nameOf(p), FIT_TERMS),
+  },
+  {
+    key: 'tops',
+    slug: 'decora-tops',
+    anchor: 'fit',
+    boardName: 'Decora tops and hoodies',
+    title: 'Decora tops and hoodies',
+    tagline: 'The loud piece you build the rest of the outfit to argue with',
+    hashtag: 'DecoraKei',
+    catLead: 'top',
+    pinTags: ['DecoraKei', 'HarajukuFashion', 'JapaneseStreetFashion', 'JFashion', 'HarajukuOutfit'],
+    match: (p) => hasWord(nameOf(p), TOP_TERMS),
+  },
+  {
+    key: 'clips',
+    slug: 'decora-clips',
+    anchor: 'more',
+    boardName: 'Decora hair clips and charms',
+    title: 'Decora hair clips and charms',
+    tagline: 'Clips, keyrings, jewellery and the case for wearing all of them at once',
+    hashtag: 'DecoraAccessories',
+    // The catch-all, so it takes hats, collars, mirrors and anything the five
+    // above did not name. "Accessory" is the honest noun for that mix; "hair
+    // clip" would be a caption that lies about a beanie.
+    catLead: 'accessory',
+    pinTags: ['DecoraAccessories', 'HairClips', 'KandiKid', 'DecoraKei', 'HarajukuFashion'],
+    match: () => true,
+  },
+]
+
+export function decoraBoard(slug: string): DecoraBoard | undefined {
+  return DECORA_BOARDS.find((b) => b.slug === slug)
+}
+
+/** What a Pin from this board overrides on the product's own record. */
+export function decoraPin(b: DecoraBoard) {
+  return {
+    tag: b.hashtag,
+    catLead: b.catLead,
+    catTags: b.pinTags,
+    style: DECORA_STYLE,
+    tail: DECORA_TAIL,
+  }
+}
+
+/**
+ * Every product in the room, dealt to exactly one board.
+ *
+ * Ordered oldest-first per board, matching the feed rule in section 4f:
+ * Pinterest publishes the oldest item first and re-reads the feed as it
+ * changes, so a feed in rank order reshuffles underneath it. Ties fall back to
+ * id so the result is fully determined.
+ */
+export function assignDecoraBoards(all: Product[]): { board: DecoraBoard; products: Product[] }[] {
+  const pool = all.filter(
+    (p) => SOURCES.includes(p.vendor) && eligible(p) && !hasWord(nameOf(p), UNPINNABLE)
+  )
+  const used = new Set<string>()
+  return DECORA_BOARDS.map((board) => {
+    const products = pool.filter((p) => !used.has(p.id) && board.match(p))
+    products.forEach((p) => used.add(p.id))
+    products.sort((x, y) => {
+      const a = Date.parse(x.added || '') || 0
+      const c = Date.parse(y.added || '') || 0
+      return a - c || (x.id < y.id ? -1 : 1)
+    })
+    return { board, products }
+  })
+}
+
+/**
+ * id -> the board that claimed it, so a Pin taken off /decora by hand carries
+ * the same board's voice as one Pinterest builds from the feed.
+ *
+ * Without this the buttons on that page would keep pinning #KidsFashion and
+ * "a kawaii apparel pick", which is the whole defect this file exists to fix,
+ * left in place on the half a visitor can actually see.
+ */
+export function decoraBoardIndex(all: Product[]): Map<string, DecoraBoard> {
+  const out = new Map<string, DecoraBoard>()
+  for (const { board, products } of assignDecoraBoards(all)) {
+    for (const p of products) out.set(p.id, board)
+  }
+  return out
 }

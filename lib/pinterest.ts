@@ -64,6 +64,19 @@ type Pinnable = {
    * are the accurate ones for the rest.
    */
   catTags?: string[]
+  /**
+   * The aesthetic word the caption leads with, default "kawaii".
+   *
+   * Set by the Decora boards (lib/decora.ts), which are a second Pinterest
+   * vocabulary over the same shelf. "A kawaii top pick" is the shop floor's
+   * sentence and it is the wrong one on a board about Japanese street fashion:
+   * that room sells to somebody building an outfit, not to somebody buying a
+   * plushie, and the whole reason it has its own boards is that the two should
+   * not blend.
+   */
+  style?: string
+  /** The closing sentence, default the storefront's. Same reason as `style`. */
+  tail?: string
 }
 
 /**
@@ -77,6 +90,8 @@ export type PinContext = {
   tag?: string
   catLead?: string
   catTags?: string[]
+  style?: string
+  tail?: string
 }
 
 const PIN_TAGS_BY_CAT: Record<string, string[]> = {
@@ -207,7 +222,9 @@ function pinDescription(o: Pinnable): string {
     cName.toLowerCase().replace(/ & .*/, '').replace(/s$/, '')
   const tags = pinHashtags(o)
   const priceTxt = Number(o.price) > 0 ? ` Just ${money(o.price)}.` : ''
-  const body = `${name}: a kawaii ${cLead} pick from ${vendor}.${priceTxt} Cute, clever & kind finds curated on Kawaii Katz.`
+  const style = o.style || 'kawaii'
+  const tail = o.tail || 'Cute, clever & kind finds curated on Kawaii Katz.'
+  const body = `${name}: a ${style} ${cLead} pick from ${vendor}.${priceTxt} ${tail}`
   const hashline = ' #ad ' + tags.map((t) => '#' + t).join(' ')
   return (body.slice(0, 480 - hashline.length) + hashline).slice(0, 480)
 }
@@ -288,6 +305,8 @@ export function pinProductPage(
     tag: opts?.tag,
     catLead: opts?.catLead,
     catTags: opts?.catTags,
+    style: opts?.style,
+    tail: opts?.tail,
   })
 }
 

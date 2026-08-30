@@ -1,9 +1,10 @@
 import { BOARDS, board, fillBoard } from '@/lib/boards'
+import { DECORA_BOARDS, assignDecoraBoards, decoraBoard, decoraPin } from '@/lib/decora'
 import { getCatalog } from '@/lib/catalog-source'
 import { db } from '@/lib/db'
 import { storeExclusions } from '@/lib/db/schema'
 import { unproxied } from '@/lib/catalog-shared'
-import { pinCaption } from '@/lib/pinterest'
+import { pinCaption, type PinContext } from '@/lib/pinterest'
 import { SITE_URL } from '@/lib/site'
 import type { Product } from '@/lib/data'
 
@@ -47,15 +48,25 @@ export const revalidate = 21600
 export const dynamicParams = false
 
 /**
- * `.xml` is part of the slug rather than a route segment.
+ * The gift guides, plus the Decora boards.
  *
- * It is cosmetic and it is worth it: this URL gets pasted into a form in
- * Pinterest's settings by a human, and `/feeds/plushies.xml` is obviously a
- * feed in a way `/feeds/plushies` is not. The handler strips it back off.
+ * `.xml` is part of the slug rather than a route segment. It is cosmetic and it
+ * is worth it: this URL gets pasted into a form in Pinterest's settings by a
+ * human, and `/feeds/plushies.xml` is obviously a feed in a way
+ * `/feeds/plushies` is not. The handler strips it back off.
+ *
+ * Two sources because they are two taxonomies over one catalogue and only one
+ * of them has guide pages. A Decora board's feed links to a section anchor on
+ * /decora rather than to a page of its own — section 4b's count is at thirty
+ * catalogue-backed prerenders and its own conclusion is that the next thing
+ * added should share a route rather than add a pair. Six feeds, no new pages.
  */
 export function generateStaticParams() {
-  return BOARDS.map((b) => ({ slug: `${b.slug}.xml` }))
+  return [...BOARDS, ...DECORA_BOARDS].map((b) => ({ slug: `${b.slug}.xml` }))
 }
+
+/** What a feed needs, whichever taxonomy it came from. */
+type Feed = { title: string; tagline: string; pageUrl: string; slug: string; pin: PinContext }
 
 function esc(s: string): string {
   return String(s ?? '')
@@ -123,12 +134,42 @@ async function excludedIds(): Promise<Set<string>> {
 
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params
-  const b = board(slug.replace(/\.xml$/, ''))
-  if (!b) return new Response('Not found', { status: 404 })
+  const name = slug.replace(/\.xml$/, '')
+  const b = board(name)
+  const d = b ? undefined : decoraBoard(name)
+  if (!b && !d) return new Response('Not found', { status: 404 })
 
   const { products } = await getCatalog()
   const hidden = await excludedIds()
-  const picks = fillBoard(b, products.filter((p) => !hidden.has(p.id))).flatMap((s) => s.products)
+  const live = products.filter((p) => !hidden.has(p.id))
+
+  let feed: Feed
+  let picks
+  if (b) {
+    feed = {
+      title: b.title,
+      tagline: b.tagline,
+      pageUrl: `${SITE_URL}/gifts/${b.slug}`,
+      slug: b.slug,
+      pin: { tag: b.hashtag, catLead: b.catLead, catTags: b.pinTags },
+    }
+    picks = fillBoard(b, live).flatMap((s) => s.products)
+  } else {
+    const dec = d as NonNullable<typeof d>
+    feed = {
+      title: dec.title,
+      tagline: dec.tagline,
+      // A shelf on the room, not a page of its own. `anchor` is the section id
+      // that actually exists on /decora, which is not always this board's key:
+      // the boards are a Pinterest taxonomy and the page is a wardrobe, and
+      // linking to an anchor that is not there is a link to the top of the page
+      // pretending to be a link to a shelf.
+      pageUrl: `${SITE_URL}/decora#${dec.anchor}`,
+      slug: dec.slug,
+      pin: decoraPin(dec),
+    }
+    picks = assignDecoraBoards(live).find((x) => x.board.slug === dec.slug)?.products ?? []
+  }
 
   // Stable order — see the note at the top. Ties fall back to id so the result
   // is fully determined even when two products carry the same `added` date.
@@ -140,17 +181,17 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
       return a - c || (x.id < y.id ? -1 : 1)
     })
 
-  const feedUrl = `${SITE_URL}/feeds/${b.slug}.xml`
-  const pageUrl = `${SITE_URL}/gifts/${b.slug}`
+  const feedUrl = `${SITE_URL}/feeds/${feed.slug}.xml`
+  const pageUrl = feed.pageUrl
   const built = Date.now()
 
   const body =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">\n` +
     `<channel>\n` +
-    `<title>${esc(b.title)} | Kawaii Katz</title>\n` +
+    `<title>${esc(feed.title)} | Kawaii Katz</title>\n` +
     `<link>${esc(pageUrl)}</link>\n` +
-    `<description>${esc(b.tagline)}</description>\n` +
+    `<description>${esc(feed.tagline)}</description>\n` +
     `<language>en</language>\n` +
     `<lastBuildDate>${new Date(built).toUTCString()}</lastBuildDate>\n` +
     `<atom:link href="${esc(feedUrl)}" rel="self" type="application/rss+xml"/>\n` +
@@ -164,7 +205,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
         const caption = pinCaption({
           id: p.id, name: p.name, vendor: p.vendor, cat: p.cat,
           price: p.price, image: p.image, url: p.url || p.domain,
-          domain: p.domain, tag: b.hashtag, catLead: b.catLead, catTags: b.pinTags,
+          domain: p.domain, ...feed.pin,
         })
         // Three ways of declaring the image, because feed readers disagree on
         // which one they honour: an <img> in the description, <enclosure>, and

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { catEmoji, money, isNewItem, type Product } from '@/lib/data'
-import { pinProductPage } from '@/lib/pinterest'
+import { pinProductPage, type PinContext } from '@/lib/pinterest'
 import { logEvent } from '@/lib/site-events'
 import { rankSimilar } from '@/lib/similar'
 import { shouldNudge, type TasteProfile, type TasteSignal } from '@/lib/taste'
@@ -32,9 +32,20 @@ type Props = {
    * Omitted (or empty) simply means the card never offers a flip.
    */
   similarPool?: Product[]
+  /**
+   * What the collection this card sits in knows about a Pin that the product
+   * record does not: the hashtag, the caption noun, the hashtag pool and the
+   * aesthetic word. Same shape BoardGrid passes, and for the same reason.
+   *
+   * /decora sets it. Without it, a Menhera Chan hoodie pinned off that page
+   * goes out tagged #KawaiiFashion #KidsFashion, because those come from its
+   * `apparel` category, and a decora board full of Pins tagged as kids'
+   * clothing is telling Pinterest the board is about kids' clothing.
+   */
+  pin?: PinContext
 }
 
-export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, isPicked, isExcluded, isAdaMode, onTogglePick, onToggleExclude, priority = false, similarPool = [] }: Props) {
+export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, isPicked, isExcluded, isAdaMode, onTogglePick, onToggleExclude, priority = false, similarPool = [], pin }: Props) {
   const { state, dispatch } = useStore()
   const router = useRouter()
   const [selVariant, setSelVariant] = useState(0)
@@ -268,7 +279,7 @@ export default function ProductCard({ product: p, isFeedPick: isFeedPickProp, is
                 {inWish ? '♥' : '♡'}
               </button>
               <button
-                onClick={() => { logEvent('pin_click', { productId: p.id, vendor: p.vendor, cat: p.cat }); pinProductPage(p) }}
+                onClick={() => { logEvent('pin_click', { productId: p.id, vendor: p.vendor, cat: p.cat }); pinProductPage(p, pin) }}
                 className="border-2 border-[#e60023] bg-white text-[#e60023] rounded-full w-[34px] h-[34px] cursor-pointer text-[15px] shadow-[0_4px_12px_rgba(255,138,101,.18)] flex items-center justify-center hover:bg-[#e60023] hover:text-white transition-colors"
                 aria-label={`Pin ${p.name} to Pinterest`}
                 title="Share this to Pinterest"

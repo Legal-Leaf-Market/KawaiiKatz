@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
 import { useStore } from '@/lib/store'
-import { fillDecora, decoraPool, SHOPS } from '@/lib/decora'
+import { fillDecora, decoraPool, decoraBoardIndex, decoraPin, SHOPS } from '@/lib/decora'
 import { money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
 import ProductCard from '@/components/ProductCard'
@@ -157,6 +157,23 @@ export default function DecoraClient({
 
   const { sections, edit } = useMemo(() => fillDecora(visible), [visible])
   const pool = useMemo(() => decoraPool(visible), [visible])
+
+  /**
+   * The Decora board each product belongs to, so the Pin button on a tile
+   * carries the same voice as the feed that publishes it.
+   *
+   * Without this the two halves disagree: Pinterest builds a Pin from
+   * /feeds/decora-tops.xml reading "a Harajuku top pick" and tagged #DecoraKei,
+   * and the button on the identical tile produces "a kawaii apparel pick"
+   * tagged #KidsFashion, because those come from the product's own category.
+   * The same board would then hold both, which is the topic mismatch section 4f
+   * is about.
+   */
+  const boardOf = useMemo(() => decoraBoardIndex(visible), [visible])
+  const pinFor = (p: Product) => {
+    const b = boardOf.get(p.id)
+    return b ? decoraPin(b) : undefined
+  }
 
   const priceFrom = useMemo(() => {
     const ps = pool.map((p) => p.price).filter((n) => n > 0).sort((a, b) => a - b)
@@ -470,7 +487,7 @@ export default function DecoraClient({
                 </p>
                 <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
                   {products.map((p) => (
-                    <ProductCard key={p.id} product={p} />
+                    <ProductCard key={p.id} product={p} pin={pinFor(p)} />
                   ))}
                 </div>
               </section>
@@ -523,7 +540,7 @@ export default function DecoraClient({
                   </p>
                   <div className="relative grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
                     {edit.map((p) => (
-                      <ProductCard key={`edit-${p.id}`} product={p} />
+                      <ProductCard key={`edit-${p.id}`} product={p} pin={pinFor(p)} />
                     ))}
                   </div>
                 </div>

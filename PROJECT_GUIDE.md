@@ -802,6 +802,65 @@ connect two or three at a time rather than all of them at once.
 
 ---
 
+## 4f-b. Kawaii Katz Goes Decora: a second set of boards over the same shelf
+
+`lib/decora.ts` → `DECORA_BOARDS`, and six more feeds at `/feeds/decora-*.xml`. No new
+pages: every one of them links to a section anchor on `/decora`.
+
+**The reason this exists is that the kawaii pools are wrong here, and wrong in the way
+§4f already costs a day to learn.** `PIN_TAGS_BY_CAT` tags an `apparel` row
+`#KawaiiFashion #KidsFashion`, and `pinCaption()` writes "a kawaii apparel pick ... cute,
+clever & kind". Publish a Menhera Chan hoodie to a Harajuku board under that caption and
+the Pin's topic disagrees with the board on both halves, which is the exact defect the
+plushies feed shipped twice. Jacob's framing and the right one: the kawaii and decora
+sides should not blend.
+
+So the room gets its own vocabulary. `PinContext` gained `style` and `tail` (the
+adjective and the closing sentence, defaulting to today's text), so a decora Pin reads
+"**a Harajuku top pick from Grumpy Bunny. Japanese street style, curated on Kawaii
+Katz.**" `Board.catLead` / `Board.pinTags` already existed and do the rest.
+
+| Feed | Board to create in Pinterest | Lands on | Items |
+|---|---|---|---:|
+| `decora-bags.xml` | Harajuku bags and ita bags | `/decora#bags` | 17 |
+| `decora-desk.xml` | Decora desk and room | `/decora#desk` | 46 |
+| `decora-anime.xml` | Sanrio, San-X and anime fits | `/decora#anime` | 95 |
+| `decora-fits.xml` | Skirts, socks and platform shoes | `/decora#fit` | 37 |
+| `decora-tops.xml` | Decora tops and hoodies | `/decora#fit` | 190 |
+| `decora-clips.xml` | Decora hair clips and charms | `/decora#more` | 52 |
+
+**No guide pages, and §4b is why.** A `BOARDS` entry generates a page AND a feed; thirty
+catalogue-backed prerenders already cost 5.2 minutes and the guide's own conclusion was
+that the next thing added should share a route. These are feeds only, so the count goes
+30 → 36 rather than 30 → 42. **Re-measure on the next deploy.**
+
+**A product belongs to exactly one board.** The page's sections are capped, so a product a
+cap pushes out is simply not shown; a feed publishes everything it is given, and two boards
+claiming the same Sanrio backpack would send Pinterest the same product twice under our own
+account. `assignDecoraBoards()` is one pass, first claim wins, `clips` is the catch-all, and
+the order is editorial: objects before clothes, characters before plain garments, bottom
+half before top half. That last one is not arbitrary. `shirt` is a word inside "shirt
+dress", so with tops first the Decora tops board opened with two dresses.
+
+**Reading the six feeds before shipping caught four things, none visible from `/decora`.**
+A Listen Flavor hoodie led the desk board because Grumpy Bunny files it as `plush` (§4f's
+"plush is an adjective", by a different door, and a feed being oldest-first it would have
+been that board's first Pin ever). A kimono and a pair of arm warmers behind it, both
+categorised `stationery`. A knapsack on the hair-clip board. Origami paper and a pad of
+Ghibli Post-its there too, because `categorize()` files them `other` and the desk board was
+only reading the category. The fixes are a garment guard on the desk board, a `DESK_TERMS`
+list for when the category has given up, and three nouns added to existing lists.
+
+**The Pin button on `/decora` carries the same board's voice**, through
+`decoraBoardIndex()`. Otherwise the two halves disagree on the identical tile: the feed
+saying "a Harajuku top pick #DecoraKei" and the button saying "a kawaii apparel pick
+#KidsFashion", both landing on the same board.
+
+**Grumpy Bunny is still untracked.** All 437 of these Pins send traffic that earns nothing
+until `affiliateParam` is filled in. It is one string in `VENDORS` and needs no code change.
+
+---
+
 ## 4g. IG Studio: the carousel exporter
 
 `/studio` + `lib/carousel.ts` (deck model) + `lib/carousel-render.ts` (canvas) +
