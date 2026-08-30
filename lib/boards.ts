@@ -667,6 +667,141 @@ export const BOARDS: Board[] = [
     maxPerVendor: 6,
     sections: themeSections('Start here.'),
   },
+  /**
+   * -------------------------------------------------------------------------
+   * THE CATEGORY BOARDS, AND THE ONE THAT IS NOT HERE
+   *
+   * These four exist because Pinterest boards already existed for them and
+   * wanted feeds. Each is a single `cats` value, which is all a category board
+   * needs: `words` and `demote` are for themes that cut ACROSS categories, and
+   * using them here would only re-litigate what categorize() already decided.
+   *
+   * Every one was measured against the live catalogue before it was written,
+   * because §4e's rule is to check what share of a shelf actually EARNS before
+   * building a page for it. Measured 2026-08-30 over 4,421 products:
+   *
+   *   category      products   tracked   median
+   *   food                47       98%    $3.99
+   *   home               201       50%   $29.99
+   *   tech               272       45%   $24.99
+   *   accessories        830       40%   $19.99
+   *   apparel          1,435       11%      $38   <- NOT BUILT
+   *
+   * APPAREL IS DELIBERATELY ABSENT and it is the biggest category we have.
+   * 1,435 products of which 153 earn anything: Sydney Sock Project's 429 and
+   * Kawaii Babe's 272 are both untracked, and they are most of the shelf. §4e
+   * already rejected four boards on this exact test, the worst of them at 28%
+   * tracked. Eleven percent means nine Pins in ten send a shopper somewhere we
+   * are paid nothing for, and a board is a durable public thing to spend on
+   * that. It goes in the moment either vendor's tracking is real.
+   */
+  {
+    slug: 'kawaii-snacks',
+    emoji: '🍬',
+    kind: 'theme',
+    title: 'Kawaii Snacks & Drinks',
+    tagline: 'Japanese sweets, novelty drinks and things that come in a very cute box',
+    intro:
+      'The cheapest shelf here and the one people actually finish. Median price under $4, ' +
+      'which makes it the easiest thing to add to an order for something else.',
+    hashtag: 'JapaneseSnacks',
+    catLead: 'snack',
+    pinTags: ['JapaneseSnacks', 'KawaiiSnacks', 'AsianSnacks', 'SnackHaul', 'SnackLover'],
+    season: [],
+    cats: ['food'],
+    // "Pink Princess Blaster", a $59.99 toy, is filed as food and was the
+    // oldest row, so it would have been the first Pin this board ever made.
+    notWords: ['blaster'],
+    // 45 of 47 products are Kore Kawaii's, so a cap of 3 would leave the board
+    // unable to fill a single section. This is the jigsawdepot case: the honest
+    // cap on a shelf one shop owns is a high one.
+    //
+    // 47 products is thin, and that is worth knowing rather than hiding: Blippo
+    // is 90% Japanese snacks and is still `pending` (§4). The day that vendor
+    // ships, this board stops being the smallest one here.
+    maxPerVendor: 20,
+    sections: themeSections('Small, cheap, and gone by Thursday.'),
+  },
+  {
+    slug: 'kawaii-home-decor',
+    emoji: '🏠',
+    kind: 'theme',
+    title: 'Kawaii Home & Decor',
+    tagline: 'Room decor, night lights and soft things for a shelf',
+    intro:
+      'The things that make a room read as somebody rather than as a rental: night lights, ' +
+      'cushions, wall pieces and the occasional deeply unnecessary lamp.',
+    hashtag: 'KawaiiRoomDecor',
+    catLead: 'home decor',
+    pinTags: ['KawaiiRoomDecor', 'CuteHomeDecor', 'KawaiiBedroom', 'AestheticRoom', 'KidsRoomDecor'],
+    season: [],
+    cats: ['home'],
+    maxPerVendor: 6,
+    sections: themeSections('The ones worth clearing a shelf for.'),
+  },
+  {
+    slug: 'kawaii-tech-gaming',
+    emoji: '🎮',
+    kind: 'theme',
+    title: 'Kawaii Tech & Gaming',
+    tagline: 'Desk setups, phone cases and controller grips that are not black plastic',
+    intro:
+      'Everything on a desk can be cute and almost none of it is, which is the entire reason ' +
+      'this shelf sells. Keyboards, cases, cables, lights and the things around a console.',
+    hashtag: 'KawaiiTech',
+    catLead: 'tech',
+    pinTags: ['KawaiiTech', 'CuteGadgets', 'GamingSetup', 'KawaiiDesk', 'TechAccessories'],
+    season: [],
+    cats: ['tech'],
+    /**
+     * KAWAII BABE'S APPAREL AND MAKEUP LAND IN `tech`, and reading the feed
+     * before connecting it is the only reason anyone knows. In oldest-first
+     * order this board was about to publish a Manga Baby Eyeshadow Palette,
+     * Love & Lace Platform Sneakers, a Pink Princess Gamer Hoodie and
+     * "Satin Baby Bear Panties", every one captioned "a kawaii tech pick".
+     *
+     * The underwear is the one that matters, and it is worth understanding why
+     * it got through rather than just excluding it. `satin` IS in CUT_PHRASES,
+     * so the adult-apparel filter would have caught it — but that filter only
+     * runs on MODEL_SCAN_CATS, which is apparel and accessories. A garment
+     * misfiled as `tech` is invisible to the one filter built to catch it.
+     * Miscategorisation does not just misplace a product, it can route it
+     * around a safety layer.
+     *
+     * These rows are still in the catalogue and still wrong there; this list
+     * only keeps them off a public board. The real fix is upstream in
+     * categorize(), which is a scrape change and a cache bump (§4).
+     */
+    notWords: [
+      'panties', 'lingerie', 'thong', 'bra',
+      'hoodie', 'sneakers', 'shoes', 'platform', 'dress', 'skirt',
+      'eyeshadow', 'palette', 'lipstick', 'lip gloss', 'makeup', 'nail polish',
+      'cushion', 'seat cushion',
+    ],
+    maxPerVendor: 6,
+    sections: themeSections('Desk upgrades that are not black plastic.'),
+  },
+  {
+    slug: 'kawaii-accessories',
+    emoji: '🎀',
+    kind: 'theme',
+    title: 'Kawaii Accessories',
+    tagline: 'Bags, charms, hair clips and the small things that finish an outfit',
+    intro:
+      'The shelf people browse without meaning to buy anything. Charms, clips, keyrings and ' +
+      'bags, mostly under $20, mostly bought as a treat rather than a plan.',
+    hashtag: 'KawaiiAccessories',
+    catLead: 'accessory',
+    pinTags: ['KawaiiAccessories', 'CuteAccessories', 'KawaiiBackpack', 'AccessoryHaul', 'KawaiiAesthetic'],
+    season: [],
+    cats: ['accessories'],
+    // Plushible's collector teddy bears are filed as accessories and led the
+    // feed. A plush keychain is an accessory; a 11in Thomas Kinkade collector
+    // bear is a plushie, and it has its own board.
+    notWords: ['rattle', 'collector', 'teddy bear'],
+    maxPerVendor: 5,
+    sections: themeSections('The small stuff that does the most work.'),
+  },
   {
     slug: 'bento-and-lunch',
     emoji: '🍱',
