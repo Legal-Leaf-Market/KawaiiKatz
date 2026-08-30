@@ -18,7 +18,7 @@ import { MODEL_SCAN_CATS, adultApparelHit } from '@/lib/adult-apparel'
  */
 export const dynamic = 'force-static'
 
-const TARGET = 'CozyKawaii'
+const TARGETS = ['CozyKawaii', 'BerryKawaii']
 const PER_PAGE = 250
 const MAX_PAGES = 5
 const UA = 'Mozilla/5.0'
@@ -120,7 +120,7 @@ async function probe(cfg: (typeof VENDORS)[number]) {
 }
 
 export async function GET() {
-  for (const v of VENDORS.filter((x) => x.vendor === TARGET)) {
+  for (const v of VENDORS.filter((x) => TARGETS.includes(x.vendor))) {
     try {
       await probe(v)
     } catch (e) {

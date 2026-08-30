@@ -420,6 +420,28 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Second of two approvals Jacob found on the same day (2026-08-30) and had
+  // not realised he had. Network unconfirmed; GoAffPro is the assumption
+  // because CozyKawaii below arrived the same way, and `ref=` is the shape
+  // GoAffPro, Refersion and Impact all use.
+  //
+  // NOTE THE SPELLING, because it is evidence about the other one. This link
+  // came through as ?ref=kawaiikatz, correctly spelled and matching the eight
+  // vendors already tracking. CozyKawaii's came through as ?ref=kawaittkatz.
+  // Two links pasted minutes apart, one right and one not, which makes the
+  // CozyKawaii value more likely to be a genuine typo than a house style. It
+  // still has to be read off the dashboard rather than inferred from this.
+  //
+  // The domain is the raw myshopify.com one. That is fine for products.json and
+  // for tracking, but if the shop has a custom domain the storefront link
+  // should use it: a shopper who lands on a myshopify.com URL sees a less
+  // finished shop than the merchant actually runs. Squishy Bottle has the same
+  // shape (stopshop9.myshopify.com) and nobody has ever checked.
+  //
+  // pending until the feed is read. The ref is already plausible here, so this
+  // one may only be one half away from shipping.
+  { vendor: 'BerryKawaii', domain: 'https://berrykawaiiuwu.myshopify.com', prefix: 'berry', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // GoAffPro, and Jacob believes the approval landed without him noticing
   // (surfaced 2026-08-30). GoAffPro attributes on a query param like Refersion
   // and Impact, so approval really is a one-line change here (§4c) and there is
