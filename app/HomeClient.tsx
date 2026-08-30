@@ -14,6 +14,7 @@ import ProductCard from '@/components/ProductCard'
 import AdaPicksRail from '@/components/AdaPicksRail'
 import FeaturedCollection from '@/components/FeaturedCollection'
 import CartDrawer from '@/components/CartDrawer'
+import FloatingCart from '@/components/FloatingCart'
 import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
 import AdaLoginModal from '@/components/AdaLoginModal'
@@ -411,6 +412,9 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
 
       {/* Drawers & Modals */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} products={allProducts} />
+      {/* The header pill scrolls away on a phone; this does not. See the note
+          in FloatingCart on why the confirmation lives with it. */}
+      <FloatingCart products={allProducts} onOpen={() => setCartOpen(true)} />
       <WishlistDrawer open={wishOpen} onClose={() => setWishOpen(false)} products={allProducts} />
       <GiftFinder open={giftOpen} onClose={() => setGiftOpen(false)} products={products} />
       <AdaLoginModal open={adaLoginOpen} onClose={() => setAdaLoginOpen(false)} />

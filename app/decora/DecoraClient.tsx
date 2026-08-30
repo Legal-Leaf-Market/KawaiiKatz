@@ -19,6 +19,7 @@ import { money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
 import ProductCard from '@/components/ProductCard'
 import CartDrawer from '@/components/CartDrawer'
+import FloatingCart from '@/components/FloatingCart'
 import WishlistDrawer from '@/components/WishlistDrawer'
 
 /**
@@ -707,6 +708,10 @@ export default function DecoraClient({
       </main>
 
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} products={live} />
+      {/* `tone` rather than the kawaii palette: this room runs hot pink, violet
+          and near-black, and a coral bubble on it would read as a widget from
+          another site. Same component, same behaviour. */}
+      <FloatingCart products={live} onOpen={() => setCartOpen(true)} tone="decora" />
       <WishlistDrawer open={wishOpen} onClose={() => setWishOpen(false)} products={live} />
     </div>
   )

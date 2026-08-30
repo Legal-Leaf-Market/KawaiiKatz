@@ -2,10 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { getCatalog } from '@/lib/catalog-source'
+import { getProductPageData } from '@/lib/catalog-source'
 import { unproxied } from '@/lib/catalog-shared'
 import { catName, money, type Product } from '@/lib/data'
-import { rankSimilar } from '@/lib/similar'
 import { SITE_URL } from '@/lib/site'
 import ProductPageActions from '@/components/ProductPageActions'
 import ProductPageChrome from '@/components/ProductPageChrome'
@@ -47,6 +46,15 @@ import ProductImage from '@/components/ProductImage'
  * plus a coco-ssd pass before any cache exists (§4b). So none are built ahead
  * of time; each is rendered the first time somebody follows a pin.
  *
+ * That first render used to cost the WHOLE SHOP. It called getCatalog(), which
+ * ends with a coco-ssd pass over every apparel photograph in the catalogue:
+ * load TensorFlow.js in a cold lambda, then scan for up to 35 seconds, to
+ * render one product. Following a tile off /decora took tens of seconds and
+ * Jacob's description was "it's like it's building each one", which is what it
+ * was doing. getProductPageData screens the seven products this page actually
+ * renders instead, with no budget — see the note on it, and note that this is
+ * a stronger guarantee than the budgeted bulk scan rather than a weaker one.
+ *
  * But omitting `generateStaticParams` altogether is NOT how you say that. It
  * makes the route fully dynamic, and `revalidate` below is then ignored —
  * every single request re-renders and Vercel sends `no-store`, so the CDN
@@ -68,6 +76,9 @@ import ProductImage from '@/components/ProductImage'
 // fails the build with "Invalid segment configuration export".
 export const revalidate = 21600
 
+/** How many "more like this" tiles the page shows. */
+const SIMILAR_COUNT = 6
+
 /** See the note above: empty, but load-bearing. Without it, `revalidate` is dead. */
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   return []
@@ -81,8 +92,7 @@ function ogImage(p: Product): string | null {
 }
 
 async function findProduct(id: string): Promise<Product | null> {
-  const { products } = await getCatalog()
-  return products.find((p) => p.id === id) ?? null
+  return (await getProductPageData(id, SIMILAR_COUNT))?.product ?? null
 }
 
 export async function generateMetadata({
@@ -145,11 +155,9 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { products } = await getCatalog()
-  const p = products.find((x) => x.id === id)
-  if (!p) notFound()
-
-  const similar = rankSimilar(p, products.filter((x) => x.image), 6)
+  const data = await getProductPageData(id, SIMILAR_COUNT)
+  if (!data) notFound()
+  const { product: p, similar } = data
 
   return (
     <ProductPageChrome>

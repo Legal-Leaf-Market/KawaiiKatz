@@ -7,6 +7,7 @@ import { VENDORS, liveVendors, isUntracked, type Product } from '@/lib/data'
 import { mapShopifyProducts } from '@/lib/catalog-shared'
 import { MODEL_SCAN_CATS, isAdultApparelByText } from '@/lib/adult-apparel'
 import { scanForBodyModels } from '@/lib/person-scan'
+import { rankSimilar } from '@/lib/similar'
 
 /**
  * The one place the catalogue is built.
@@ -190,7 +191,10 @@ const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v8'], {
  * whole catalogue, because a safety filter that a narrow caller can skip is a
  * safety filter with a hole in it.
  */
-async function buildCatalog(vendorNames?: string[]): Promise<CatalogResult> {
+async function buildCatalog(
+  vendorNames?: string[],
+  opts: { bulkScan?: boolean } = {}
+): Promise<CatalogResult> {
   // Filter to the live vendors ONCE and index everything off that same array.
   // `results[i]` is matched back to its vendor by position, so filtering inside
   // the loop instead would slide every vendor one place along and file one
@@ -254,7 +258,14 @@ async function buildCatalog(vendorNames?: string[]): Promise<CatalogResult> {
   // model. Scoped to apparel/accessories with an image; budgeted so a cold
   // build can't hang. Unscanned items stay (the text filter is the backstop)
   // and get caught on later loads as the in-process verdict cache warms.
-  const scanTargets = list.filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image)
+  //
+  // `bulkScan: false` is for a caller that renders a HANDFUL of products and
+  // then screens exactly those — see getProductPageData, which is the only one.
+  // It is not an escape hatch: that function does the screening itself and
+  // never hands the unscanned list to anybody, because a safety filter a caller
+  // can skip is a safety filter with a hole in it.
+  const scanTargets =
+    opts.bulkScan === false ? [] : list.filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image)
   try {
     const flagged = await scanForBodyModels(
       scanTargets.map((p) => p.image),
@@ -276,6 +287,67 @@ async function buildCatalog(vendorNames?: string[]): Promise<CatalogResult> {
 
 /** The whole catalogue. What every page and /api/catalog call. */
 export const getCatalog = cache((): Promise<CatalogResult> => buildCatalog())
+
+/**
+ * Everything one product page renders, screened.
+ *
+ * -----------------------------------------------------------------------------
+ * WHY THIS EXISTS: A PRODUCT PAGE WAS BUILDING THE WHOLE SHOP
+ *
+ * /p/[id] renders on demand — there are ~4,400 products and prerendering them
+ * all would add 4,400 pages to a build already measured in minutes (§4b). Each
+ * first view therefore ran getCatalog() in a cold lambda, and getCatalog() ends
+ * with a coco-ssd pass over every apparel photograph in the catalogue: load
+ * TensorFlow.js, then scan for up to 35 seconds. To render one product.
+ *
+ * Jacob's report was "it's like it's building each one", which is exactly what
+ * it was doing, and it is §4b's own lesson arriving on the one route nobody had
+ * applied it to: a route's cost should be the size of its output, not the size
+ * of the catalogue.
+ *
+ * -----------------------------------------------------------------------------
+ * THE SCREENING IS STRONGER HERE, NOT WEAKER
+ *
+ * The bulk scan is budgeted and fails open: "anything not reached within the
+ * budget is simply omitted (kept)". On a cold lambda it therefore screened a
+ * few hundred of two thousand images and kept the rest unscanned anyway. This
+ * screens exactly the seven products the page renders, with no budget at all,
+ * so every item on the page is genuinely checked rather than probably checked.
+ *
+ * The text filter (§4, isAdultApparelByText) runs identically either way; it is
+ * inside buildCatalog and no caller can reach past it.
+ */
+/*
+ * react-cached on (id, similarCount), which matters more here than anywhere:
+ * generateMetadata and the page component both need this, and without the
+ * dedupe a single product view builds the catalogue twice.
+ */
+export const getProductPageData = cache(async (
+  id: string,
+  similarCount: number
+): Promise<{ product: Product; similar: Product[] } | null> => {
+  const { products } = await buildCatalog(undefined, { bulkScan: false })
+  const target = products.find((p) => p.id === id)
+  if (!target) return null
+
+  const ranked = rankSimilar(target, products.filter((p) => p.image), similarCount)
+
+  // No budget: this is at most seven images, and a page that renders an item is
+  // the moment to be certain about it.
+  const candidates = [target, ...ranked].filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image)
+  let flagged = new Set<string>()
+  if (candidates.length) {
+    try {
+      flagged = await scanForBodyModels(candidates.map((p) => p.image), { concurrency: 4 })
+    } catch {
+      // Scan unavailable — the text filter is the backstop, as everywhere else.
+    }
+  }
+  const blocked = (p: Product) => MODEL_SCAN_CATS.has(p.cat) && flagged.has(p.image)
+
+  if (blocked(target)) return null
+  return { product: target, similar: ranked.filter((p) => !blocked(p)) }
+})
 
 /**
  * The same catalogue, built from named vendors only.

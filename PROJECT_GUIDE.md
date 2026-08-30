@@ -307,6 +307,24 @@ Check the sigil after touching segment config on any `[param]` route. Nothing fa
 warns, and the page keeps rendering correctly — it just quietly costs a function invocation
 per view.
 
+**A render-on-demand route pays for the whole catalogue unless you stop it, and `/p/[id]`
+did.** With `generateStaticParams` returning `[]`, each product page renders the first time
+somebody follows a Pin — and it called `getCatalog()`, which ends with a coco-ssd pass over
+every apparel photograph in the shop: load TensorFlow.js in a cold lambda, then scan for up
+to 35 seconds, to render one product. Following a tile off `/decora` took tens of seconds.
+Jacob's report was "it's like it's building each one", which is what it was doing.
+
+`getProductPageData()` screens the seven products the page renders instead, and it is a
+**stronger** guarantee rather than a weaker one: the bulk scan is budgeted and fails open
+("anything not reached within the budget is simply omitted"), so a cold lambda checked a few
+hundred of two thousand images and kept the rest unscanned anyway. Seven images with no
+budget means every item on the page is actually checked. The text filter is untouched and
+runs inside `buildCatalog` where no caller can reach past it.
+
+This is §4b's own rule arriving on the route nobody had applied it to. The `bulkScan: false`
+flag has exactly one caller and that function does the screening itself; it is not an escape
+hatch, because a safety filter a caller can skip is a safety filter with a hole in it.
+
 ---
 
 ### Measured vendor state, 2026-08-22

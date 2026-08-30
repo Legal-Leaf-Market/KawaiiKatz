@@ -15,6 +15,22 @@ type State = {
   wish: string[] // product ids
   adaMode: boolean
   adaAuthorized: boolean
+  /**
+   * The most recent add, so a confirmation can be shown without any component
+   * having to remember to raise one.
+   *
+   * Same argument as the conversion call in `dispatch` below, and for the same
+   * reason it lives in the same place: every ADD_TO_CART in the app goes
+   * through this reducer, so a toast driven off this field cannot be forgotten
+   * at the ninth call site. A component watching `cart` instead would also fire
+   * on the localStorage LOAD, which is a page refresh rather than an add.
+   *
+   * `at` is what changes on a repeat add of the same product, where the cart
+   * line just increments and nothing else in state moves. It is deliberately
+   * NOT persisted (see the localStorage effect): a confirmation is about the
+   * thing you just did, not about the last thing you did last week.
+   */
+  lastAdd: { productId: string; at: number } | null
 }
 
 /**
@@ -44,10 +60,13 @@ function reducer(state: State, action: Action): State {
     case 'ADD_TO_CART': {
       const key = `${action.productId}::${action.variantIndex}`
       const existing = state.cart.find((i) => `${i.productId}::${i.variantIndex}` === key)
+      // Date.now() rather than a counter: the toast keys its animation off this
+      // value, and a counter would collide across a reload.
+      const lastAdd = { productId: action.productId, at: Date.now() }
       if (existing) {
-        return { ...state, cart: state.cart.map((i) => `${i.productId}::${i.variantIndex}` === key ? { ...i, qty: i.qty + 1 } : i) }
+        return { ...state, lastAdd, cart: state.cart.map((i) => `${i.productId}::${i.variantIndex}` === key ? { ...i, qty: i.qty + 1 } : i) }
       }
-      return { ...state, cart: [...state.cart, { productId: action.productId, variantIndex: action.variantIndex, qty: 1 }] }
+      return { ...state, lastAdd, cart: [...state.cart, { productId: action.productId, variantIndex: action.variantIndex, qty: 1 }] }
     }
     case 'REMOVE_FROM_CART': {
       const key = `${action.productId}::${action.variantIndex}`
@@ -70,7 +89,7 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const defaultState: State = { cart: [], wish: [], adaMode: false, adaAuthorized: false }
+const defaultState: State = { cart: [], wish: [], adaMode: false, adaAuthorized: false, lastAdd: null }
 
 const StoreCtx = createContext<{ state: State; dispatch: React.Dispatch<Action> }>({ state: defaultState, dispatch: () => {} })
 
