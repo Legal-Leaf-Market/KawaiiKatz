@@ -621,7 +621,36 @@ export const VENDORS: VendorConfig[] = [
   // "Plush Toy"), which is roughly 456 of 719 and still carries the licensing
   // question. Do NOT paste the probe's suggested include list: it happily
   // includes Pet Beds, Cat Trees, Floor Rug and Harnesses.
-  { vendor: 'CozyKawaii', domain: 'https://cozykawaii.shop', prefix: 'cozy', affiliateParam: 'ref=kawaittkatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+  //
+  // The include list below is WRITTEN AND READY, so shipping this vendor is a
+  // one-line change: delete `pending` once the ref is confirmed. It keeps the
+  // eight genuine plush types (462 of 719) and drops every pet bed, cat tree,
+  // floor rug, slipper, harness, tote and robot. It is deliberately NOT the
+  // list the probe suggested, which included all of those.
+  //
+  // What it does NOT solve is the licensing question in point 2 above. That is
+  // a judgement, not a filter.
+  {
+    vendor: 'CozyKawaii',
+    domain: 'https://cozykawaii.shop',
+    prefix: 'cozy',
+    affiliateParam: 'ref=kawaittkatz',
+    network: 'goaffpro',
+    commissionPct: 0,
+    couponCode: '',
+    couponPct: 0,
+    pending: true,
+    include: [
+      'Stuffed Animals',
+      'Stuffed Animals (Giant)',
+      'Stuffed Animals 1',
+      'Stuffed Animals 2',
+      'Stuffed Animals 3',
+      'Plush Toy',
+      'Plush Pillow',
+      'Dolls',
+    ],
+  },
 
   // Third AWIN partner, and like BRKOX and MamaRaya they approached us
   // (approved 2026-08-30). GiftLAB sell personalised photo gifts: custom face
