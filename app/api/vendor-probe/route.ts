@@ -18,7 +18,7 @@ import { MODEL_SCAN_CATS, adultApparelHit } from '@/lib/adult-apparel'
  */
 export const dynamic = 'force-static'
 
-const TARGETS = ['CozyKawaii', 'BerryKawaii']
+const TARGETS = ['CozyKawaii', 'BerryKawaii', 'Tabletop Item Shop']
 const PER_PAGE = 250
 const MAX_PAGES = 5
 const UA = 'Mozilla/5.0'

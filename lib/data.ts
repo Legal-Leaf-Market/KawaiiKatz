@@ -420,6 +420,28 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Third approval surfaced on 2026-08-30, and the only one registered with an
+  // open question about whether it belongs here at all. Jacob looked at them
+  // originally for the gaming site and wants to see how they fit this one, so
+  // this row exists to be MEASURED, not to be shipped.
+  //
+  // Tabletop is a real adjacency rather than an obvious one. Kawaii dice sets,
+  // pastel dice trays and cute meeple accessories are a genuine category that
+  // this audience buys; rulebooks, card sleeves, painting supplies and licensed
+  // minis are a different hobby that happens to share a shop. Which of the two
+  // this merchant mostly stocks is exactly what categorize() will show, and the
+  // number to watch is how many land in `other`: a shop whose stock our
+  // classifier has no rule for is a shop this site has no shelf for.
+  //
+  // If it splits, the answer is probably an `include` list rather than a whole
+  // vendor, and if the kawaii part is thin the honest answer is to leave them
+  // to the gaming site and not dilute this one. §4e's rule applies: a page that
+  // gets pinned is the public face of the brand.
+  //
+  // Raw myshopify.com domain again, so the custom-domain note on BerryKawaii
+  // below applies here too.
+  { vendor: 'Tabletop Item Shop', domain: 'https://tabletop-itemshop.myshopify.com', prefix: 'ttis', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // Second of two approvals Jacob found on the same day (2026-08-30) and had
   // not realised he had. Network unconfirmed; GoAffPro is the assumption
   // because CozyKawaii below arrived the same way, and `ref=` is the shape
