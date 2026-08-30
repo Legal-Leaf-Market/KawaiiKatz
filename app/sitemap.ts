@@ -36,6 +36,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     })),
+    // The Decora room. Listed on the same footing as a gift guide: original
+    // Kawaii Katz editorial over a shelf we do not own, competing with no
+    // vendor for their own product URL. It is a room rather than a vendor
+    // page, so it stays listed when the retailers behind it change.
+    {
+      url: `${SITE_URL}/decora`,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
     // Articles. Listed for the same reason the guides are: they compete with no
     // vendor because no vendor wrote them, and they are the only pages here
     // that answer a question rather than list stock.
