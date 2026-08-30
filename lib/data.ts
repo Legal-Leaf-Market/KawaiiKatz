@@ -420,6 +420,33 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
+  // Fourth of the same batch (2026-08-30). On category this is the easiest fit
+  // of the four: plush is the biggest shelf we have, and a Minecraft plush is a
+  // plush toy in a way that a photo blanket or a dice tray is not.
+  //
+  // TWO THINGS TO SETTLE BEFORE IT SHIPS, and neither is a category question.
+  //
+  // 1. IS THE STOCK LICENSED? A standalone shop on a `minecraftplushies.com`
+  //    domain selling Minecraft plush is either an official licensee or it is
+  //    not, and the second case matters more here than it would on most sites:
+  //    /learn carries "How to spot a fake Nendoroid" and "Sanrio: real or
+  //    fake?". A storefront that teaches people to spot counterfeits and then
+  //    earns commission on them has undermined the only thing it sells, which
+  //    is trust. Check for a licence statement, a Mojang or Microsoft
+  //    attribution, or an authorised-reseller note before the flag comes off.
+  //
+  // 2. IT IS A LICENCE, AND §4e ALREADY HAS A RULE ABOUT THOSE. Plushible's
+  //    NASCAR and college rows are excluded from the guides via
+  //    SPORTS_LICENCE_TERMS, not because they are bad products but because they
+  //    are a different market from a kawaii guide. Minecraft is a softer case
+  //    than a college mascot — it is a children's property with real crossover
+  //    into cute plush — but "it is plush" is not by itself the answer. Read
+  //    the names in the probe output.
+  //
+  // Registered pending like the rest. The feed is unread and neither question
+  // above has been asked of anyone who can answer it.
+  { vendor: 'Minecraft Plushies', domain: 'https://minecraftplushies.com', prefix: 'mine', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
+
   // Third approval surfaced on 2026-08-30, and the only one registered with an
   // open question about whether it belongs here at all. Jacob looked at them
   // originally for the gaming site and wants to see how they fit this one, so
