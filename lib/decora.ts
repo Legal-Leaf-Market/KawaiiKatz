@@ -64,6 +64,7 @@ import type { Product } from './data'
  *
  *   Grumpy Bunny       438 of 438   (all)     untracked
  *   KawaiiMoriStore    943 of 1250  (all)     TRACKED, 10%   (added 2026-08-30)
+ *   Kawaii Unicorn      42 of 1192  (decora)  TRACKED, 15%   (added 2026-08-30)
  *   Kawaii Babe        113 of 921   (decora)  untracked
  *   sugarhai            29 of 408   (decora)  untracked
  *   Kore Kawaii         24 of 1062  (decora)  TRACKED, 15%
@@ -97,6 +98,13 @@ export const SOURCE_SHOPS: Source[] = [
   { vendor: 'sugarhai', take: 'decora' },
   { vendor: 'Kore Kawaii', take: 'decora' },
   { vendor: 'The Kawaii Shoppu', take: 'decora' },
+  // Filed main-grid-only when it went live, on the reasoning that a unicorn
+  // shop is general kawaii. True of 1,150 of its rows and wrong about the tail:
+  // it carries 42 gothic-unicorn plush, lolita dresses, tutus and punk sets,
+  // and it is the highest-commission shop in the room at 15%. `decora` takes
+  // exactly that tail and leaves the rainbow bedding on the main grid, which is
+  // what the mode is for.
+  { vendor: 'Kawaii Unicorn', take: 'decora' },
 ]
 
 /** Vendor names only. Kept because the feeds narrow their catalogue build on it. */
@@ -196,6 +204,13 @@ export const SHOPS: Shop[] = [
     home: 'https://shop.kawaiimoristore.com',
     says: 'Japanese fashion: lolita, jirai kei and ouji',
     shipsFrom: 'Asia',
+    brands: [],
+  },
+  {
+    vendor: 'Kawaii Unicorn',
+    home: 'https://kawaii-unicorn.com',
+    says: 'unicorn and rainbow kawaii across fashion, plush and home',
+    shipsFrom: 'the US',
     brands: [],
   },
   {

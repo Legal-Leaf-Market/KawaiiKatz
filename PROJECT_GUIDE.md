@@ -1076,9 +1076,31 @@ shop names on its own storefront, and it feeds The Edit ("one piece per house").
 "Pastel goth" in there would invent a label and put a non-house in a section whose whole
 premise is houses.
 
-**The room is still 96% untracked**, against 100% before. That is a reason to fill in
-`affiliateParam` for Grumpy Bunny and Kawaii Babe — one string each, no code change — not a
-reason to show a thinner page.
+**Measured again on the live catalogue once the two GoAffPro shops landed, 2026-08-30:**
+
+| Shop | in the room | take | tracked |
+|---|---:|---|---|
+| KawaiiMoriStore | 754 | all | **yes, 10%** |
+| Grumpy Bunny | 437 | all | no |
+| Kawaii Babe | 104 | decora | no |
+| Kawaii Unicorn | 42 | decora | **yes, 15%** |
+| sugarhai | 29 | decora | no |
+| Kore Kawaii | 23 | decora | **yes, 15%** |
+| The Kawaii Shoppu | 20 | decora | no |
+
+**1,409 products and 58% of them tracked**, against 438 products and 0% when the room
+shipped. Grumpy Bunny and Kawaii Babe are still the two worth an `affiliateParam` — one
+string each, no code change — but the room now earns.
+
+**Kawaii Unicorn is the case `take: 'decora'` exists for.** It went live main-grid-only
+because a unicorn shop is general kawaii, which is true of 1,150 of its rows and wrong about
+the tail: it carries 42 gothic-unicorn plush, lolita dresses, tutus and punk sets, and it is
+the highest-commission shop in the room. Judging a vendor by its name put its most relevant
+stock on the wrong page. Measure the tail before deciding a shop is one thing.
+
+**The six feeds now hold 1,408 items.** Pinterest caps at 200 Pins/day across the account,
+so that is a week of publishing: connect them a couple at a time and expect the big two
+(`decora-tops` 524, `decora-fits` 462) to take days on their own.
 
 ---
 
