@@ -1,6 +1,6 @@
 import { BOARDS, board, fillBoard } from '@/lib/boards'
-import { DECORA_BOARDS, assignDecoraBoards, decoraBoard, decoraPin } from '@/lib/decora'
-import { getCatalog } from '@/lib/catalog-source'
+import { DECORA_BOARDS, SOURCES, assignDecoraBoards, decoraBoard, decoraPin } from '@/lib/decora'
+import { getCatalog, getVendorCatalog } from '@/lib/catalog-source'
 import { db } from '@/lib/db'
 import { storeExclusions } from '@/lib/db/schema'
 import { unproxied } from '@/lib/catalog-shared'
@@ -139,7 +139,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
   const d = b ? undefined : decoraBoard(name)
   if (!b && !d) return new Response('Not found', { status: 404 })
 
-  const { products } = await getCatalog()
+  // A Decora feed publishes one room's shelf, so it builds one room's shelf.
+  // The full fan-out plus the coco-ssd scan is around four minutes on a cold
+  // worker and two of these feeds hit the 240s per-page cap on their first
+  // deploy; the vendors it was scraping had nothing in the output. The
+  // per-vendor cache entries are shared either way, so this takes work away
+  // from nobody. See getVendorCatalog.
+  const { products } = d ? await getVendorCatalog(SOURCES) : await getCatalog()
   const hidden = await excludedIds()
   const live = products.filter((p) => !hidden.has(p.id))
 

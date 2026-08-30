@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
-import { getCatalog } from '@/lib/catalog-source'
-import { decoraPool, fillDecora } from '@/lib/decora'
+import { getVendorCatalog } from '@/lib/catalog-source'
+import { SOURCES, decoraPool, fillDecora } from '@/lib/decora'
 import { SITE_URL } from '@/lib/site'
 import { pageNode } from '@/lib/schema'
 import JsonLd from '@/components/JsonLd'
@@ -40,7 +40,11 @@ import DecoraClient from './DecoraClient'
  * ONE MORE CATALOGUE-BACKED PRERENDER
  *
  * Section 4b is tracking this count: it was 30 routes and 5.2 minutes on
- * be62863. This adds one. Re-measure on the next deploy rather than assuming.
+ * be62863. This adds one, and the six Decora feeds add six more.
+ *
+ * This route no longer pays for all of them: it builds SOURCES only, which is
+ * everything it renders. Two of the feeds timed out at 240 seconds before that
+ * change went in.
  */
 export const revalidate = 21600 // 6 hours — must stay statically analysable
 export const maxDuration = 60
@@ -79,7 +83,13 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const { products } = await getCatalog()
+  // One room, one shelf. Everything this page renders server-side comes from
+  // SOURCES, so scraping the other seventeen vendors here bought nothing but
+  // build time — and the count of routes doing exactly that is what put two
+  // Decora feeds over the 240s per-page cap. The browser still fetches the
+  // whole catalogue for the cart and the Gift Finder; that is a different
+  // request and it is not on the build's clock.
+  const { products } = await getVendorCatalog(SOURCES)
   const pool = decoraPool(products)
   const { sections, edit } = fillDecora(products)
   const seen = new Set<string>()

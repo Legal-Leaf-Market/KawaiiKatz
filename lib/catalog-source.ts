@@ -166,13 +166,38 @@ const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v8'], {
   tags: ['catalog'],
 })
 
-export const getCatalog = cache(async (): Promise<CatalogResult> => {
+/**
+ * The catalogue, optionally narrowed to a few vendors.
+ *
+ * -----------------------------------------------------------------------------
+ * WHY A SUBSET EXISTS AT ALL
+ *
+ * Section 4b has been counting catalogue-backed prerendered routes since there
+ * were three of them, and the Decora feeds are where the count finally bit: two
+ * of them hit `staticPageGenerationTimeout` at 240 seconds on their first
+ * attempt, on the deploy of 2c30f74. Every one of those feeds publishes ONE
+ * vendor's shelf and was paying for eighteen — a full fan-out plus a coco-ssd
+ * scan over roughly two thousand garment photographs, to write out 437 rows
+ * from Grumpy Bunny.
+ *
+ * Narrowing costs nothing anyone else pays for. The per-vendor
+ * `unstable_cache` entries are the same entries, so a narrowed caller warms the
+ * cache for the full one and vice versa; the only work that disappears is work
+ * that was being thrown away.
+ *
+ * The `vendors` argument is a filter, not a second source. Everything below it
+ * — de-dupe, the text filter, the image scan — runs exactly as it does for the
+ * whole catalogue, because a safety filter that a narrow caller can skip is a
+ * safety filter with a hole in it.
+ */
+async function buildCatalog(vendorNames?: string[]): Promise<CatalogResult> {
   // Filter to the live vendors ONCE and index everything off that same array.
   // `results[i]` is matched back to its vendor by position, so filtering inside
   // the loop instead would slide every vendor one place along and file one
   // merchant's products under another merchant's name.
-  const live = liveVendors()
-  const held = VENDORS.filter((v) => v.pending)
+  const want = vendorNames ? new Set(vendorNames) : null
+  const live = liveVendors().filter((v) => !want || want.has(v.vendor))
+  const held = VENDORS.filter((v) => v.pending && (!want || want.has(v.vendor)))
   if (held.length) {
     console.log(
       `[catalog] pending, not scraped: ${held.map((v) => v.vendor).join(', ')} (see VendorConfig.pending)`
@@ -247,7 +272,22 @@ export const getCatalog = cache(async (): Promise<CatalogResult> => {
     vendors,
     dropped: vendors.reduce((n, v) => n + v.fetched, 0) - list.length,
   }
-})
+}
+
+/** The whole catalogue. What every page and /api/catalog call. */
+export const getCatalog = cache((): Promise<CatalogResult> => buildCatalog())
+
+/**
+ * The same catalogue, built from named vendors only.
+ *
+ * For a route whose whole output comes from one shelf — the Decora feeds — so
+ * it stops paying for seventeen storefronts it never reads. Not react-cached:
+ * the callers ask once per render, and keying a cache() on an array argument
+ * would miss on every call anyway.
+ */
+export function getVendorCatalog(vendors: string[]): Promise<CatalogResult> {
+  return buildCatalog(vendors)
+}
 
 /**
  * How many products get inlined into a page's HTML as first-paint data.

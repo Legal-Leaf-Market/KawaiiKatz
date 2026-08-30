@@ -832,7 +832,27 @@ Katz.**" `Board.catLead` / `Board.pinTags` already existed and do the rest.
 **No guide pages, and §4b is why.** A `BOARDS` entry generates a page AND a feed; thirty
 catalogue-backed prerenders already cost 5.2 minutes and the guide's own conclusion was
 that the next thing added should share a route. These are feeds only, so the count goes
-30 → 36 rather than 30 → 42. **Re-measure on the next deploy.**
+30 → 36 rather than 30 → 42.
+
+**And 36 was still too many.** On the deploy of `2c30f74`, `/feeds/decora-anime.xml` and
+`/feeds/decora-fits.xml` both **failed at `staticPageGenerationTimeout` (240s) on their
+first attempt** and went to a retry. That is the first time this budget has actually been
+hit, and §4b had been predicting it for two entries. The cause was not the route count on
+its own: **every Decora route publishes one vendor's shelf and was building all eighteen**,
+a full fan-out plus a coco-ssd scan over ~2,000 garment photographs, to write out 437 rows
+from Grumpy Bunny.
+
+`getVendorCatalog(vendors)` in `lib/catalog-source.ts` is the fix and it is the shape §4b
+asked for. It runs the identical pipeline — same de-dupe, same text filter, same image scan,
+because a safety filter a narrow caller can skip is a safety filter with a hole in it — over
+a filtered vendor list. **The per-vendor `unstable_cache` entries are the same entries**, so
+a narrowed caller warms the cache for the full one and takes work away from nobody; the only
+work that disappears was being thrown away. `/decora` and all six feeds now use it.
+
+**The general lesson, and it generalises past this page:** a route's cost should be the
+size of its output, not the size of the catalogue. Any future route that renders one
+vendor, one category or one shelf should take the narrow build. **Re-measure on the deploy
+after this one.**
 
 **A product belongs to exactly one board.** The page's sections are capped, so a product a
 cap pushes out is simply not shown; a feed publishes everything it is given, and two boards
