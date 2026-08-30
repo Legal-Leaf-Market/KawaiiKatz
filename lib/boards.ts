@@ -259,6 +259,30 @@ const OFF_SEASON_TERMS = [
  * equally wrong and nobody has looked. That is a scrape change and a
  * unstable_cache version bump (section 4), so it is not folded in here.
  */
+/**
+ * Never on any guide, whatever else matches. Checked for every board.
+ *
+ * The squishies feed opened with "Gift Card: a kawaii squishy pick from Squishy
+ * Bottle. Just $5.00", illustrated with a stock photo of two women exchanging a
+ * present. Because a feed is ordered oldest-first (§4f), that was the FIRST Pin
+ * Pinterest made from the board.
+ *
+ * A gift card is not a product, it is a way of paying for one. It has no image
+ * worth pinning, it tells a visitor nothing, and on a curated shelf it reads as
+ * a shop that could not be bothered to filter its own export. The same is true
+ * of samples, shipping-protection upsells and deposits, which every Shopify
+ * catalogue carries and none of which is a thing anybody wants.
+ *
+ * This belongs at board level rather than in an `exclude` on one vendor,
+ * because there is no board on which any of it is ever right, and a per-vendor
+ * list only fixes the vendor somebody noticed.
+ */
+const NEVER_ON_A_BOARD = [
+  'gift card', 'gift cards', 'giftcard', 'e-gift', 'egift', 'gift certificate',
+  'gift voucher', 'sample', 'samples', 'shipping protection', 'shipping insurance',
+  'route protection', 'donation', 'deposit', 'store credit', 'test product',
+]
+
 export const PLUSH_NOT_A_TOY_TERMS = [
   // Bags and carriers.
   'backpack', 'backpacks', 'bookbag', 'bag', 'bags', 'purse', 'handbag',
@@ -362,6 +386,7 @@ function tiebreak(id: string): number {
 
 /** Does this product belong on this page at all? */
 function belongs(b: Board, p: Product): boolean {
+  if (hasWord(String(p.name || '').toLowerCase(), NEVER_ON_A_BOARD)) return false
   if (b.notCats?.length && b.notCats.includes(p.cat)) return false
   if (b.notVendors?.length && b.notVendors.includes(p.vendor)) return false
   if (b.notWords?.length && hasWord(String(p.name || '').toLowerCase(), b.notWords)) return false
@@ -439,6 +464,19 @@ export const BOARDS: Board[] = [
       'check out on their site, never ours.',
     hashtag: 'ChristmasGiftIdeas',
     catLead: 'Christmas',
+    // A SEASON TAKES THE WHOLE CATALOGUE, which is right, and means it inherits
+    // every problem the themed boards exclude one at a time. The live feed was
+    // carrying "Penn State University Nittany Lion Kids Snugible" and three
+    // Autoplush cars as Christmas gift ideas.
+    //
+    // Note what is deliberately NOT excluded here: the Snugibles, slippers and
+    // blanket hoodies stay. A blanket hoodie is a bad plushie and a perfectly
+    // good Christmas present, so PLUSH_NOT_A_TOY_TERMS is wrong for this board
+    // even though it is right for plushies and squishies. The exclusions that
+    // travel are the ones about MARKET rather than about category: a college
+    // mascot and a plush Ford F150 are not kawaii gifts in December either.
+    notWords: SPORTS_LICENCE_TERMS,
+    notVendors: ['Autoplush'],
     season: [8, 9, 10, 11], // Sept–Dec; Pinterest searches Christmas from September
     sections: [
       {
@@ -519,7 +557,16 @@ export const BOARDS: Board[] = [
      * Word-anchored, which is what keeps Montessori & Me's genuine "Montessori
      * Bookshelf" in: `shelf` does not match inside BOOKSHELF.
      */
-    notWords: ['shelf', 'shelves', 'shelving', 'spatula', 'dustpan', 'organiser', 'organizer', 'hoop art'],
+    // `blankie` is deliberately absent, unlike on plushies and squishies: Russ
+    // Berrie's "Activity Blankie" is a genuine baby development toy, where
+    // Plushible's "Blankie Bestie" is a blanket. Same word, opposite verdict,
+    // which is why these lists are per board and not one global one.
+    notWords: [
+      'shelf', 'shelves', 'shelving', 'spatula', 'dustpan', 'organiser',
+      'organizer', 'hoop art', 'backpack', 'backpacks', 'bookbag',
+      // A bunny onesie and a blanket cloak are not Montessori toys.
+      'hoodie', 'onesie', 'cloak',
+    ],
     maxPerVendor: 6,
     sections: themeSections('The ones we would buy first, across every shop.'),
   },
@@ -609,7 +656,14 @@ export const BOARDS: Board[] = [
     // Squishy Bottle's collapsible silicone cups are called "Squishy" and are
     // drinkware, not fidget toys. They belong on the lunch page, and are there.
     notCats: ['kitchen'],
-    demote: ['snugible', 'blanket', 'hoodie'],
+    // Demoting the Snugibles was not enough, exactly as it was not enough on
+    // the plushies board: a feed carries the whole list whatever its order, so
+    // "Mochi Bunny Adult Snugible | Blanket Hoodie & Pillow" went out as a
+    // kawaii squishy pick anyway. Same shared list, same reasoning.
+    notWords: PLUSH_NOT_A_TOY_TERMS,
+    // Autoplush's Ae86 shipped here as "a kawaii squishy pick". A plush car is
+    // not a squishy and is not kawaii; see the note on the plushies board.
+    notVendors: ['Autoplush'],
     maxPerVendor: 6,
     sections: themeSections('Start here.'),
   },
