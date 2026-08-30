@@ -17,12 +17,11 @@ import CartDrawer from '@/components/CartDrawer'
 import FloatingCart from '@/components/FloatingCart'
 import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
-import AdaLoginModal from '@/components/AdaLoginModal'
+import AdaLoginModal, { ADA_SECRET_CODE } from '@/components/AdaLoginModal'
 import { CatMark, PandaMark } from '@/components/BrandMark'
 import TasteNote from '@/components/TasteNote'
 
 const PAGE_SIZE = 18
-const ADA_SECRET_CODE = 'adamode'
 
 /**
  * Grid cards that load their photo eagerly at high priority. Sized to roughly

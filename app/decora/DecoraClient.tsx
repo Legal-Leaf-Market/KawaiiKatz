@@ -1,10 +1,11 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
 import { useLiveCatalog } from '@/hooks/useLiveCatalog'
 import { useExclusions } from '@/hooks/useExclusions'
+import { usePicks } from '@/hooks/usePicks'
 import { useStore } from '@/lib/store'
 import {
   fillDecora,
@@ -18,6 +19,7 @@ import { pinCollection } from '@/lib/pinterest'
 import { money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
 import ProductCard from '@/components/ProductCard'
+import AdaLoginModal, { ADA_SECRET_CODE } from '@/components/AdaLoginModal'
 import CartDrawer from '@/components/CartDrawer'
 import FloatingCart from '@/components/FloatingCart'
 import WishlistDrawer from '@/components/WishlistDrawer'
@@ -148,10 +150,50 @@ export default function DecoraClient({
   totalCount: number
 }) {
   const { products: live, loading } = useLiveCatalog(initialProducts)
-  const { excludedIds } = useExclusions()
+  const { excludedIds, exclude, restore } = useExclusions()
+  const { pickedIds, togglePick } = usePicks()
   const { state } = useStore()
   const [cartOpen, setCartOpen] = useState(false)
   const [wishOpen, setWishOpen] = useState(false)
+  const [adaLoginOpen, setAdaLoginOpen] = useState(false)
+
+  /**
+   * ADA MODE, AND IT MATTERS MORE HERE THAN ON THE HOME PAGE.
+   *
+   * This room is J-fashion, and a real part of that shelf is cut in a way that
+   * needs a person to look at it. The automatic layers do what they can - the
+   * text filter runs on every category, the image scan drops full-body model
+   * shots - but §4 is explicit that they are a backstop and not a verdict: the
+   * three garments that reached the site filed as `plush` and `tech` were found
+   * by Ada, by hand, not by a filter.
+   *
+   * So the curator's two controls have to be reachable on the page where the
+   * question actually comes up. Until now they were not: this page rendered
+   * ProductCard with no Ada props at all, so a product could be seen here and
+   * only hidden from the home grid.
+   *
+   * Entry is the same hidden keydown buffer the home page uses, and stays
+   * hidden for the same reason. There is no search box on this page to type it
+   * into, which is why the listener is the only route.
+   */
+  useEffect(() => {
+    let buf = ''
+    function onKey(e: KeyboardEvent) {
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)) return
+      const k = e.key || ''
+      if (k.length !== 1 || !/[a-z]/i.test(k)) return
+      buf = (buf + k.toLowerCase()).slice(-ADA_SECRET_CODE.length)
+      if (buf === ADA_SECRET_CODE) { buf = ''; setAdaLoginOpen(true) }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  function toggleExclude(p: Product, currentlyExcluded: boolean) {
+    if (currentlyExcluded) restore(p.id)
+    else exclude(p)
+  }
 
   /**
    * `useLiveCatalog` holds SHOWCASE vendors out of `products`, which is right
@@ -159,9 +201,14 @@ export default function DecoraClient({
    * Grumpy Bunny has none, so `products` is the correct list and using it keeps
    * this page consistent with the rest of the site's idea of the catalogue.
    */
+  /**
+   * In Ada Mode the excluded rows STAY, marked, exactly as they do on the home
+   * grid. A curator who cannot see what she hid cannot restore it, and hiding
+   * something is the one action on this site that most needs to be reversible.
+   */
   const visible = useMemo(
-    () => live.filter((p) => !excludedIds.has(p.id)),
-    [live, excludedIds]
+    () => (state.adaMode ? live : live.filter((p) => !excludedIds.has(p.id))),
+    [live, excludedIds, state.adaMode]
   )
 
   const { sections, edit } = useMemo(() => fillDecora(visible), [visible])
@@ -450,6 +497,33 @@ export default function DecoraClient({
               </p>
             </div>
 
+            {/*
+              A visible marker for Ada Mode, and it earns its line.
+
+              The mode is entered by typing a word nothing on the page mentions,
+              so without this the only feedback is that two extra buttons appear
+              on a tile - easy to miss on a page this loud, and the failure is
+              silent in the wrong direction: believing you are in the mode and
+              not being, so a product you meant to hide is still on the shelf.
+
+              It also says what the buttons do, because "exclude" is site-wide
+              and permanent-ish while the star is only the picks rail, and those
+              are very different actions to press by accident.
+            */}
+            {state.adaMode && (
+              <div className="mb-6 rounded-[18px] border-[3px] border-[#25e0e8] bg-[#0e2a2e] px-4 py-3">
+                <p className="font-display text-[13px] font-extrabold uppercase tracking-[.2em] text-[#25e0e8]">
+                  Ada Mode is on
+                </p>
+                <p className="mt-1 text-[13.5px] font-semibold leading-relaxed text-[#bdf3f6]">
+                  Every tile now carries ⛔ Exclude from Store, which hides it everywhere on
+                  the site and keeps it out of the Pinterest feeds, and ☆ to add it to your
+                  picks. Excluded items stay visible to you here, marked, so you can put one
+                  back.
+                </p>
+              </div>
+            )}
+
             {/* Section jump chips. Real anchors, so the page is navigable
                 without JavaScript and a Pin can deep-link to a section. */}
             <nav className="flex gap-2 flex-wrap mb-9">
@@ -565,7 +639,16 @@ export default function DecoraClient({
                 )}
                 <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
                   {products.map((p) => (
-                    <ProductCard key={p.id} product={p} pin={pinFor(p)} />
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      pin={pinFor(p)}
+                      isPicked={pickedIds.has(p.id)}
+                      isExcluded={excludedIds.has(p.id)}
+                      isAdaMode={state.adaMode}
+                      onTogglePick={state.adaMode ? togglePick : undefined}
+                      onToggleExclude={state.adaMode ? toggleExclude : undefined}
+                    />
                   ))}
                 </div>
               </section>
@@ -618,7 +701,16 @@ export default function DecoraClient({
                   </p>
                   <div className="relative grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
                     {edit.map((p) => (
-                      <ProductCard key={`edit-${p.id}`} product={p} pin={pinFor(p)} />
+                      <ProductCard
+                        key={`edit-${p.id}`}
+                        product={p}
+                        pin={pinFor(p)}
+                        isPicked={pickedIds.has(p.id)}
+                        isExcluded={excludedIds.has(p.id)}
+                        isAdaMode={state.adaMode}
+                        onTogglePick={state.adaMode ? togglePick : undefined}
+                        onToggleExclude={state.adaMode ? toggleExclude : undefined}
+                      />
                     ))}
                   </div>
                 </div>
@@ -713,6 +805,7 @@ export default function DecoraClient({
           and near-black, and a coral bubble on it would read as a widget from
           another site. Same component, same behaviour. */}
       <FloatingCart products={live} onOpen={() => setCartOpen(true)} tone="decora" />
+      <AdaLoginModal open={adaLoginOpen} onClose={() => setAdaLoginOpen(false)} />
       <WishlistDrawer open={wishOpen} onClose={() => setWishOpen(false)} products={live} />
     </div>
   )

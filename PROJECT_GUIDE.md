@@ -980,6 +980,35 @@ that is the split rather than a preference. Pinterest reads the image to decide 
 topic: somebody searching Harajuku fashion wants the clothes. The one Pin whose subject
 really is the room gets the cast.
 
+### Ada Mode works on this page, and for a while it did not
+
+`/decora` rendered `ProductCard` with no curator props at all, so a product could be seen
+here and only hidden from the home grid. On the room where the shelf is J-fashion, that is
+the wrong page to be missing the control on: Jacob's words were "some of the clothing is
+pretty skimpy", and §4 already says the automatic layers are a backstop rather than a
+verdict, since the three garments that reached the site filed as `plush` and `tech` were
+found by Ada by hand.
+
+Entry is the same hidden keydown buffer (`ADA_SECRET_CODE`, now exported from
+`AdaLoginModal` rather than duplicated per page - two copies of a magic string that must
+match is the shape that silently stops matching). There is no search box here to type it
+into, so the listener is the only route.
+
+Two things it does differently from the home grid, both deliberate:
+
+- **Excluded rows stay visible in Ada Mode**, marked, exactly as on the home grid. A curator
+  who cannot see what she hid cannot restore it, and hiding is the one action here that most
+  needs to be reversible.
+- **A visible "Ada Mode is on" bar.** The mode is entered by typing a word nothing on the
+  page mentions, so without it the only feedback is two extra buttons appearing on a tile,
+  which is easy to miss on a page this loud. The failure is silent in the wrong direction:
+  believing you are in the mode and not being, so something you meant to hide is still on
+  the shelf. The bar also says what each control does, because the exclude button is
+  site-wide and the star is only the picks rail.
+
+Verified in a browser against the live catalogue: 81 exclude controls and 81 stars on the
+page, banner present.
+
 ### Five shops, and four of them were already in the catalogue
 
 The room shipped with one source because Grumpy Bunny IS a decora shop: every row on its

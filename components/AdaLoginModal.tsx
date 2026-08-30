@@ -2,6 +2,18 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
 
+/**
+ * The word that opens this modal, typed anywhere on a page that listens.
+ *
+ * It lives beside the modal it opens rather than in each page, because it was
+ * a local const in HomeClient and /decora needed the same one: two copies of a
+ * magic string that must match is the shape that silently stops matching. It
+ * is not a secret - it gates nothing, it only reveals the PIN prompt - so a
+ * client module is the right home for it. ADA_PIN is the secret and it never
+ * leaves the server (§3, §7).
+ */
+export const ADA_SECRET_CODE = 'adamode'
+
 type Props = {
   open: boolean
   onClose: () => void
