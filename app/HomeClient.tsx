@@ -15,6 +15,7 @@ import AdaPicksRail from '@/components/AdaPicksRail'
 import FeaturedCollection from '@/components/FeaturedCollection'
 import CartDrawer from '@/components/CartDrawer'
 import FloatingCart from '@/components/FloatingCart'
+import KawaiiConfetti from '@/components/KawaiiConfetti'
 import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
 import AdaLoginModal, { ADA_SECRET_CODE } from '@/components/AdaLoginModal'
@@ -244,6 +245,23 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
 
   return (
     <>
+      {/*
+        The falling layer, and the page above it.
+
+        TWO wrappers, and both are load-bearing. The OUTER `relative` is what
+        the rail cast positions against: it spans the whole document, so a
+        character's `top: 40%` means 40% of the page. Without it, `absolute`
+        resolves to the initial containing block, which is viewport-sized, and
+        all eight characters pile into the first screen and then scroll away.
+
+        The INNER `relative z-10` lifts the content above the confetti's z-0.
+        Not `-z-10` on the confetti: that hides a child behind its own parent's
+        background, which is the bug /decora shipped once already.
+      */}
+      <div className="relative">
+      <KawaiiConfetti />
+      <div className="relative z-10">
+
       {/* Header */}
       <Header
         onSearch={handleSearch}
@@ -410,6 +428,9 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
       </footer>
 
       {/* Drawers & Modals */}
+      </div>
+      </div>
+
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} products={allProducts} />
       {/* The header pill scrolls away on a phone; this does not. See the note
           in FloatingCart on why the confirmation lives with it. */}

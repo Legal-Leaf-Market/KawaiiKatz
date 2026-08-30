@@ -882,6 +882,41 @@ and the feed together, within the 6h revalidate.
 
 ---
 
+## 4e-b. The falling layer, on both sides
+
+`components/DecoraDecor.tsx` (the room) and `components/KawaiiConfetti.tsx` (the shop floor)
+share their KEYFRAMES and nothing else. `kkCharmFall`, `kkBob` and `kkTwinkle` live once in
+`globals.css`, so walking from one room to the other the page moves the same way and only
+the cast changes. That shared motion is the whole point: Jacob's ask was for two rooms that
+look nothing alike and still feel like one site.
+
+**The artwork is NOT shared, and that was a judgement.** The decora charm sheets are hot
+pink and black, drawn to sit on a near-black room; on `#fffaf0` the black pieces read heavy
+and a little mean, which is the opposite of this side. So the kawaii confetti is **inline
+SVG** hearts, bows, stars and sparkles filled from the site's own tokens. Three reasons, all
+of which apply here specifically:
+
+- Exactly on palette, because it is the palette.
+- **It cannot blur.** The §4f-b blur note is about a 900px source stretched past native; a
+  vector has no native size to exceed. That is the honest fix rather than a treatment that
+  hides the problem.
+- No request, no decode, a few hundred bytes against ~50KB per charm sheet.
+
+**The CAST is reused unchanged, and that is the deliberate bridge.** Katz and Panda are this
+site's own mascots (`public/brand-cat.png` is the same cat), so seeing them in the margins
+of both rooms is the thing that ties the two together.
+
+**Two wrappers on the home page and both are load-bearing.** The outer `relative` is what
+the rail positions against: it spans the document, so `top: 40%` means 40% of the page.
+Without it `absolute` resolves to the initial containing block, which is viewport-sized, and
+all eight characters pile into the first screen and scroll away. Measured before and after:
+the rail now sits at 470 through 4,093 on a 4,767px page. The inner `relative z-10` lifts
+the content above the confetti's `z-0`, and it is `z-0` rather than `-z-10` for the reason
+§4f-b records.
+
+Opacity differs on purpose: 0.72 on cream, 0.55 on the near-black room. Pale shapes at half
+opacity on a light page read as dust rather than confetti.
+
 ## 4f-b. Kawaii Katz Goes Decora: a second set of boards over the same shelf
 
 `lib/decora.ts` → `DECORA_BOARDS`, and six more feeds at `/feeds/decora-*.xml`. No new
