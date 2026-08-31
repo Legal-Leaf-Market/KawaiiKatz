@@ -57,6 +57,7 @@ type HeaderProps = {
         <a href="#shop" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]"><ShopIcon size={18} /> Shop</a>
         <button onClick={() => { setMobileMenuOpen(false); onOpenGift() }} className="flex items-center gap-2 text-left py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550] w-full"><GiftIcon size={18} /> Gift Finder</button>
         <a href="/gifts" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]">🎁 Gift Guides</a>
+        <a href="/anime" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]">🌸 Anime Shops</a>
         <a href="/learn" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550]">📚 Learn</a>
         <button onClick={() => { setMobileMenuOpen(false); onOpenWish() }} className="block text-left py-3 px-2 font-display font-bold text-base border-b border-[#ffe6d9] text-[#4f4550] w-full">
           <span className="inline-flex items-center gap-2"><HeartIcon size={18} /> My Board</span> {wishCount > 0 && <span className="ml-1 bg-[#ff5a7a] text-white rounded-full text-xs px-2 py-0.5">{wishCount}</span>}
@@ -115,6 +116,7 @@ type HeaderProps = {
             <a href="#shop" className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors inline-flex items-center gap-1.5"><ShopIcon /> Shop</a>
             <button onClick={onOpenGift} className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors cursor-pointer inline-flex items-center gap-1.5"><GiftIcon /> Gift Finder</button>
             <a href="/gifts" className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors inline-flex items-center gap-1.5">🎁 Gift Guides</a>
+            <a href="/anime" className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors inline-flex items-center gap-1.5">🌸 Anime</a>
             <a href="/learn" className="font-bold text-[13.5px] px-3 py-2 rounded-full hover:bg-[#ffb199] transition-colors inline-flex items-center gap-1.5">📚 Learn</a>
           </nav>
 

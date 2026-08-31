@@ -974,6 +974,159 @@ export function linkShowcase(slug: string): LinkShowcase | undefined {
   return LINK_SHOWCASES.find((s) => s.slug === slug)
 }
 
+/**
+ * THE ANIME HALL — /anime.
+ *
+ * A third shape, and it exists because neither of the first two fits.
+ * `VendorConfig.showcase` (BRKOX) renders scraped products and needs a feed we
+ * have read. `LinkShowcase` (Claire's, Smiggle) is one merchant per page and is
+ * hard-wired to AWIN's redirect. What arrived on 2026-08-31 is five approved
+ * GoAffPro merchants who belong together on ONE page and whose catalogues
+ * nobody has read.
+ *
+ * WHY ONE PAGE AND NOT FIVE. They are one operator. The sister site's registry
+ * spotted the pattern before a single application went in, and the approvals
+ * confirmed it with data: five programmes, five keyword domains, and every one
+ * of them paying an identical rate on an identical window. Five separate brand
+ * pages would present one supplier as five partners, which is the failure that
+ * makes a comparison site worthless. One hall presents it as what it is: a
+ * cluster of anime shops, each holding a different shelf.
+ *
+ * WHY NO PRODUCTS AND NO DEEP LINKS. Every link here points at a merchant's
+ * home page, and that is deliberate rather than lazy. The only URL on these
+ * five domains that is certain to exist is the one their affiliate programme is
+ * attached to. Nothing in this container can reach them to check anything
+ * deeper, so a curated `/collections/...` link would be a guess, and a guessed
+ * deep link does not degrade politely: it 404s in front of a shopper who
+ * already trusted us enough to click. Sections get added when somebody has
+ * opened the shops in a real browser, and not before.
+ *
+ * WHY THE SWIMWEAR SHOP IS NOT HERE, AND MUST NOT BE ADDED LATER. The cluster
+ * has six domains and this page carries five. `animeswimsuit.com` was left off
+ * by Jacob's own call on 2026-08-31, and the reasoning is the whole reason this
+ * site has a `CUT_PHRASES` list at all: Kawaii Katz is the kid-facing sibling.
+ * The phrase filter cannot help here, because it screens ingested product
+ * titles and nothing on this page is ingested. A human deciding which shops to
+ * name IS the filter on a page of hand-written links, and it has already been
+ * applied. Do not "complete the set".
+ *
+ * THE TRACKING CODE IS THE SISTER SITE'S, AND THAT IS A KNOWN COST.
+ * `ref=verdastudio` is the code these five merchants issued, and they issued it
+ * to the Verda Studio account. It pays, and it pays the same person. What it
+ * does not do is separate the two sites' earnings: a sale driven from here
+ * lands in Verda Studio's GoAffPro reporting, so neither dashboard can answer
+ * "which site earned this". Every other GoAffPro row on this site carries
+ * `ref=kawaiikatz` for exactly that reason.
+ *
+ * The fix is one form per merchant from the Kawaii Katz account and then one
+ * line per shop below. Until then the choice is between merged reporting and
+ * handing five merchants free traffic, and the sock vendors already settled
+ * which of those is worse: 466 products with an empty `affiliateParam` earned
+ * nothing at all, and nothing in the UI said so.
+ */
+export type AnimeShop = {
+  key: string
+  merchant: string
+  /** Home page. The one URL on this domain we know exists. */
+  domain: string
+  emoji: string
+  /** Two or three words. Sits under the name. */
+  tagline: string
+  blurb: string
+  /** What is actually on their shelves. Chips, not links. */
+  shelves: string[]
+  /**
+   * Query param appended to the destination, GoAffPro's `?ref=` shape. Empty
+   * means the link earns nothing, and the page says so rather than hiding it.
+   */
+  affiliateParam: string
+  /** Tailwind-ready accent, so the five cards read as five shops. */
+  accent: string
+}
+
+export const ANIME_SHOPS: AnimeShop[] = [
+  {
+    key: 'animebed',
+    merchant: 'Anime Bedding',
+    domain: 'https://animebed.com',
+    emoji: '🛏️',
+    tagline: 'Your favourite series, at duvet scale',
+    blurb:
+      'Duvet covers, pillowcases and full bedding sets printed with anime art. It is the ' +
+      'biggest surface in a bedroom and the one nobody thinks to decorate, which is why a ' +
+      'set here changes a room more than anything else on this page.',
+    shelves: ['Duvet covers', 'Bedding sets', 'Pillowcases', 'Throw blankets'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#b79cff',
+  },
+  {
+    key: 'animebackpack',
+    merchant: 'Anime Backpacks',
+    domain: 'https://animebackpack.com',
+    emoji: '🎒',
+    tagline: 'School bags with a fandom on them',
+    blurb:
+      'Backpacks, rucksacks and shoulder bags in anime prints. The one item on this page ' +
+      'that gets used every single day, which makes it the one where the print actually ' +
+      'has to be good.',
+    shelves: ['Backpacks', 'School bags', 'Shoulder bags', 'Drawstring bags'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#7fc4d4',
+  },
+  {
+    key: 'animejacket',
+    merchant: 'Anime Jacket',
+    domain: 'https://animejacket.com',
+    emoji: '🧥',
+    tagline: 'Bombers, hoodies and varsity coats',
+    blurb:
+      'Jackets and hoodies built around anime artwork rather than a logo slapped on a ' +
+      'blank. Bomber and varsity cuts, embroidered as often as printed.',
+    shelves: ['Bomber jackets', 'Hoodies', 'Varsity coats', 'Windbreakers'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#ff8a65',
+  },
+  {
+    key: 'animekimono',
+    merchant: 'Anime Kimono',
+    domain: 'https://animekimono.com',
+    emoji: '👘',
+    tagline: 'Haori, yukata and kimono cardigans',
+    blurb:
+      'The loose open-front layer that goes over everything else, in anime prints and in ' +
+      'plain traditional patterns. The most wearable piece of costume on this page: it ' +
+      'reads as a cardigan anywhere that is not a convention.',
+    shelves: ['Haori jackets', 'Yukata', 'Kimono cardigans', 'Obi belts'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#f2a2c0',
+  },
+  {
+    key: 'animepuzzle',
+    merchant: 'Anime Puzzles',
+    domain: 'https://animepuzzle.com',
+    emoji: '🧩',
+    tagline: 'Key art, one thousand pieces at a time',
+    blurb:
+      'Jigsaws printed with anime key art, mostly in the 300 to 1000 piece range. A poster ' +
+      'you have to earn, and the quietest thing on this page by a distance.',
+    shelves: ['1000 piece', '500 piece', 'Kids puzzles', 'Poster art'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#8fd0a8',
+  },
+]
+
+/** Append a shop's tracking param to one of its URLs. Empty param = untouched. */
+export function animeShopUrl(shop: AnimeShop, url?: string): string {
+  const dest = url || shop.domain
+  if (!shop.affiliateParam) return dest
+  return dest + (dest.includes('?') ? '&' : '?') + shop.affiliateParam
+}
+
+/** True when every shop on the hall is tracked, i.e. the page earns. */
+export function animeHallTracked(): boolean {
+  return ANIME_SHOPS.every((s) => Boolean(s.affiliateParam))
+}
+
 export const SEED_PRODUCTS: Product[] = [
   { id: 'plbl-14-inch-brown-plush-bunny', vendor: 'Plushible', domain: 'https://plushible.com', name: 'Poppy the Plush Unicorn', cat: 'plush', character: '', price: 12.99, unit: 'from', onSale: false, wasPrice: 0, discountPct: 0, commissionPct: 20, couponCode: '', couponPct: 0, image: '', url: 'https://plushible.com/products/14-inch-brown-plush-bunny', badge: '', added: '2026-07-22', variants: [{ id: 'seed-plbl-1', title: '10 in', price: 12.99, available: true }, { id: 'seed-plbl-2', title: '34 in Jumbo', price: 49.99, available: true }], blurb: 'Soft huggable plush bunny. A classic cuddle buddy for all ages.' },
   { id: 'plbl-manhattan-toy-kreecher-pillow', vendor: 'Plushible', domain: 'https://plushible.com', name: 'Pawley the Plush Pillow Pal', cat: 'plush', character: '', price: 15.29, unit: '', onSale: true, wasPrice: 17.99, discountPct: 15, commissionPct: 20, couponCode: '', couponPct: 0, image: '', url: 'https://plushible.com/products/manhattan-toy-kreecher-pillow', badge: '', added: '2026-07-20', variants: [], blurb: 'Classic pillow pal plush, timeless and squishy-soft.' },
