@@ -452,6 +452,40 @@ Two things in there worth knowing without reading it:
    row would register a vendor that returns zero products forever, which is the Tokyo Tiger
    failure by construction.
 
+### A showcase is for a partner whose stock is a different SHAPE, not a worse one
+
+Three rooms now: BRKOX (display frames), GiftLAB (personalised photo gifts, declined on
+2026-08-30 but the page pattern stands) and **Everblog US** (AWIN 128579, a digital family
+calendar, live 2026-08-31). None of the three sells anything kawaii and all three are real
+partners, which is exactly the case the field exists for.
+
+`VendorConfig.showcase` does two things at once and the second is the one worth remembering:
+it generates the page AND it holds the vendor out of the main grid, because `useLiveCatalog`
+keeps showcase vendors out of `products`. A $349 wall calendar sitting between a $12 plushie
+and a pencil case reads as a mis-click, and the grid is the one surface whose whole job is
+looking coherent.
+
+**Everblog shipped unprobed, on Jacob's call, and the page is built for that.** An empty
+`products.json` is a live possibility here — §4c's own batch is seven approved partnerships
+of which ONE returned a readable feed — so `/everblog` renders its pitch, its sourced review
+line and a tracked link to the shop whether or not a single product comes through. A showcase
+that reads as broken when the feed is thin is a showcase that only works on the days it was
+not needed.
+
+**Every claim on it is sourced and no price is hardcoded.** The 4.7/358 Trustpilot figure and
+the Notebookcheck / Gadgeteer / TWICE / Poc Network write-ups are attributed in the copy as
+somebody else's measurement, because they will drift and a page cached for six hours cannot
+promise a number. The `EVER10` code named in their AWIN terms is deliberately NOT shown: the
+terms name the code and never say what it takes off, and this site has never invented a
+discount.
+
+**It is in the sitemap and not on the home page**, which is the GiftLAB precedent rather than
+a new rule: `app/sitemap.ts` generates a route per `showcaseVendors()` entry automatically,
+and only BRKOX has a hand-written tile on `/`. Jacob's framing was a side page we do not push
+on-site and do push on Pinterest, and that is what this is — with the §4f caveat still
+standing, that a destination we tell nobody to value is the destination Pinterest declines to
+distribute.
+
 ## 4d. Pinterest
 
 Domain verified 2026-08-25 via `metadata.verification.other` in `app/layout.tsx`.

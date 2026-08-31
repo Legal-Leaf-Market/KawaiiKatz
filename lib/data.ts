@@ -550,7 +550,33 @@ export const VENDORS: VendorConfig[] = [
   // getCatalog skips the vendor silently and nothing appears, which is the
   // benign half of the failure modes. The probe still lists it and reads it on
   // the next build, so the number arrives either way.
-  { vendor: 'Everblog US', domain: 'https://everblog.com', prefix: 'ever', affiliateParam: '', awinMerchantId: '128579', network: 'awin', commissionPct: 10, couponCode: '', couponPct: 0 },
+  {
+    vendor: 'Everblog US',
+    domain: 'https://everblog.com',
+    prefix: 'ever',
+    affiliateParam: '',
+    awinMerchantId: '128579',
+    network: 'awin',
+    commissionPct: 10,
+    couponCode: '',
+    couponPct: 0,
+    // A SHOWCASE, which also holds it out of the main grid: useLiveCatalog
+    // keeps showcase vendors out of `products` precisely because they have a
+    // room of their own. That is the point here. A $349 wall calendar sitting
+    // between a $12 plushie and a pencil case reads as a mis-click, and the
+    // grid is the one surface whose whole job is looking coherent.
+    showcase: {
+      slug: 'everblog',
+      emoji: '📅',
+      tagline: 'The family calendar on the fridge, for the people buying the plushies',
+      intro:
+        'Everblog make a digital calendar that hangs on the fridge or the wall and keeps a ' +
+        'household straight: everyone gets a profile, chores turn into stars, and the shopping ' +
+        'list stops living on four different phones. It is not kawaii and it is not pretending ' +
+        'to be. It is here because the person buying a plushie for a seven year old is usually ' +
+        'the person running the seven year old\'s week.',
+    },
+  },
 
   // Egirldoll. Fourth of the sitting, tracking real
   // (https://egirldoll.com/?ref=kawaiikatz).
