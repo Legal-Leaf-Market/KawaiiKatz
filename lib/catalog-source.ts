@@ -3,7 +3,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { fetchAwinFeed, hasFeed } from './awin-feed'
 
-import { VENDORS, liveVendors, isUntracked, type Product } from '@/lib/data'
+import { VENDORS, liveVendors, isUntracked, vendorForId, type Product } from '@/lib/data'
 import { mapShopifyProducts } from '@/lib/catalog-shared'
 import { MODEL_SCAN_CATS, isAdultApparelByText } from '@/lib/adult-apparel'
 import { scanForBodyModels } from '@/lib/person-scan'
@@ -331,7 +331,29 @@ export const getProductPageData = cache(async (
   id: string,
   similarCount: number
 ): Promise<{ product: Product; similar: Product[] } | null> => {
-  const { products } = await buildCatalog(undefined, { bulkScan: false })
+  /**
+   * ONE VENDOR, NOT NINETEEN, and this is the half of the fix that was missing.
+   *
+   * Dropping the coco-ssd scan took the worst of it, and the page was still
+   * slow: it fanned out across every vendor, read nineteen cache entries and
+   * de-duped and text-filtered 6,782 products, to render one. The production
+   * log said so plainly - a `/p/<id>` request logging "[catalog] pending, not
+   * scraped: ..." is the whole catalogue being assembled for one page.
+   *
+   * The id already says which vendor it belongs to: ids are `<prefix>-<handle>`
+   * and the prefix is a vendor key. So Plushible's 308 products get built
+   * instead of everybody's 6,782.
+   *
+   * The `similar` strip is therefore SAME-SHOP, which is a change and a
+   * defensible one: a second thing from the shop the visitor is already looking
+   * at is one checkout and one shipping charge instead of two. An unknown
+   * prefix falls back to the whole catalogue, so a vendor rename can never 404
+   * a live page.
+   */
+  const vendor = vendorForId(id)
+  const { products } = vendor
+    ? await buildCatalog([vendor], { bulkScan: false })
+    : await buildCatalog(undefined, { bulkScan: false })
   const target = products.find((p) => p.id === id)
   if (!target) return null
 

@@ -542,7 +542,15 @@ export const VENDORS: VendorConfig[] = [
   // couponCode: the terms say it may be promoted but never say what it takes
   // off. A code shown beside "saves 0%" is worse than no code, and inventing a
   // percentage is the one thing this file must not do.
-  { vendor: 'Everblog US', domain: 'https://everblog.com', prefix: 'ever', affiliateParam: '', awinMerchantId: '128579', network: 'awin', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+  //
+  // LIVE 2026-08-31 on Jacob's call, unprobed. §7 wants a read feed AND real
+  // tracking; this has the tracking and the research (a Shopify storefront, 358
+  // Trustpilot reviews, four independent hardware reviews) but not the feed.
+  // The risk that buys is small and known: if products.json does not answer,
+  // getCatalog skips the vendor silently and nothing appears, which is the
+  // benign half of the failure modes. The probe still lists it and reads it on
+  // the next build, so the number arrives either way.
+  { vendor: 'Everblog US', domain: 'https://everblog.com', prefix: 'ever', affiliateParam: '', awinMerchantId: '128579', network: 'awin', commissionPct: 10, couponCode: '', couponPct: 0 },
 
   // Egirldoll. Fourth of the sitting, tracking real
   // (https://egirldoll.com/?ref=kawaiikatz).
@@ -1043,6 +1051,24 @@ export function liveVendors(): VendorConfig[] {
 
 export function pendingVendors(): VendorConfig[] {
   return VENDORS.filter((v) => v.pending)
+}
+
+/**
+ * Which vendor a product id belongs to, read off its prefix.
+ *
+ * Ids are minted as `<prefix>-<handle>` in mapShopifyProducts, so the prefix is
+ * already a vendor key and nothing new has to be stored to use it. Matched
+ * longest-first because the prefixes are not a fixed length and `k` prefixes
+ * overlap: `kore-`, `kbabe-`, `kshop-`, `kmori-`, `kuni-`, `kslime-`, `kfs-`.
+ *
+ * Returns undefined for an id that matches nothing, and the one caller treats
+ * that as "build the whole catalogue" rather than as an error.
+ */
+const PREFIXES_LONGEST_FIRST = [...VENDORS]
+  .sort((a, b) => b.prefix.length - a.prefix.length)
+
+export function vendorForId(id: string): string | undefined {
+  return PREFIXES_LONGEST_FIRST.find((v) => id.startsWith(v.prefix + '-'))?.vendor
 }
 
 /** Vendors with a dedicated showcase page. */
