@@ -362,7 +362,7 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | KawaiiMoriStore | 1250 | 943 | GoAffPro 10%, **live 2026-08-30**. J-fashion, so it is a `/decora` source too. **Hits the 5-page cap.** 156 of 784 dropped |
 | Kawaii mood | 0 | 0 | GoAffPro 10%, joined and **frozen**: HTTP 402 `{"errors":"Unavailable Shop"}`. Stays `pending` |
 | Egirldoll | 1250 | 951 | GoAffPro 10%, **probed 2026-08-31 and readable**. Lolita / e-girl, **hits the 5-page cap**. 148 of 799 dropped, the highest share here. Stays `pending` on a brand call, not a technical one |
-| Everblog US | ? | ? | AWIN 128579, 10%. Live 2026-08-31 as a **showcase** (`/everblog`), unprobed. Not kawaii, held out of the main grid by design |
+| Everblog US | 7 | 6 | AWIN 128579, 10%. Live 2026-08-31 as a **showcase** (`/everblog`). Two calendars ($249 / $349) plus accessories. The 7th row is a checkout add-on, not a product |
 
 ### The second probe, 2026-08-31
 
@@ -508,6 +508,16 @@ somebody else's measurement, because they will drift and a page cached for six h
 promise a number. The `EVER10` code named in their AWIN terms is deliberately NOT shown: the
 terms name the code and never say what it takes off, and this site has never invented a
 discount.
+
+**A feed carries rows that are not products, and the cheapest one writes your headline.**
+Their `products.json` reads fine (7 rows), and one of them is a $0.98 "Worry-Free Purchase"
+checkout add-on. Harmless in the catalogue, and on the page it made the header say **prices
+start at $0.98** for a shop whose calendars are $249 and $349. That is the invented number
+the rest of the page is built to avoid, arrived at by arithmetic rather than by anybody
+writing it. The page screens on the BRAND (`everblog|fridgecal|homecal`), not on a price
+floor: every real row names the product line because it is a one-product shop with
+accessories, and a genuine $2 accessory is something they could list tomorrow. Any showcase
+whose header derives a "from" price should check what the cheapest row actually is.
 
 **It is in the sitemap and not on the home page**, which is the GiftLAB precedent rather than
 a new rule: `app/sitemap.ts` generates a route per `showcaseVendors()` entry automatically,

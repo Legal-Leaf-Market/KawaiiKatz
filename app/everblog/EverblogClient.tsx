@@ -15,6 +15,24 @@ import WishlistDrawer from '@/components/WishlistDrawer'
 const VENDOR = 'Everblog US'
 
 /**
+ * Rows that are not products.
+ *
+ * Their feed carries a $0.98 "Worry-Free Purchase" line, which is a checkout
+ * add-on rather than a thing you buy. It cost nothing to leave in the catalogue
+ * and everything to leave on this page: it is the cheapest row, so the header
+ * read "prices start at $0.98" for a shop whose calendars are $249 and $349.
+ * That is exactly the invented number the rest of this page is built to avoid,
+ * and it was invented by arithmetic rather than by anyone writing it.
+ *
+ * The test is the BRAND, not the price. Every real row here says Everblog,
+ * FridgeCal or HomeCal in its name, because it is a single-product shop with
+ * accessories; a warranty line does not. A price floor would have been the
+ * obvious rule and the wrong one, since a genuine $2 accessory is a thing they
+ * could sell tomorrow.
+ */
+const BRAND = /everblog|fridgecal|homecal/i
+
+/**
  * Everblog's showcase.
  *
  * -----------------------------------------------------------------------------
@@ -61,7 +79,7 @@ export default function EverblogClient({ initialProducts }: { initialProducts: P
 
   const cfg = vendorCfg(VENDOR)
   const visible = useMemo(
-    () => products.filter((p) => !excludedIds.has(p.id)),
+    () => products.filter((p) => !excludedIds.has(p.id) && BRAND.test(p.name)),
     [products, excludedIds]
   )
   const from = useMemo(() => {
