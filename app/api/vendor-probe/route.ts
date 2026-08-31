@@ -54,7 +54,20 @@ function tally<T>(rows: T[], key: (r: T) => string): [string, number][] {
   return [...m.entries()].sort((a, b) => b[1] - a[1])
 }
 
-async function probe(cfg: VendorConfig) {
+type Result = Record<string, unknown>
+
+/* THE BUILD LOG WAS NOT ENOUGH, and that is worth recording rather than
+   working around silently. The first run of this route printed per-vendor
+   headers and five result blocks; the log kept ONE collapsed "NO FEED"
+   block and the END line. The catalogue build logs a "5-page cap" warning
+   per vendor per prerendered route, which floods the same stream, and
+   Vercel drops or collapses under that volume.
+
+   So the results also go in the RESPONSE BODY. `force-static` prerenders
+   that body to a real file served at /api/vendor-probe on the production
+   domain, which needs no auth and cannot be sampled. The log stays as a
+   convenience; the body is the record. */
+async function probe(cfg: VendorConfig): Promise<Result> {
   console.log(`${TAG} ${'='.repeat(66)}`)
   console.log(`${TAG} ${cfg.vendor}  ${cfg.domain}`)
 
@@ -63,15 +76,12 @@ async function probe(cfg: VendorConfig) {
     ;({ rows, capped } = await feed(cfg.domain))
   } catch (e) {
     console.log(`${TAG}   NO FEED: ${(e as Error).message}`)
-    console.log(`${TAG}   Not Shopify, products.json closed, or the store is gone.`)
-    console.log(`${TAG}   402 = frozen shop. 404 = no store at this host. 403 = a bot rule.`)
-    return
+    return { vendor: cfg.vendor, domain: cfg.domain, feed: 'NONE', error: (e as Error).message }
   }
 
   if (!rows.length) {
-    console.log(`${TAG}   FEED ANSWERED AND IS EMPTY. The Tokyo Tiger shape: the site`)
-    console.log(`${TAG}   would report ok:true for this and show nothing.`)
-    return
+    console.log(`${TAG}   FEED ANSWERED AND IS EMPTY. The Tokyo Tiger shape.`)
+    return { vendor: cfg.vendor, domain: cfg.domain, feed: 'EMPTY' }
   }
 
   const mapped = mapShopifyProducts(cfg, rows as never)
@@ -96,22 +106,37 @@ async function probe(cfg: VendorConfig) {
 
   console.log(`${TAG}   -- first 12 titles --`)
   for (const r of rows.slice(0, 12)) console.log(`${TAG}     ${(r.title || '').slice(0, 92)}`)
+
+  return {
+    vendor: cfg.vendor,
+    domain: cfg.domain,
+    feed: 'OK',
+    inFeed: rows.length,
+    capped,
+    mapped: mapped.length,
+    types: tally(rows, (r) => (r.product_type || '').trim()),
+    cats: tally(rows, (r) => categorize(`${r.title || ''} ${r.product_type || ''}`)),
+    cutByFilter: cut.length,
+    cutPhrases: tally(cut, (c) => c).slice(0, 8),
+    sampleTitles: rows.slice(0, 25).map((r) => (r.title || '').slice(0, 110)),
+  }
 }
 
 export async function GET() {
   console.log(`${TAG} START ${new Date().toISOString()}`)
+  const results: Result[] = []
   for (const name of TARGETS) {
     const cfg = VENDORS.find((v) => v.vendor === name)
     if (!cfg) {
-      console.log(`${TAG} ${name}: NOT IN VENDORS`)
+      results.push({ vendor: name, feed: 'NOT_IN_VENDORS' })
       continue
     }
     try {
-      await probe(cfg)
+      results.push(await probe(cfg))
     } catch (e) {
-      console.log(`${TAG} ${name}: probe threw: ${(e as Error).message}`)
+      results.push({ vendor: name, domain: cfg.domain, feed: 'THREW', error: (e as Error).message })
     }
   }
   console.log(`${TAG} END`)
-  return NextResponse.json({ ok: true, note: 'output is in the build log, filter for [probe]' })
+  return NextResponse.json({ ok: true, at: new Date().toISOString(), results })
 }
