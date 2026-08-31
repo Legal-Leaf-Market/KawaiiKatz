@@ -7,6 +7,7 @@ import { useExclusions } from '@/hooks/useExclusions'
 import { useStore } from '@/lib/store'
 import { affiliateUrl, vendorCfg, money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
+import { pinCollection } from '@/lib/pinterest'
 import { EverblogHero, EverblogAccessory } from './EverblogCards'
 import FloatingCart from '@/components/FloatingCart'
 import CartDrawer from '@/components/CartDrawer'
@@ -48,6 +49,43 @@ const BRAND = /everblog|fridgecal|homecal/i
  * accessories row simply does not render.
  */
 const IS_CALENDAR = /\bcalendar\b/i
+
+/**
+ * Everblog's own hero photograph, the one their storefront opens with.
+ *
+ * -----------------------------------------------------------------------------
+ * TWO CROPS, NOT ONE, AND THAT IS THE WHOLE POINT
+ *
+ * They ship a 5760x2400 landscape for desktop and a SEPARATE 4000x5000 portrait
+ * for phones, switching at 699px. Taking only the landscape and letting CSS
+ * cover-crop it on a phone would throw away the crop a photographer already
+ * made and leave a sliver of a wide kitchen shot. A <picture> with their own
+ * breakpoint uses the frame each device was given.
+ *
+ * This is also why it is not `ProductImage`: that component is one <img> with a
+ * retry, which is right for a product tile and cannot do art direction.
+ *
+ * -----------------------------------------------------------------------------
+ * PROXIED, AND THE WIDTH IS BAKED INTO THE URL
+ *
+ * /api/img is same-origin, so the browser is fetching from us and CORS and
+ * robots.txt do not enter into it (§4f's `unproxied()` rule is for URLs handed
+ * to something OUTSIDE this site, which is the opposite case). The proxy
+ * allowlists `cdn.shopify.com` only, so these use the CDN host rather than the
+ * everblog.com/cdn/shop path their page prints, and `width` is set inside the
+ * proxied URL rather than passed as `w` because the `w` ladder tops out at 900
+ * and a full-bleed banner wants more than that.
+ */
+const CDN = 'https://cdn.shopify.com/s/files/1/0697/7136/2538/files'
+const proxy = (file: string, version: string, width: number) =>
+  `/api/img?u=${encodeURIComponent(`${CDN}/${file}?v=${version}&width=${width}`)}`
+
+const HERO_WIDE = proxy('E2-_banner-calendar.jpg', '1787906692', 1600)
+const HERO_TALL = proxy(
+  'E2-_banner-calendar_caa44231-38a0-4068-b9cd-e4aefe8cc0b1.jpg',
+  '1787906695',
+  1000
+)
 
 /**
  * Everblog's showcase.
@@ -117,6 +155,15 @@ export default function EverblogClient({ initialProducts }: { initialProducts: P
   /** The tracked link to the shop itself, for the empty state and the footer. */
   const shopLink = affiliateUrl('https://everblog.com', VENDOR)
 
+  /**
+   * The hero photograph is the biggest thing on the page, so it is a link, and
+   * it goes where their own banner goes: the FridgeCal. Falls back to the shop
+   * when the feed has not come through, because a hero that leads nowhere is
+   * worse than a hero that leads to the front door.
+   */
+  const heroTarget = heroes.find((p) => /fridgecal/i.test(p.name))
+  const heroLink = heroTarget ? affiliateUrl(heroTarget.url, VENDOR) : shopLink
+
   return (
     <div className="min-h-screen bg-[#fffaf0]">
       <header className="border-b-4 border-[#7fc4d4] bg-gradient-to-br from-[#e8f6f9] to-[#fffaf0]">
@@ -128,7 +175,37 @@ export default function EverblogClient({ initialProducts }: { initialProducts: P
             ← Back to Kawaii Katz
           </Link>
 
-          <div className="mt-5 flex flex-wrap items-start gap-5">
+          {/* Full bleed inside the padded column: negative margins rather than
+              moving it out of the header, so it keeps its place in the reading
+              order and the back link still comes first.
+
+              Capped in height because a 2.4:1 banner on a 2560px monitor is
+              1,066px tall otherwise, which is a screen and a half of one
+              photograph. object-cover then trims top and bottom, and the
+              subject of a kitchen banner is in the middle of it. */}
+          <a
+            href={heroLink}
+            target="_blank"
+            rel="nofollow sponsored noopener"
+            onClick={() => logEvent('outbound_click', { vendor: VENDOR, meta: 'everblog-hero-banner' })}
+            className="mt-5 -mx-4 block overflow-hidden bg-[#e8f6f9] sm:-mx-6 sm:rounded-[22px]"
+          >
+            <picture>
+              <source media="(max-width: 699px)" srcSet={HERO_TALL} />
+              <img
+                src={HERO_WIDE}
+                alt="The Everblog FridgeCal on a family kitchen fridge"
+                width={5760}
+                height={2400}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="max-h-[560px] w-full object-cover object-center sm:max-h-[480px]"
+              />
+            </picture>
+          </a>
+
+          <div className="mt-6 flex flex-wrap items-start gap-5">
             <div className="text-[54px] leading-none">{cfg?.showcase?.emoji ?? '📅'}</div>
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-[34px] font-extrabold leading-[1.05] text-[#4f4550] sm:text-[46px]">
@@ -168,7 +245,47 @@ export default function EverblogClient({ initialProducts }: { initialProducts: P
             write-ups, not ours.
           </p>
 
-          <p className="mt-3 max-w-[72ch] text-[12.5px] font-semibold leading-relaxed text-[#9a8fa3]">
+          {/* Pin the PAGE, not a product.
+              This is the Pin worth making and lib/pinterest.ts says why: a
+              collection URL holds the whole shelf behind one click and keeps
+              working, where a Pin per product made in volume is the shape
+              Pinterest's community guidelines limit. One press seeds a new
+              board; the per-card buttons fill it in.
+
+              The image is their own hero banner. It is a proxied /api/img path
+              here and pinCollection() calls unproxied() on it, because
+              robots.txt disallows /api/ and Pinterest is the one fetching it.
+              That is the §4f rule, and this is the fifth place it applies. */}
+          <button
+            type="button"
+            onClick={() => {
+              logEvent('pin_click', { vendor: VENDOR, meta: 'everblog-collection' })
+              pinCollection({
+                path: '/everblog',
+                // No colon in either half. pinCollection joins them with one,
+                // so a colon here gave the caption three of them.
+                title: 'The family calendar that lives on the fridge',
+                tagline:
+                  'a profile for everyone in the house, chores that turn into stars, one shopping list instead of four, and no subscription',
+                image: HERO_WIDE,
+                tag: 'FamilyCalendar',
+                tags: [
+                  'FamilyOrganization',
+                  'FamilyCommandCenter',
+                  'ChoreChart',
+                  'KitchenOrganization',
+                  'KawaiiKatz',
+                ],
+                tail: 'Found on Kawaii Katz.',
+              })
+            }}
+            className="mt-5 inline-flex items-center gap-2 rounded-full border-[3px] border-[#e60023] bg-[#e60023] px-5 py-2.5 font-display text-[14px] font-extrabold text-white transition-opacity hover:opacity-90"
+            title="Pin this whole page to one of your boards"
+          >
+            📌 Pin this collection
+          </button>
+
+          <p className="mt-4 max-w-[72ch] text-[12.5px] font-semibold leading-relaxed text-[#9a8fa3]">
             We do not sell any of this. Everblog stock it and ship it, you check out on their
             site, and our links are affiliate links, so we may earn a commission when you buy.
             {from > 0 ? ` Prices come from their live feed and start at ${money(from)}.` : ''}

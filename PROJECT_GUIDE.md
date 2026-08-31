@@ -557,6 +557,41 @@ Oak, Walnut and Charcoal is noise.
 **The discount badge on the photo was cut in half by the card's own rounded corner** and said
 what the price row already said. Removed rather than nudged: one place per fact.
 
+### The merchant's own hero, and the Pins off it
+
+`/everblog` opens with Everblog's own banner photograph, the one their storefront leads with.
+**They ship two crops and both are used**: a 5760x2400 landscape for desktop and a separate
+4000x5000 portrait for phones, switching at 699px, so a `<picture>` with their breakpoint uses
+the frame a photographer already chose rather than cover-cropping a wide kitchen shot down to
+a sliver. This is also why it is not `ProductImage`, which is one `<img>` with a retry and
+cannot do art direction.
+
+It goes through `/api/img` like every other merchant image, and two details matter: the proxy
+allowlists `cdn.shopify.com` only, so the URL uses the CDN host rather than the
+`everblog.com/cdn/shop/...` path their page prints; and `width` is set INSIDE the proxied URL
+rather than passed as `w`, because the `w` ladder tops out at 900 and a full-bleed banner
+wants more. Height is capped (480px desktop, 560px mobile) because a 2.4:1 banner on a 2560px
+monitor is 1,066px tall otherwise.
+
+**Pin buttons: one for the collection, one per card.** The collection Pin is the one worth
+making, for the reason `lib/pinterest.ts` already states: a collection URL holds the whole
+shelf behind one click, where a Pin per product made in volume is the shape Pinterest's
+community guidelines limit. Every card Pin goes through `pinProductPage`, so it lands on
+`/p/<id>` and is not an affiliate Pin.
+
+**The Pin voice is overridden, and §4f-b is why.** These rows are categorised `other` and
+`tech`, so the default caption would read "a kawaii gift pick ... cute, clever & kind" under
+`#KawaiiFinds #CuteStuff`. Publishing a $349 family calendar to a board about kawaii under
+that caption is the exact defect the plushies feed shipped twice. `everblogPin()` sets the
+`PinContext` overrides instead, and **the lead noun is per-product**: calling the $19.90
+stylus "a family calendar pick" would be the caption lying about the photograph.
+
+Two things only reading the generated captions caught. `PinContext.vendor` is new, because
+"Everblog US" is a config key that distinguishes a storefront from its other regions and "a
+pick from Everblog US" is not a sentence anybody writes; a Pin is durable and public, so the
+caption gets the brand. And `pinCollection` joins title and tagline with a colon, so a colon
+inside either half gave the collection caption three of them.
+
 **It is in the sitemap and not on the home page**, which is the GiftLAB precedent rather than
 a new rule: `app/sitemap.ts` generates a route per `showcaseVendors()` entry automatically,
 and only BRKOX has a hand-written tile on `/`. Jacob's framing was a side page we do not push

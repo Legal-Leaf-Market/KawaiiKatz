@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { affiliateUrl, money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
+import { pinProductPage, type PinContext } from '@/lib/pinterest'
 import ProductImage from '@/components/ProductImage'
 
 const VENDOR = 'Everblog US'
@@ -43,6 +44,77 @@ const VENDOR = 'Everblog US'
  * availability or a discount, and a page cached for six hours could not stand
  * behind one anyway.
  */
+
+/**
+ * The Pin voice for this room, and why it is not the site's default.
+ *
+ * `pinCaption()` would write "a kawaii gift pick from Everblog US ... cute,
+ * clever & kind" and tag it `#KawaiiFinds #CuteStuff`, because these rows are
+ * categorised `other` and `tech`. Publishing a $349 family calendar to a board
+ * about kawaii under that caption is the exact defect §4f-b was written for:
+ * the Pin's topic disagreeing with the board on both halves.
+ *
+ * `PinContext` already carries the four overrides that fix it, so this is the
+ * same mechanism a Decora board uses, pointed at a different shelf.
+ *
+ * The lead noun is per-product rather than fixed. Calling the $19.90 stylus
+ * "a family calendar pick" would be the caption lying about what is in the
+ * photograph.
+ */
+export function everblogPin(p: Product): PinContext {
+  return {
+    tag: 'FamilyCalendar',
+    catLead: /calendar/i.test(p.name) ? 'family calendar' : 'calendar accessory',
+    catTags: [
+      'FamilyOrganization',
+      'FamilyCommandCenter',
+      'ChoreChart',
+      'SmartHome',
+      'KitchenOrganization',
+    ],
+    style: 'digital',
+    tail: 'One calendar for the whole house, found on Kawaii Katz.',
+    vendor: 'Everblog',
+  }
+}
+
+/**
+ * The Pin button, on every card.
+ *
+ * It pins `/p/<id>` rather than the merchant deep link, which is the rule
+ * lib/pinterest.ts states in as many words: a Pin at an affiliate URL IS an
+ * affiliate Pin, and those are what Pinterest's community guidelines limit in
+ * volume. `pinProductPage` does that for us.
+ */
+function PinButton({ p, label = false }: { p: Product; label?: boolean }) {
+  const onClick = () => {
+    logEvent('pin_click', { productId: p.id, vendor: VENDOR, cat: p.cat })
+    pinProductPage(p, everblogPin(p))
+  }
+  if (label) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-1.5 rounded-full border-[3px] border-[#e60023] bg-white px-4 py-2.5 font-display text-[13.5px] font-extrabold text-[#e60023] transition-colors hover:bg-[#e60023] hover:text-white"
+        title={`Pin ${p.name} to one of your boards`}
+      >
+        📌 Pin
+      </button>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border-[3px] border-[#e60023] bg-white text-[15px] text-[#e60023] transition-colors hover:bg-[#e60023] hover:text-white"
+      aria-label={`Pin ${p.name} to Pinterest`}
+      title="Pin this to one of your boards"
+    >
+      📌
+    </button>
+  )
+}
 
 /** Shared by both card shapes: the tracked outbound link. */
 function shopUrl(p: Product) {
@@ -223,6 +295,7 @@ export function EverblogHero({ p, priority }: { p: Product; priority?: boolean }
               Buy on Everblog →
             </a>
             <AddToCart p={p} />
+            <PinButton p={p} label />
           </div>
         </div>
       </div>
@@ -270,7 +343,10 @@ export function EverblogAccessory({ p }: { p: Product }) {
           >
             Buy on Everblog →
           </a>
-          <AddToCart p={p} full />
+          <div className="flex gap-2">
+            <AddToCart p={p} full />
+            <PinButton p={p} />
+          </div>
         </div>
       </div>
     </article>

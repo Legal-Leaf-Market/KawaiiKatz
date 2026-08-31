@@ -92,6 +92,13 @@ export type PinContext = {
   catTags?: string[]
   style?: string
   tail?: string
+  /**
+   * The merchant's name as a reader should see it, when the VendorConfig key is
+   * not it. "Everblog US" is a key that distinguishes a storefront from its
+   * other regions, and "a pick from Everblog US" is not a sentence anyone
+   * writes. A Pin is durable and public, so the caption gets the brand.
+   */
+  vendor?: string
 }
 
 const PIN_TAGS_BY_CAT: Record<string, string[]> = {
@@ -295,7 +302,7 @@ export function pinProductPage(
   openPin({
     id: p.id,
     name: p.name,
-    vendor: p.vendor,
+    vendor: opts?.vendor ?? p.vendor,
     cat: p.cat,
     price: p.price,
     image: p.image,
