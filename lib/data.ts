@@ -504,6 +504,37 @@ export const VENDORS: VendorConfig[] = [
   // approval survives. Re-probe before writing it off (§4).
   { vendor: 'Kawaii mood', domain: 'https://kawaiimood.com', prefix: 'kmood', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
 
+  // THE ANIME CLUSTER, 2026-08-31. Five GoAffPro programmes approved in one
+  // afternoon, and the ANIME_SHOPS doc further down carries the full reasoning:
+  // one operator, five keyword domains, one identical rate on one identical
+  // window, niched by product rather than by branding.
+  //
+  // ON THE MAIN GRID, not only on /anime. Anime bedding, backpacks, jackets,
+  // kimono and jigsaws are all things this catalogue already sells in other
+  // forms, so keeping them off the main feed would be filing them by supplier
+  // rather than by what they are, which is the one thing a browse-first
+  // catalogue must never do.
+  //
+  // EVERY ONE IS PENDING AND NONE HAS AN `include` LIST, because nobody has
+  // read a single one of these feeds. §4's rule, and the reason for it is the
+  // reason it is a rule: guess too wide and the shelf fills with gift cards,
+  // guess too narrow and the vendor matches nothing and reads as a shop with
+  // no stock. `platform` is unconfirmed too. GoAffPro is overwhelmingly a
+  // Shopify app, which makes products.json likely and does not make it true.
+  //
+  // THE TRACKING VALUE IS THE SISTER SITE'S. `verdastudio` is the code these
+  // merchants issued, and they issued it to the Verda Studio account. It pays
+  // the same person; what it cannot do is tell the two sites apart in
+  // reporting. Every other GoAffPro row above carries `ref=kawaiikatz`. One
+  // form per merchant from this account fixes it, one line each.
+  //
+  // animeswimsuit.com is the sixth and is deliberately absent. See ANIME_SHOPS.
+  { vendor: 'Anime Bedding', domain: 'https://animebed.com', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Jacket', domain: 'https://animejacket.com', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Kimono', domain: 'https://animekimono.com', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Puzzles', domain: 'https://animepuzzle.com', prefix: 'apzl', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+
   // Everblog US. AWIN 128579, joined 2026-08-31, 10% on a 30-day cookie.
   //
   // NOT KAWAII, and researched before it was added rather than after. It is a
