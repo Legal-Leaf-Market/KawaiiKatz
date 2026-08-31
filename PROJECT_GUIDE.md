@@ -519,6 +519,44 @@ floor: every real row names the product line because it is a one-product shop wi
 accessories, and a genuine $2 accessory is something they could list tomorrow. Any showcase
 whose header derives a "from" price should check what the cheapest row actually is.
 
+### A showcase page does not have to use the site's product card
+
+Jacob, on the first version of `/everblog`: the photos do not look right, the description
+truncates with no way to open it, rethink the card, it does not need to fit the Kawaii Katz
+model. All three are one cause. `ProductCard` is built for a grid of thousands and is good at
+that job, which is exactly why it crops `aspect-[4/5]` with `object-cover` (a plushie is a
+square subject and a tall tile packs a grid) and shows two lines of a 140-character blurb.
+
+Everblog is six products and none of them is that shape. **The photographs are wide room shots
+of a calendar on a fridge, so a 4:5 cover crop cuts the calendar out of a picture whose subject
+is the calendar.** `app/everblog/EverblogCards.tsx` uses `object-contain` on a tinted panel
+instead: contain reads as a mistake against white and as a deliberate mat against a tint, and
+the tint is the site's own wash, so the page still looks like Kawaii Katz.
+
+**The Read more revealed nothing, and the fix was upstream.** `blurb` is cut to 137 characters
+plus an ellipsis at scrape time, so the existing expand control on `ProductCard` opened onto
+the same sentence. `Product.details` now carries up to 1,400 characters, **for showcase vendors
+only** (`cfg.showcase` in `mapShopifyProducts`). The gate is the §4b cache limit, not taste:
+Next's data cache rejects an entry over 2MB, Kore Kawaii already maps to 1.41MB, and a fuller
+description on all 6,700 rows would silently stop that vendor caching with no error. A showcase
+vendor is a handful of rows by definition, which is why it can afford prose. Cache key bumped
+v8 → v9 in the same commit, per §4.
+
+**Two card shapes, not one grid.** The shelf is genuinely two things: a $249 device and a $349
+device, then four accessories that only make sense once you own one. A uniform grid of six gave
+the $19.90 stylus the same weight as the product the page is about. Split on the name, since
+both calendars say Calendar and no accessory does, and it degrades in both directions: nothing
+matching renders every row as a hero, everything matching drops the accessories row.
+
+**The variants were in the feed the whole time and the grid card hid them in a `<select>`.**
+On a six-product page they are most of the decision: three frame finishes at $99, the FridgeCal
+with or without the dual stylus, the HomeCal with or without a frame at $80 more. They are
+chips now, priced only where the prices actually differ, because printing $99 three times for
+Oak, Walnut and Charcoal is noise.
+
+**The discount badge on the photo was cut in half by the card's own rounded corner** and said
+what the price row already said. Removed rather than nudged: one place per fact.
+
 **It is in the sitemap and not on the home page**, which is the GiftLAB precedent rather than
 a new rule: `app/sitemap.ts` generates a route per `showcaseVendors()` entry automatically,
 and only BRKOX has a hand-written tile on `/`. Jacob's framing was a side page we do not push

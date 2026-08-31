@@ -691,6 +691,21 @@ export function mapShopifyProducts(
     // description and its <meta name="description">, and fed to categorize().
     // Nothing is a legitimate outcome here; gibberish never is.
     if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
+    /**
+     * A SHOWCASE vendor keeps the description at length; everybody else gets
+     * the 140 characters a grid card can show.
+     *
+     * The cut is right for a tile among two thousand and wrong for a page about
+     * six products, where /everblog's cards offered a "read more" that revealed
+     * nothing because nothing more had been carried. Bounded rather than whole:
+     * these are marketing bodies and a few hundred words of it is a wall.
+     *
+     * Gated on `cfg.showcase` for the reason §4b gives: Next's data cache
+     * rejects an entry over 2MB, Kore Kawaii already maps to 1.41MB, and a
+     * fuller description on every product would stop that vendor caching with
+     * no error to say so. Showcase vendors are a handful of rows each.
+     */
+    const details = cfg.showcase && blurb.length > 140 ? blurb.slice(0, 1400).trim() : undefined
     if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
 
     const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ') : String(p.tags || '')
@@ -729,6 +744,7 @@ export function mapShopifyProducts(
       added: p.published_at || p.created_at || '',
       variants: vars.map(({ id, title, price, available }) => ({ id, title, price, available })),
       blurb,
+      ...(details ? { details } : {}),
     })
   }
   return out

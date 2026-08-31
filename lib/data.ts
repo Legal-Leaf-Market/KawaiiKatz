@@ -25,6 +25,21 @@ export type Product = {
    * SEED_PRODUCTS predate it; `isKidSafe()` re-derives a verdict for those.
    */
   kidSafe?: boolean
+  /**
+   * The merchant's description at greater length, for SHOWCASE VENDORS ONLY.
+   *
+   * `blurb` is cut to 140 characters at scrape time and that is right for a
+   * card in a grid of two thousand. It is wrong for a page about six products:
+   * /everblog's cards offered a "read more" that revealed nothing, because
+   * there was nothing more to reveal.
+   *
+   * Undefined everywhere else, on purpose. Next's data cache rejects an entry
+   * over 2MB and Kore Kawaii already maps to 1.41MB (§4b), so a fuller
+   * description on all 6,700 products would silently stop that vendor caching
+   * and no error would say so. A showcase vendor is a handful of rows by
+   * definition, which is exactly why it can afford prose.
+   */
+  details?: string
 }
 
 export type Category = { key: string; name: string; emoji: string }

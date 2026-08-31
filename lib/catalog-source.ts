@@ -162,7 +162,7 @@ async function sourceVendor(vendorName: string): Promise<{ products: Product[]; 
   return scrapeVendor(vendorName)
 }
 
-const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v8'], {
+const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v9'], {
   revalidate: CATALOG_REVALIDATE_SECONDS,
   tags: ['catalog'],
 })

@@ -7,7 +7,7 @@ import { useExclusions } from '@/hooks/useExclusions'
 import { useStore } from '@/lib/store'
 import { affiliateUrl, vendorCfg, money, type Product } from '@/lib/data'
 import { logEvent } from '@/lib/site-events'
-import ProductCard from '@/components/ProductCard'
+import { EverblogHero, EverblogAccessory } from './EverblogCards'
 import FloatingCart from '@/components/FloatingCart'
 import CartDrawer from '@/components/CartDrawer'
 import WishlistDrawer from '@/components/WishlistDrawer'
@@ -31,6 +31,23 @@ const VENDOR = 'Everblog US'
  * could sell tomorrow.
  */
 const BRAND = /everblog|fridgecal|homecal/i
+
+/**
+ * The calendars, and the things you bolt onto a calendar.
+ *
+ * Two shapes rather than one grid, because the shelf is genuinely two things:
+ * a $249 device and a $349 device, then four accessories that only make sense
+ * once you own one. A uniform grid of six gave the $19.90 stylus the same
+ * weight as the product the page is about.
+ *
+ * Split on the NAME, which is the only field that distinguishes them: both
+ * calendars say Calendar and none of the accessories does (Wooden Frame,
+ * Charging Dock, Magnetic Stylus, Stand). It degrades in both directions on
+ * purpose. If they rename and nothing matches, every row renders as a hero,
+ * which is over-generous rather than broken; if everything matches, the
+ * accessories row simply does not render.
+ */
+const IS_CALENDAR = /\bcalendar\b/i
 
 /**
  * Everblog's showcase.
@@ -82,6 +99,16 @@ export default function EverblogClient({ initialProducts }: { initialProducts: P
     () => products.filter((p) => !excludedIds.has(p.id) && BRAND.test(p.name)),
     [products, excludedIds]
   )
+  /** See IS_CALENDAR: heroes, then accessories, and either may be empty. */
+  const heroes = useMemo(() => {
+    const c = visible.filter((p) => IS_CALENDAR.test(p.name))
+    return c.length ? c : visible
+  }, [visible])
+  const accessories = useMemo(
+    () => visible.filter((p) => !heroes.includes(p)),
+    [visible, heroes]
+  )
+
   const from = useMemo(() => {
     const ps = visible.map((p) => p.price).filter((n) => n > 0).sort((a, b) => a - b)
     return ps.length ? ps[0] : 0
@@ -152,14 +179,33 @@ export default function EverblogClient({ initialProducts }: { initialProducts: P
       <main className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6">
         {visible.length > 0 ? (
           <>
-            <h2 className="mb-4 font-display text-[22px] font-extrabold text-[#4f4550]">
-              {visible.length === 1 ? 'The calendar' : `${visible.length} from Everblog`}
+            <h2 className="font-display text-[24px] font-extrabold text-[#4f4550]">
+              {heroes.length === 1 ? 'The calendar' : 'The calendars'}
             </h2>
-            <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
-              {visible.map((p) => (
-                <ProductCard key={p.id} product={p} similarPool={allProducts} />
+            <p className="mt-1 text-[13.5px] font-semibold text-[#9a8fa3]">
+              Two sizes: one that magnets onto the fridge, one that hangs on the wall.
+            </p>
+            <div className="mt-4 grid gap-4">
+              {heroes.map((p, i) => (
+                <EverblogHero key={p.id} p={p} priority={i === 0} />
               ))}
             </div>
+
+            {accessories.length > 0 && (
+              <>
+                <h2 className="mt-10 font-display text-[24px] font-extrabold text-[#4f4550]">
+                  Add to it
+                </h2>
+                <p className="mt-1 text-[13.5px] font-semibold text-[#9a8fa3]">
+                  Frames, stands and the stylus, for once one is on the wall.
+                </p>
+                <div className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+                  {accessories.map((p) => (
+                    <EverblogAccessory key={p.id} p={p} />
+                  ))}
+                </div>
+              </>
+            )}
           </>
         ) : (
           /* The empty state is a real page, not an apology. See the note above:
