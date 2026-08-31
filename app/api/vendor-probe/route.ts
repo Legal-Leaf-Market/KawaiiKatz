@@ -36,15 +36,19 @@ const SUSPECT =
  * Every pending vendor we actually intend to launch, chosen by the data rather
  * than by a list here.
  *
- * `pending && affiliateParam` is the honest test: a pending vendor with no
- * tracking value is one nobody has signed up for, and probing it tells us
- * nothing we can act on. Reading it off VENDORS means the next signup needs a
+ * `pending` plus EITHER tracking value is the honest test: a pending vendor
+ * with neither is one nobody has signed up for, and probing it tells us nothing
+ * we can act on. Both halves matter - an AWIN merchant is tracked by
+ * `awinMerchantId` and carries an empty `affiliateParam` by design (§4c), so
+ * testing only the param would silently skip every AWIN partner. Reading it off VENDORS means the next signup needs a
  * row in lib/data.ts and no edit to this file.
  *
  * It re-probes the ones already written off once, which §4 asks for in as many
  * words: "Re-probe once before writing off."
  */
-const TARGETS = VENDORS.filter((v) => v.pending && v.affiliateParam).map((v) => v.vendor)
+const TARGETS = VENDORS.filter((v) => v.pending && (v.affiliateParam || v.awinMerchantId)).map(
+  (v) => v.vendor
+)
 
 type ShopifyRow = { product_type?: string; title?: string }
 

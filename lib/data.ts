@@ -513,6 +513,37 @@ export const VENDORS: VendorConfig[] = [
   // approval survives. Re-probe before writing it off (§4).
   { vendor: 'Kawaii mood', domain: 'https://kawaiimood.com', prefix: 'kmood', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
 
+  // Everblog US. AWIN 128579, joined 2026-08-31, 10% on a 30-day cookie.
+  //
+  // NOT KAWAII, and researched before it was added rather than after. It is a
+  // real product with a real reputation: FridgeCal 13.4" at $239 and HomeCal
+  // 21.5" at $349, no subscription, 4.7/5 across 358 Trustpilot reviews, and
+  // reviewed by Notebookcheck, The Gadgeteer, TWICE and Poc Network. Its own
+  // /products/ and /collections/ URLs say Shopify, so unlike GiftLAB it should
+  // be readable.
+  //
+  // The FIT is the open question and it is not the usual one. This is not a
+  // cute product, and $239 next to a $12 plushie on the main grid would look
+  // like a mis-click. But the site already runs a thread of parent-facing
+  // stock - MamaRaya's baby gifts, Montessori & Me's routine charts - and this
+  // is a chore-and-rewards board for families. So the honest home is a SHOWCASE
+  // page (VendorConfig.showcase, as BRKOX and GiftLAB have), never a row in the
+  // grid.
+  //
+  // Two things to watch, neither disqualifying. The programme launched
+  // 2026-07-16 and its terms were revised hours before we joined, so it is six
+  // weeks old; and its AWIN ShopWindow reads "Total Products 0, Last Updated
+  // Never", which is the merchant not having set up their datafeed. We scrape
+  // products.json directly, so that costs us nothing, but it is a sign of how
+  // new the programme is. Auto-validation is 45 days, so a first payment is a
+  // long way out.
+  //
+  // The programme names a code, EVER10, and it is deliberately NOT in
+  // couponCode: the terms say it may be promoted but never say what it takes
+  // off. A code shown beside "saves 0%" is worse than no code, and inventing a
+  // percentage is the one thing this file must not do.
+  { vendor: 'Everblog US', domain: 'https://everblog.com', prefix: 'ever', affiliateParam: '', awinMerchantId: '128579', network: 'awin', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+
   // Egirldoll. Fourth of the sitting, tracking real
   // (https://egirldoll.com/?ref=kawaiikatz).
   //
