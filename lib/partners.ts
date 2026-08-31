@@ -232,6 +232,8 @@ export const PARTNERS_REJECTED: { merchant: string; why: string }[] = [
   // the other two and one of the four came to.
   { merchant: 'SparkX Harajuku', why: 'Dead URL, dead store (confirmed by Jacob 2026-08-30). Never applied for. It was the shortlist entry whose OWN DOMAIN was supposed to be the reassuring signal against a myshopify subdomain, and it was the one that did not exist. A domain tells you a shop was set up once, not that it is trading.' },
   { merchant: 'Best of Kawaii', why: 'Dead, and confirmed twice. products.json answered HTTP 404 with a Cloudflare HTML error page on 2026-08-22 and again on 2026-08-30, so it is not a Shopify store or the endpoint is gone. §4 asks for one re-probe before writing a shop off; it has had it.' },
+  { merchant: 'Kawaii Fashion Store', why: 'Dead, and confirmed by the second probe §4 asks for. products.json THREW rather than answering on 2026-08-30 and again on 2026-08-31 (`fetch failed` from a Vercel build, so DNS or a refused connection: the host does not answer at all). A thrown fetch is the one result that can be a transient resolver failure on the build machine rather than the shop, which is why it was given a re-probe instead of a conclusion. It threw again. GoAffPro approval was real and the ref value looked correct; the domain is not live.' },
+
   { merchant: 'Minecraft Plushies', why: 'Dead, and confirmed twice. products.json answered HTTP 404 with a non-Shopify JSON body ({"message":""}, no server header) on 2026-08-22 and again on 2026-08-30. A live shop on a platform we cannot read is the §4c showcase-or-nothing case, but nothing answers here at all.' },
 
   // DELISTED rather than never-listed, and the distinction is the point. This

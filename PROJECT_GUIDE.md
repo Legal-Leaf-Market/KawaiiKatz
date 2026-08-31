@@ -361,6 +361,36 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Kawaii Unicorn | 1250 | 1234 | GoAffPro 15%, **live 2026-08-30**. 8 of 703 dropped by the phrase filter, the cleanest feed here. No `include` (empty types) |
 | KawaiiMoriStore | 1250 | 943 | GoAffPro 10%, **live 2026-08-30**. J-fashion, so it is a `/decora` source too. **Hits the 5-page cap.** 156 of 784 dropped |
 | Kawaii mood | 0 | 0 | GoAffPro 10%, joined and **frozen**: HTTP 402 `{"errors":"Unavailable Shop"}`. Stays `pending` |
+| Egirldoll | 1250 | 951 | GoAffPro 10%, **probed 2026-08-31 and readable**. Lolita / e-girl, **hits the 5-page cap**. 148 of 799 dropped, the highest share here. Stays `pending` on a brand call, not a technical one |
+| Everblog US | ? | ? | AWIN 128579, 10%. Live 2026-08-31 as a **showcase** (`/everblog`), unprobed. Not kawaii, held out of the main grid by design |
+
+### The second probe, 2026-08-31
+
+Three of the intake were still `pending` with real tracking, so the probe ran once more before
+the route was deleted. Two of the three are now settled and both answers were already written
+down as the thing to look for.
+
+- **Kawaii Fashion Store threw again**, and the note on it said what to do about that in
+  advance: a thrown fetch is the one result that can be the build machine rather than the
+  shop, so re-probe once, and if it throws again the domain is not live. It threw again. It is
+  out of `VENDORS` and in `PARTNERS_REJECTED`.
+- **Kawaii mood is still 402 `{"errors":"Unavailable Shop"}`.** A frozen store stays frozen.
+  It keeps its row and its `pending` flag; there is nothing to re-decide until it thaws.
+- **Egirldoll is the most ingestable feed of the whole intake and is still not live.** 1,250
+  rows (capped, so a floor), 951 mapped, a real `product_type` taxonomy rather than the empty
+  column MamaRaya had, and 789 of 951 landing in `apparel`. **148 of 799 would be dropped by
+  the kid-safety filter, 19%** - against 156 of 784 for KawaiiMoriStore and 8 of 703 for
+  Kawaii Unicorn - and the leading terms are `high waist` (43), `lace up` (28) and `camisole`
+  (15), which is the lolita wardrobe §4 already describes. That is the filter working, not a
+  reason to loosen it (§7).
+
+  Nothing technical blocks it. What blocks it is the question the prospect note asked before it
+  was signed, and it is Ada and Jacob's on the actual photographs, the way Autoplush was
+  decided: **the probe answers whether a shop is ingestable and never whether it belongs.**
+
+**The probe route is deleted again** (§4's recipe, step 4). It has now been added and removed
+twice, which is the recipe working rather than churn: it is a temporary instrument, and leaving
+it in the tree is a public endpoint that scrapes merchant hosts on every build.
 
 Two things that only showed up under real data:
 

@@ -419,30 +419,6 @@ export const VENDORS: VendorConfig[] = [
   // candidate found whose programme is confirmed on a network we already use.
   { vendor: 'Kawaii Slime Company', domain: 'https://kawaiislimecompany.com', prefix: 'kslime', affiliateParam: '', network: 'refersion', commissionPct: 10, couponCode: '', couponPct: 0, pending: true, exclude: ['hide'] },
 
-  // Sixth of the batch (2026-08-30). Apparel-led by name, which is the one
-  // category on this site with a filter in front of it: lib/adult-apparel.ts
-  // drops adult-model and suggestive-cut clothing, and §4 records that its
-  // CUT_PHRASES list is also, word for word, the vocabulary of a fairy-kei
-  // wardrobe. On a sample of twelve typical decora items, seven were dropped.
-  //
-  // So the number to read first for this vendor is not the category split but
-  // the kid-safety drop count. A high number is the filter working as written,
-  // not a bug, and the fix for a genuine false positive is a narrow KID_SAFE
-  // entry and never a loosened CUT_PHRASES (§7).
-  //
-  // MEASURED 2026-08-30 (build log, §4): the fetch THREW rather than returning
-  // a status. `fetch failed` from a Vercel build is DNS or a refused
-  // connection, so the host did not answer at all.
-  //
-  // This is the one result of the batch that deserves a second look rather than
-  // a conclusion. An HTTP status is the server talking; a thrown fetch can also
-  // be a transient resolver failure on the build machine. Re-probe once before
-  // writing this vendor off. If it throws again, the domain is not live.
-  //
-  // If it does come back, the number to read first is the kid-safety drop count
-  // rather than the category split, for the reason above.
-  { vendor: 'Kawaii Fashion Store', domain: 'https://kawaiifashionstore.com', prefix: 'kfs', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 0, couponCode: '', couponPct: 0, pending: true },
-
   // Kawaii Unicorn. Joined GoAffPro 2026-08-30, and the tracking value is REAL:
   // Jacob's own link is https://kawaii-unicorn.com/?ref=kawaiikatz.
   //
@@ -591,6 +567,24 @@ export const VENDORS: VendorConfig[] = [
   // and Jacob's call on the actual photographs, the way Autoplush was decided
   // (§4f-b): a brand question, not a technical one, and the highest commission
   // rate on the site did not save that one.
+  //
+  // PROBED 2026-08-31, and it is the most ingestable feed of the whole intake:
+  // 1,250 rows (it HITS the 5-page cap, so this is a floor and not a count),
+  // 951 survive mapping, and the product_type histogram is a proper merchant
+  // taxonomy rather than the empty column MamaRaya had. It is also, on the
+  // numbers, a clothes shop and nothing else: 789 of 951 land in `apparel`,
+  // and Clothing Tops + Dresses + Skirts alone are 1,106 of the raw feed.
+  //
+  // THE FILTER NUMBER IS THE ONE TO READ, and §4 says to read it first on any
+  // J-fashion vendor: 148 of 799 would be dropped by the kid-safety phrase
+  // filter, 19%. That is the highest share of any vendor here (KawaiiMoriStore
+  // was 156 of 784 and Kawaii Unicorn 8 of 703), and the leading terms are
+  // "high waist" (43), "lace up" (28) and "camisole" (15) - the plain
+  // vocabulary of a lolita wardrobe, so the filter is working as written and
+  // NOT to be loosened for it (§7).
+  //
+  // It stays pending. Nothing technical is blocking it now; the open question
+  // is the one the note above states, and it is not a question code answers.
   { vendor: 'Egirldoll', domain: 'https://egirldoll.com', prefix: 'egd', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
 
   // Fifth of the batch (2026-08-30), and the one whose name promises the best
