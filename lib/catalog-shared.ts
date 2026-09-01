@@ -749,3 +749,153 @@ export function mapShopifyProducts(
   }
   return out
 }
+
+/* ============================================================
+   WOOCOMMERCE, the second door.
+   ------------------------------------------------------------
+   WHY THIS EXISTS. Until now this file knew exactly one way to
+   read a merchant: Shopify's products.json. That made "we cannot
+   read this shop" and "this shop has no catalogue" look identical
+   from inside the codebase, and on 2026-08-31 that cost a wrong
+   call: five approved merchants answered 404 on products.json and
+   were nearly written off as having no feed. Three of them run
+   WooCommerce and hand over their whole catalogue through the
+   Store API, which is a public, unauthenticated, read-only
+   endpoint built for exactly this.
+
+   IT LIVES BESIDE mapShopifyProducts ON PURPOSE. contentSafe(),
+   typeAllowed(), isKidSafeText() and vendorDefaultCat() are
+   private to this module, and the kid-safety story depends on
+   EVERY row passing through them whichever door it came in by. A
+   mapper written in another file could only reach the exported
+   half, and the half it could not reach is the half that matters.
+   Keeping the two mappers adjacent also makes drift visible: if
+   one grows a rule, the other is right there not having it.
+
+   THE MINOR-UNIT TRAP, which is the one thing about this API that
+   will bite. Woo returns prices as INTEGER STRINGS in the
+   currency's smallest unit, with the scale in the same object:
+   { price: "2499", currency_minor_unit: 2 } is $24.99, not
+   $2,499. Read as a float it inflates every price by a hundred
+   times, and nothing downstream would flag it: the cards would
+   render, the sort would work, the filters would work, and a
+   plush toy would cost three thousand dollars.
+   ============================================================ */
+
+export type WooProductRaw = {
+  id?: number
+  name?: string
+  slug?: string
+  permalink?: string
+  description?: string
+  short_description?: string
+  type?: string
+  is_in_stock?: boolean
+  is_purchasable?: boolean
+  date_created?: string
+  prices?: {
+    price?: string
+    regular_price?: string
+    sale_price?: string
+    currency_minor_unit?: number
+    price_range?: { min_amount?: string; max_amount?: string } | null
+  }
+  images?: { src?: string }[]
+  categories?: { name?: string }[]
+  tags?: { name?: string }[]
+}
+
+/** Woo's minor-unit integer string to a real number. See the trap above. */
+function wooAmount(raw: string | undefined, minorUnit: number | undefined): number {
+  if (raw == null || raw === '') return 0
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return 0
+  const scale = Number.isFinite(minorUnit as number) ? (minorUnit as number) : 2
+  return n / Math.pow(10, scale)
+}
+
+export function mapWooProducts(
+  cfg: typeof VENDORS[number],
+  raw: WooProductRaw[]
+): Product[] {
+  const out: Product[] = []
+  for (const p of raw || []) {
+    if (!p || !p.slug || !p.permalink) continue
+
+    /* Woo has no product_type field. Its categories are the nearest
+       equivalent and are what an include list would be written from,
+       so they are what typeAllowed() is asked about: any one of them
+       matching is enough. A shop with no include list is unaffected. */
+    const cats = (p.categories || []).map((c) => c.name || '').filter(Boolean)
+    if (cats.length && !cats.some((c) => typeAllowed(cfg, c))) continue
+    if (!cats.length && !typeAllowed(cfg, '')) continue
+
+    /* Purchasability, not just stock. A Woo catalogue carries
+       non-purchasable rows (external/affiliate stubs, hidden parents)
+       that render as a card with a price and cannot be bought. */
+    if (p.is_in_stock === false || p.is_purchasable === false) continue
+
+    const mu = p.prices?.currency_minor_unit
+    const range = p.prices?.price_range
+    const minP = range?.min_amount
+      ? wooAmount(range.min_amount, mu)
+      : wooAmount(p.prices?.price, mu)
+    if (!(minP > 0)) continue
+    const regular = wooAmount(p.prices?.regular_price, mu)
+
+    /* Same cleaning as the Shopify path, same reason: a description
+       body with a <style> block in it becomes CSS on the card, in the
+       meta description, and in whatever categorize() then decides. */
+    let blurb = String(p.short_description || p.description || '')
+      .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
+    const details = cfg.showcase && blurb.length > 140 ? blurb.slice(0, 1400).trim() : undefined
+    if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
+
+    const tagsStr = (p.tags || []).map((t) => t.name || '').join(' ')
+    const hay = `${p.name || ''} ${cats.join(' ')} ${tagsStr} ${blurb}`
+    if (!contentSafe(hay)) continue
+
+    const onSale = regular > 0 && regular > minP
+    let cat = cfg.forceCat ?? categorize(hay)
+    if (cat === 'other') cat = vendorDefaultCat(cfg.vendor)
+
+    out.push({
+      id: `${cfg.prefix}-${p.slug}`,
+      vendor: cfg.vendor,
+      domain: cfg.domain,
+      name: p.name || '',
+      cat,
+      character: detectCharacter(hay),
+      kidSafe: isKidSafeText(hay, cat, p.name || ''),
+      price: minP,
+      /* "from" when the row really does span a range. The Store API
+         gives variable products a price_range and no per-variant
+         rows, so a variant list cannot be built here and claiming
+         one would be inventing options nobody can pick. */
+      unit: range?.max_amount && wooAmount(range.max_amount, mu) > minP ? 'from' : '',
+      onSale,
+      wasPrice: onSale ? regular : 0,
+      discountPct: onSale ? Math.round((1 - minP / regular) * 100) : 0,
+      commissionPct: cfg.commissionPct,
+      couponCode: cfg.couponCode,
+      couponPct: cfg.couponPct,
+      image: proxied(p.images?.[0]?.src ?? ''),
+      /* The merchant's own permalink, verbatim. Woo installs differ on
+         whether products live at /product/<slug>/ or under a nested
+         category path, so a URL rebuilt from the slug 404s on some of
+         them. The feed already knows the right one. */
+      url: p.permalink,
+      badge: '',
+      added: p.date_created || '',
+      variants: [],
+      blurb,
+      ...(details ? { details } : {}),
+    })
+  }
+  return out
+}

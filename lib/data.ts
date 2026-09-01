@@ -86,6 +86,21 @@ export type VendorConfig = {
    */
   network?: 'impact' | 'awin' | 'refersion' | 'goaffpro' | 'direct'
   /**
+   * Which shop engine to READ. Not the same question as `network`, which is
+   * who pays: a merchant can be on GoAffPro and run WooCommerce, and three of
+   * them are.
+   *
+   * Omitted means Shopify, because eleven of twelve vendors are and defaulting
+   * the other way would silently break all of them. 'woo' routes to the
+   * WooCommerce Store API instead of products.json.
+   *
+   * It is stated rather than sniffed. Probing every vendor for every engine on
+   * every build costs a round trip per door per vendor to learn something that
+   * changes roughly never, and a sniffer that guesses wrong fails by scraping
+   * nothing and reporting a healthy zero.
+   */
+  platform?: 'shopify' | 'woo'
+  /**
    * Optional product_type allow-list. Present = ONLY these types are ingested,
    * matched case-insensitively against Shopify's `product_type`.
    *
@@ -529,11 +544,11 @@ export const VENDORS: VendorConfig[] = [
   // form per merchant from this account fixes it, one line each.
   //
   // animeswimsuit.com is the sixth and is deliberately absent. See ANIME_SHOPS.
-  { vendor: 'Anime Bedding', domain: 'https://animebed.com', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Bedding', domain: 'https://animebed.com', platform: 'woo', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
   { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
-  { vendor: 'Anime Jacket', domain: 'https://animejacket.com', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
   { vendor: 'Anime Kimono', domain: 'https://animekimono.com', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
-  { vendor: 'Anime Puzzles', domain: 'https://animepuzzle.com', prefix: 'apzl', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Puzzles', domain: 'https://animepuzzle.com', platform: 'woo', prefix: 'apzl', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
 
   // Everblog US. AWIN 128579, joined 2026-08-31, 10% on a 30-day cookie.
   //

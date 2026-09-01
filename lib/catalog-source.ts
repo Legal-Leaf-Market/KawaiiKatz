@@ -4,7 +4,7 @@ import { unstable_cache } from 'next/cache'
 import { fetchAwinFeed, hasFeed } from './awin-feed'
 
 import { VENDORS, liveVendors, isUntracked, vendorForId, type Product } from '@/lib/data'
-import { mapShopifyProducts } from '@/lib/catalog-shared'
+import { mapShopifyProducts, mapWooProducts } from '@/lib/catalog-shared'
 import { MODEL_SCAN_CATS, isAdultApparelByText } from '@/lib/adult-apparel'
 import { scanForBodyModels } from '@/lib/person-scan'
 import { rankSimilar } from '@/lib/similar'
@@ -155,14 +155,65 @@ async function scrapeVendor(vendorName: string): Promise<{ products: Product[]; 
  * `capped` is always false for a feed: a feed is the whole catalogue in one
  * file, so there is no page limit to run into and nothing to warn about.
  */
+/**
+ * The WooCommerce Store API: public, unauthenticated, read-only, and built to
+ * be read. Three approved merchants answer here and answered 404 on
+ * products.json, which is the whole reason this function exists.
+ *
+ * PAGINATION IS `page`, AND THE CAP IS SMALLER THAN SHOPIFY'S. Woo's per_page
+ * maxes out at 100 against Shopify's 250, so the same MAX_PAGES would read less
+ * than half as deep. WOO_MAX_PAGES is raised to keep the reach comparable.
+ *
+ * A page that comes back short is the last page, same rule as the Shopify door.
+ * Every exit other than exhausting the cap returns directly, for the reason
+ * written on that door: `break` here would fall through to the cap warning and
+ * report a vendor that failed on page 1 as a vendor too big to fit.
+ */
+const WOO_PER_PAGE = 100
+const WOO_MAX_PAGES = 12
+
+async function scrapeWooVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
+  const vendor = VENDORS.find((v) => v.vendor === vendorName)
+  if (!vendor) return { products: [], capped: false }
+
+  const all: Product[] = []
+  try {
+    for (let page = 1; page <= WOO_MAX_PAGES; page++) {
+      const url =
+        `${vendor.domain}/wp-json/wc/store/v1/products?per_page=${WOO_PER_PAGE}&page=${page}`
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', 'User-Agent': SCRAPE_UA },
+        cache: 'no-store',
+      })
+      if (!res.ok) return { products: all, capped: false }
+      const raw = (await res.json()) as Parameters<typeof mapWooProducts>[1]
+      if (!Array.isArray(raw) || !raw.length) return { products: all, capped: false }
+      all.push(...mapWooProducts(vendor, raw))
+      if (raw.length < WOO_PER_PAGE) return { products: all, capped: false }
+    }
+  } catch {
+    return { products: all, capped: false }
+  }
+  console.warn(
+    `[catalog] ${vendorName} still had a full page at the ${WOO_MAX_PAGES}-page Woo cap; catalogue may be truncated`
+  )
+  return { products: all, capped: true }
+}
+
 async function sourceVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
   if (hasFeed(vendorName)) {
     return { products: await fetchAwinFeed(vendorName), capped: false }
   }
+  const cfg = VENDORS.find((v) => v.vendor === vendorName)
+  if (cfg?.platform === 'woo') return scrapeWooVendor(vendorName)
   return scrapeVendor(vendorName)
 }
 
-const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v9'], {
+/* v9 -> v10: sourceVendor can now return rows built by the WooCommerce
+   door. Without the bump a warm 6h entry would go on serving the old
+   code's answer for those vendors, which was an empty list, and the
+   whole change would look like it silently did nothing. */
+const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v10'], {
   revalidate: CATALOG_REVALIDATE_SECONDS,
   tags: ['catalog'],
 })

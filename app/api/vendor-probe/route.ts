@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { VENDORS, type VendorConfig } from '@/lib/data'
+import { mapWooProducts } from '@/lib/catalog-shared'
 
 /**
  * TEMPORARY. Delete this route once the anime cluster is settled.
@@ -57,91 +58,81 @@ const TELLS: [string, RegExp][] = [
   ['cloudflare-block', /Just a moment|cf-browser-verification|Attention Required/i],
 ]
 
-type Probe = { url: string; status: number | string; note?: string; rows?: number }
+type WooRow = { name?: string; categories?: { name?: string }[] }
 
-async function ask(url: string, expect: 'json' | 'text'): Promise<Probe & { body?: unknown }> {
-  try {
-    const res = await fetch(url, {
-      headers: { Accept: expect === 'json' ? 'application/json' : 'text/html', 'User-Agent': UA },
-      cache: 'no-store',
-      redirect: 'follow',
-    })
-    if (!res.ok) return { url, status: res.status }
-    if (expect === 'json') {
-      const text = await res.text()
-      try {
-        const j = JSON.parse(text)
-        const rows = Array.isArray(j) ? j.length : Array.isArray(j?.products) ? j.products.length : undefined
-        return { url, status: res.status, rows, body: j }
-      } catch {
-        return { url, status: res.status, note: 'answered but is not JSON (probably an HTML page)' }
-      }
-    }
-    return { url, status: res.status, body: await res.text() }
-  } catch (e) {
-    return { url, status: 'THREW', note: (e as Error).message }
-  }
+function tally<T>(rows: T[], key: (r: T) => string): [string, number][] {
+  const m = new Map<string, number>()
+  for (const r of rows) m.set(key(r), (m.get(key(r)) ?? 0) + 1)
+  return [...m.entries()].sort((a, b) => b[1] - a[1])
 }
 
+/**
+ * Round two: the doors are settled, so this reads CONTENTS.
+ *
+ * Three of the five answer the WooCommerce Store API. Knowing that a door
+ * opens is not the same as having read the feed, and section 4's rule is
+ * explicit that clearing `pending` needs the feed read, not the endpoint
+ * pinged: guess the include list too wide and the shelf fills with gift cards,
+ * too narrow and the vendor matches nothing and reads as a shop with no stock.
+ *
+ * So this runs the REAL mapper, mapWooProducts, the same one the catalogue
+ * will use. What it reports is therefore what the site would actually get,
+ * including how many rows the kid-safety filter removes on the way, which is
+ * the number to read first on any vendor going onto a kid-facing shelf.
+ */
 async function probe(cfg: VendorConfig) {
   const d = cfg.domain.replace(/\/$/, '')
-  const out: Record<string, unknown> = { vendor: cfg.vendor, domain: d }
+  const out: Record<string, unknown> = { vendor: cfg.vendor, domain: d, platform: cfg.platform ?? 'shopify' }
 
-  /* ---- the feed doors, in the order the sister site tries them ---- */
-  const doors: Record<string, Probe> = {}
-  for (const [name, url, kind] of [
-    ['shopify products.json', `${d}/products.json?limit=250`, 'json'],
-    ['shopify collections', `${d}/collections/all/products.json?limit=250`, 'json'],
-    ['woo store api v1', `${d}/wp-json/wc/store/v1/products?per_page=100`, 'json'],
-    ['woo store api', `${d}/wp-json/wc/store/products?per_page=100`, 'json'],
-    ['wp rest', `${d}/wp-json/`, 'json'],
-  ] as [string, string, 'json'][]) {
-    const r = await ask(url, kind)
-    doors[name] = { url: r.url, status: r.status, rows: r.rows, note: r.note }
-  }
-  out.doors = doors
-
-  /* ---- what is it, actually ---- */
-  const home = await ask(`${d}/`, 'text')
-  out.homepage = { status: home.status, note: home.note }
-  if (typeof home.body === 'string') {
-    const html = home.body
-    out.platformTells = TELLS.filter(([, re]) => re.test(html)).map(([n]) => n)
-    out.htmlBytes = html.length
-    out.title = (/<title[^>]*>([^<]{0,120})/i.exec(html)?.[1] || '').trim()
-
-    /* JSON-LD is the last door on the sister site's ladder and the one that
-       works on a storefront with no API at all, because it is put there for
-       Google rather than for us. Count Product nodes, do not parse them. */
-    const blocks = [...html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)]
-    let products = 0
-    const types = new Set<string>()
-    for (const b of blocks) {
-      try {
-        const parsed = JSON.parse(b[1].trim())
-        for (const node of (Array.isArray(parsed) ? parsed : [parsed, ...(parsed['@graph'] || [])])) {
-          const t = node?.['@type']
-          if (t) (Array.isArray(t) ? t : [t]).forEach((x: string) => types.add(x))
-          if (t === 'Product' || (Array.isArray(t) && t.includes('Product'))) products++
-        }
-      } catch { /* a malformed block is not a finding */ }
+  if (cfg.platform !== 'woo') {
+    /* The two with no API. Count what the homepage links to, so the size of
+       the catalogue behind them is on the record even though we cannot read
+       it yet, and a later pass knows whether a scraper is worth writing. */
+    try {
+      const res = await fetch(`${d}/`, { headers: { 'User-Agent': UA }, cache: 'no-store' })
+      const html = await res.text()
+      const links = [...html.matchAll(/href="([^"]*\/product\/[^"#?]+)"/g)].map((m) => m[1])
+      out.noApi = true
+      out.productLinks = new Set(links).size
+      out.sampleLinks = [...new Set(links)].slice(0, 8)
+    } catch (e) {
+      out.error = (e as Error).message
     }
-    out.jsonLd = { blocks: blocks.length, productNodes: products, types: [...types] }
-
-    /* Link shapes say more than any header. /products/ is Shopify,
-       /product/ with a trailing slash is WooCommerce. */
-    const shapes = ['/products/', '/product/', '/collections/', '/product-category/', '/shop/', '/item/']
-    out.linkShapes = Object.fromEntries(
-      shapes.map((s) => [s, (html.match(new RegExp(s.replace(/\//g, '\\/'), 'g')) || []).length]),
-    )
+    console.log(`${TAG} ${cfg.vendor}: ${JSON.stringify(out).slice(0, 600)}`)
+    return out
   }
 
-  const sm = await ask(`${d}/sitemap.xml`, 'text')
-  out.sitemap =
-    typeof sm.body === 'string'
-      ? { status: sm.status, bytes: sm.body.length, head: sm.body.slice(0, 400) }
-      : { status: sm.status, note: sm.note }
+  const rows: WooRow[] = []
+  let pages = 0
+  try {
+    for (let page = 1; page <= 12; page++) {
+      const res = await fetch(`${d}/wp-json/wc/store/v1/products?per_page=100&page=${page}`, {
+        headers: { Accept: 'application/json', 'User-Agent': UA }, cache: 'no-store',
+      })
+      if (!res.ok) break
+      const batch = (await res.json()) as WooRow[]
+      if (!Array.isArray(batch) || !batch.length) break
+      rows.push(...batch); pages++
+      if (batch.length < 100) break
+    }
+  } catch (e) { out.error = (e as Error).message }
 
+  const mapped = mapWooProducts(cfg, rows as never)
+  out.pages = pages
+  out.inFeed = rows.length
+  out.mapped = mapped.length
+  out.droppedByPipeline = rows.length - mapped.length
+
+  out.categories = tally(rows, (r) => (r.categories || []).map((c) => c.name).join(' | ') || '(none)').slice(0, 22)
+  out.ourCats = tally(mapped, (m) => m.cat)
+  out.kidSafeFalse = mapped.filter((m) => m.kidSafe === false).length
+
+  const prices = mapped.map((m) => m.price).filter((n) => n > 0).sort((a, b) => a - b)
+  out.priceBand = prices.length
+    ? { min: prices[0], median: prices[Math.floor(prices.length / 2)], max: prices[prices.length - 1] }
+    : null
+
+  out.sample = mapped.slice(0, 14).map((m) => ({ n: m.name.slice(0, 76), p: m.price, cat: m.cat, url: m.url.slice(0, 90) }))
   console.log(`${TAG} ${cfg.vendor}: ${JSON.stringify(out).slice(0, 900)}`)
   return out
 }
@@ -150,15 +141,9 @@ export async function GET() {
   const results = []
   for (const name of TARGETS) {
     const cfg = VENDORS.find((v) => v.vendor === name)
-    if (!cfg) {
-      results.push({ vendor: name, error: 'NOT_IN_VENDORS' })
-      continue
-    }
-    try {
-      results.push(await probe(cfg))
-    } catch (e) {
-      results.push({ vendor: name, domain: cfg.domain, error: (e as Error).message })
-    }
+    if (!cfg) { results.push({ vendor: name, error: 'NOT_IN_VENDORS' }); continue }
+    try { results.push(await probe(cfg)) }
+    catch (e) { results.push({ vendor: name, domain: cfg.domain, error: (e as Error).message }) }
   }
   return NextResponse.json({ ok: true, at: new Date().toISOString(), results })
 }
