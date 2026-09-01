@@ -76,11 +76,72 @@ const SAFE_EXCEPTIONS: RegExp[] = [
   // Craft/decor uses of "strip" that must not be caught by stripper/strip-tease rules.
   /(sticker|led|light|comic|test|washi|bacon|film)\s*strip/,
 ]
+/**
+ * Decode the handful of HTML entities a merchant title actually carries.
+ *
+ * WooCommerce returns product names HTML-encoded, so a real feed hands over
+ * "Ghibli Puzzles &#8211; Kiki&#8217;s Delivery Service" and the card prints
+ * that character for character. The Shopify path never needed this because
+ * products.json gives plain text, which is exactly why the first Woo mapper
+ * did not have it: the blurb was being cleaned and the NAME was not.
+ *
+ * Numeric entities are handled generally; the five named ones are the only
+ * named entities that appear in practice, and a full table would be a
+ * dependency for nothing.
+ */
+export function decodeEntities(input: string): string {
+  return String(input || '')
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * A REPLICA WEAPON IS NOT MERCHANDISE ON A SITE FOR CHILDREN.
+ *
+ * Found in a real feed: a 100cm steel-look katana sitting in a jigsaw shop's
+ * catalogue at $124, uncategorised, which would have gone onto a kid-facing
+ * shelf between two Ghibli puzzles.
+ *
+ * WHY IT IS NOT JUST A WORD IN UNSAFE_TERMS. Anime merchandise is full of
+ * weapon words that describe a PICTURE rather than an object: "Sword Art
+ * Online" is a franchise name, "Naruto Sasuke Sword Intense Battle Soft
+ * Bedding" is a duvet, and a Nichirin sword jigsaw is a jigsaw. Blocking the
+ * noun would delete a large slice of legitimate stock and look like a bug.
+ *
+ * So the test is whether the product IS the weapon, by two signals that a
+ * printed design does not produce:
+ *   a length in centimetres near the weapon noun, which is how a replica is
+ *   listed and never how a bedspread is;
+ *   the weapon noun in the trailing product-noun position, since a duvet's
+ *   title ends in "Bedding" and a puzzle's ends in "Puzzle".
+ */
+const REPLICA_WEAPON_RX: RegExp[] = [
+  /\b\d{2,3}\s*(cm|inch|in|")\b[^.]{0,70}\b(katana|sword|blade|dagger|knife|scythe|axe)\b/i,
+  /\b(katana|sword|blade|dagger|knife|scythe|nunchaku|kunai)\s*$/i,
+]
+function replicaWeapon(name: string): boolean {
+  const n = decodeEntities(name)
+  return REPLICA_WEAPON_RX.some((rx) => rx.test(n))
+}
+
 const TERM_RX = UNSAFE_TERMS.map((t) => {
   const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')
   return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)', 'i')
 })
-function contentSafe(hay: string): boolean {
+function contentSafe(hay: string, name = ''): boolean {
+  /* The weapon test reads the NAME, not the haystack, because it depends on
+     where the noun sits in the title and the haystack has tags and a blurb
+     glued to the end of it. It runs before the exceptions: nothing in that
+     list should be able to wave a replica sword through. */
+  if (name && replicaWeapon(name)) return false
   const s = hay.toLowerCase()
   for (const ex of SAFE_EXCEPTIONS) if (ex.test(s)) return true
   for (const rx of TERM_RX) if (rx.test(s)) return false
@@ -710,7 +771,7 @@ export function mapShopifyProducts(
 
     const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ') : String(p.tags || '')
     const hay = `${p.title || ''} ${p.product_type || ''} ${tagsStr} ${blurb}`
-    if (!contentSafe(hay)) continue
+    if (!contentSafe(hay, p.title || '')) continue
 
     // Sale detection from compare_at_price
     const chosen = vars.find((v) => v.price === minP) ?? vars[0]
@@ -857,8 +918,12 @@ export function mapWooProducts(
     if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
 
     const tagsStr = (p.tags || []).map((t) => t.name || '').join(' ')
-    const hay = `${p.name || ''} ${cats.join(' ')} ${tagsStr} ${blurb}`
-    if (!contentSafe(hay)) continue
+    /* DECODED BEFORE ANYTHING READS IT. Woo hands names over HTML-encoded, so
+       an undecoded title reaches the card, the classifier haystack and the
+       weapon test all three as literal "&#8211;". */
+    const name = decodeEntities(p.name || '')
+    const hay = `${name} ${cats.join(' ')} ${tagsStr} ${blurb}`
+    if (!contentSafe(hay, name)) continue
 
     const onSale = regular > 0 && regular > minP
     let cat = cfg.forceCat ?? categorize(hay)
@@ -868,10 +933,10 @@ export function mapWooProducts(
       id: `${cfg.prefix}-${p.slug}`,
       vendor: cfg.vendor,
       domain: cfg.domain,
-      name: p.name || '',
+      name,
       cat,
       character: detectCharacter(hay),
-      kidSafe: isKidSafeText(hay, cat, p.name || ''),
+      kidSafe: isKidSafeText(hay, cat, name),
       price: minP,
       /* "from" when the row really does span a range. The Store API
          gives variable products a price_range and no per-variant

@@ -544,11 +544,47 @@ export const VENDORS: VendorConfig[] = [
   // form per merchant from this account fixes it, one line each.
   //
   // animeswimsuit.com is the sixth and is deliberately absent. See ANIME_SHOPS.
-  { vendor: 'Anime Bedding', domain: 'https://animebed.com', platform: 'woo', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+    // READ 2026-09-01 through the real mapper, 4 pages, 353 rows in the feed,
+  // 351 surviving. Categories are franchise names end to end: Ghibli, Jujutsu
+  // Kaisen, Haikyuu, Dragon Ball, My Hero Academia, Naruto, One Piece, Demon
+  // Slayer, Tokyo Ghoul, Attack on Titan. $17.99 to $138, median $99.89.
+  //
+  // NO include LIST, deliberately. The categories here are franchises rather
+  // than product types, and a new series arrives every season: an allow-list
+  // would silently hide new stock and read as a shop that stopped restocking.
+  // The shop sells exactly one kind of thing, so there is nothing to allow-list
+  // against.
+  //
+  // forceCat BECAUSE THE CLASSIFIER SCATTERED IT. 323 of 351 landed in `home`
+  // and the rest did not: 11 in apparel, 10 in stationery, 2 in plush, one each
+  // in puzzle and food. Every one of them is a duvet. "Demon Slayer Bedding -
+  // Kamado Tanjiro Nezuko Soft Bedding" was filed as stationery. The vendor is
+  // what disambiguates when a word cannot, same call as jigsawdepot and
+  // Montessori & Me.
+  { vendor: 'Anime Bedding', domain: 'https://animebed.com', platform: 'woo', forceCat: 'home', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
-  { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+    // READ 2026-09-01, 9 pages, 822 rows, 715 surviving. The 107 dropped are the
+  // adult-apparel text filter doing its job on a garment catalogue, which is
+  // the highest count of any vendor here and is expected on this category.
+  // $39.95 to $125.95, median $59.95.
+  //
+  // forceCat FOR THE SAME REASON AS THE BEDDING SHOP: 639 of 715 reached
+  // apparel on their own and the strays went somewhere indefensible, 45 into
+  // tech and 18 into plush. A Pokemon bomber jacket is not a gadget.
+  { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', forceCat: 'apparel', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Anime Kimono', domain: 'https://animekimono.com', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
-  { vendor: 'Anime Puzzles', domain: 'https://animepuzzle.com', platform: 'woo', prefix: 'apzl', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+    // READ 2026-09-01, 4 pages, 391 rows, 379 surviving. The cleanest of the
+  // three by a distance: 366 of 379 classify as `puzzle` unaided, so NO
+  // forceCat, and `puzzle` is a kid-native category so only 3 rows lack
+  // positive kid-safety evidence against 275 and 561 on the other two.
+  //
+  // IT ALSO CARRIED THE ONE THING THAT HAD NO BUSINESS HERE: a 100cm replica
+  // katana at $124, uncategorised, which would have sat on a kid-facing shelf
+  // between two Ghibli jigsaws. It is blocked by the replica-weapon rule in
+  // catalog-shared rather than by an include list here, because the problem is
+  // not this shop's taxonomy, it is that no shop on this site should ever be
+  // able to list a replica weapon.
+  { vendor: 'Anime Puzzles', domain: 'https://animepuzzle.com', platform: 'woo', prefix: 'apzl', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
 
   // Everblog US. AWIN 128579, joined 2026-08-31, 10% on a 30-day cookie.
   //
