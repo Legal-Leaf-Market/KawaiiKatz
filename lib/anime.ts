@@ -70,6 +70,24 @@ export type AnimeSection = {
   /** Transparent cutout beside the heading, or none if the file is absent. */
   sticker: string
   max: number
+  /**
+   * Cap on how many slots one vendor may take in THIS section. Absent means no
+   * cap, and for most sections here that is correct rather than lax.
+   *
+   * It began as a flat limit across every section, copied from the Christmas
+   * guide where sugarhai alone was 37 of 76 festive products and the band it
+   * filled read as an advert. Applied flat here it was actively wrong, and
+   * testing caught it before the page shipped: these five shops are niched BY
+   * PRODUCT, so only one of them sells bedding at all. Capping "Sleep in it" at
+   * five per vendor capped the entire section at five, because there is no
+   * second bedding shop to fill the other seven slots.
+   *
+   * A section being all one vendor is only a failure when another vendor could
+   * have been in it. So the cap applies to the broad section and not the niched
+   * ones: "New in the room" matches everything, and without a cap the shop that
+   * uploaded most recently would own the whole top of the page.
+   */
+  maxPerVendor?: number
   match: (p: Product) => boolean
 }
 
@@ -95,6 +113,7 @@ export const ANIME_SECTIONS: AnimeSection[] = [
     blurb: 'The most recent things to reach the shelf. Picked by us, shipped by the shop.',
     sticker: 'st-new',
     max: 12,
+    maxPerVendor: 4,
     match: () => true,
   },
   {
@@ -145,17 +164,27 @@ export const ANIME_SECTIONS: AnimeSection[] = [
 ]
 
 /**
- * One vendor must not take a whole section.
+ * What crosses the server/client boundary: the section WITHOUT its matcher.
  *
- * The Christmas guide learned this on real data: sugarhai alone was 37 of the
- * catalogue's 76 festive products, and the band it filled read as an advert
- * rather than a shelf. Here the risk is sharper, because the five shops ARE one
- * supplier and a section that is all one of them is the cluster failure showing
- * through the curation.
+ * THE MATCHER IS A FUNCTION AND FUNCTIONS DO NOT SERIALISE. Passing the whole
+ * section to a Client Component failed the production build outright:
+ *
+ *   Functions cannot be passed directly to Client Components
+ *   {key: "new", ..., match: function match}
+ *
+ * It did not fail locally, and the reason is worth keeping. With no products
+ * the page renders its empty state and never mounts the client at all, so the
+ * boundary was never crossed in dev. The build broke on the first deploy where
+ * the shelves actually had something on them, which is the worst possible time
+ * to find out.
+ *
+ * `Omit` rather than care taken at the call site, because care is not
+ * enforceable. Typed this way the compiler refuses the function, and the bug
+ * cannot come back by somebody passing the richer object again.
  */
-const MAX_PER_VENDOR_PER_SECTION = 5
+export type AnimeSectionView = Omit<AnimeSection, 'match'>
 
-export type FilledSection = { section: AnimeSection; products: Product[] }
+export type FilledSection = { section: AnimeSectionView; products: Product[] }
 
 export function fillAnime(all: Product[]): FilledSection[] {
   /* Newest first, so "New in the room" is true of the first section and every
@@ -175,9 +204,11 @@ export function fillAnime(all: Product[]): FilledSection[] {
       if (picked.length >= section.max) break
       if (used.has(p.id)) continue
       if (!section.match(p)) continue
-      const n = perVendor.get(p.vendor) ?? 0
-      if (n >= MAX_PER_VENDOR_PER_SECTION) continue
-      perVendor.set(p.vendor, n + 1)
+      if (section.maxPerVendor != null) {
+        const n = perVendor.get(p.vendor) ?? 0
+        if (n >= section.maxPerVendor) continue
+        perVendor.set(p.vendor, n + 1)
+      }
       picked.push(p)
       used.add(p.id)
     }
@@ -185,7 +216,12 @@ export function fillAnime(all: Product[]): FilledSection[] {
        nothing is a promise of content, which reads worse than not offering it:
        the same call the main shelf already makes by staying hidden until there
        is stock. */
-    if (picked.length) out.push({ section, products: picked })
+    if (picked.length) {
+      /* Destructured rather than spread, so the matcher is dropped by name and
+         a future field on AnimeSection is carried across automatically. */
+      const { match: _match, ...view } = section
+      out.push({ section: view, products: picked })
+    }
   }
   return out
 }
