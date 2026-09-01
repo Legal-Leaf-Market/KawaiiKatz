@@ -69,6 +69,17 @@ export type AnimeSection = {
   blurb: string
   /** Transparent cutout beside the heading, or none if the file is absent. */
   sticker: string
+  /**
+   * The shelf's own colour, carried by its kicker rule, its title swash, its
+   * border and the glow behind its sticker.
+   *
+   * Six identical white cards down a page is a list with headings on it. One
+   * colour each, all of them lifted off the hero's night street, gives the room
+   * a rhythm as you scroll and ties the daylight half of the page back to the
+   * neon half. It is a string, which matters: this crosses into a Client
+   * Component, and the last thing that went across there was a function.
+   */
+  accent: string
   max: number
   /**
    * Cap on how many slots one vendor may take in THIS section. Absent means no
@@ -108,6 +119,7 @@ export type AnimeSection = {
 export const ANIME_SECTIONS: AnimeSection[] = [
   {
     key: 'new',
+    accent: '#b79cff',
     kicker: 'Just landed',
     title: 'New in the room',
     blurb: 'The most recent things to reach the shelf. Picked by us, shipped by the shop.',
@@ -118,6 +130,7 @@ export const ANIME_SECTIONS: AnimeSection[] = [
   },
   {
     key: 'fit',
+    accent: '#ff8a65',
     kicker: 'Bombers, hoodies, varsity',
     title: 'Wear it out',
     blurb: 'Jackets built around the artwork rather than a logo stuck on a blank.',
@@ -127,6 +140,7 @@ export const ANIME_SECTIONS: AnimeSection[] = [
   },
   {
     key: 'layer',
+    accent: '#f2a2c0',
     kicker: 'Haori, yukata, kimono',
     title: 'The loose layer',
     blurb: 'Open-front and worn over everything else. Reads as a cardigan anywhere that is not a convention.',
@@ -136,6 +150,7 @@ export const ANIME_SECTIONS: AnimeSection[] = [
   },
   {
     key: 'carry',
+    accent: '#7fc4d4',
     kicker: 'Backpacks and bags',
     title: 'Carry it every day',
     blurb: 'The one thing here that gets used daily, which is why the print has to be good.',
@@ -145,6 +160,7 @@ export const ANIME_SECTIONS: AnimeSection[] = [
   },
   {
     key: 'sleep',
+    accent: '#8b8ade',
     kicker: 'Duvets, sets, pillowcases',
     title: 'Sleep in it',
     blurb: 'The biggest surface in a bedroom and the one nobody thinks to decorate.',
@@ -154,6 +170,7 @@ export const ANIME_SECTIONS: AnimeSection[] = [
   },
   {
     key: 'build',
+    accent: '#8fd0a8',
     kicker: '300 to 1000 pieces',
     title: 'Build it slowly',
     blurb: 'A poster you have to earn, and the quietest thing on this page by a distance.',
