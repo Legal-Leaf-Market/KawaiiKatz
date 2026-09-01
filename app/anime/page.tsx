@@ -1,214 +1,204 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { ANIME_SHOPS, animeHallTracked, animeShopUrl } from '@/lib/data'
+import { getVendorCatalog } from '@/lib/catalog-source'
+import { ANIME_VENDORS, animePool, fillAnime } from '@/lib/anime'
+import { ANIME_SHOPS, animeShopUrl } from '@/lib/data'
 import { SITE_URL } from '@/lib/site'
 import { pageNode } from '@/lib/schema'
 import JsonLd from '@/components/JsonLd'
+import AnimeClient from './AnimeClient'
 
 /**
- * The anime hall. See the ANIME_SHOPS doc in lib/data.ts for why these five
- * shops share one page, why the sixth is not here, and what the tracking code
- * costs.
+ * The Anime room: /anime. See lib/anime.ts for why five merchants share one
+ * room and why the sixth is deliberately absent.
  *
- * A SERVER COMPONENT, for the same reason /[brand] is one: there is nothing to
- * filter, nothing to search and nothing to put in a cart. It is a page of
- * links, and shipping a hydration bundle to render links is paying for
- * interactivity that does not exist.
+ * -----------------------------------------------------------------------------
+ * IT WAS FIVE CARDS AND THAT WAS THE WRONG PAGE
  *
- * NOTHING HERE RENDERS A COMMISSION RATE. The rates and cookie windows for
- * these five are real and known, and they live in the sister site's registry
- * and in lib/partners.ts where visitors do not see them. A page that prints
- * what we earn per click is our own paperwork served to every reader, and the
- * shopper is not helped by it.
+ * The first cut was a signpost: five shop tiles linking out, no products. It
+ * was honest and it was thin, and Jacob's note on it was the right one, that
+ * the point is a room like /decora rather than a page with five things on it.
+ * The difference is not decoration. A signpost asks a visitor to go and browse
+ * five shops; a room shows them the things and lets them decide, which is the
+ * only reason a curated site is worth visiting instead of a search engine.
+ *
+ * -----------------------------------------------------------------------------
+ * NARROWED TO ITS OWN VENDORS
+ *
+ * getVendorCatalog(ANIME_VENDORS) rather than getCatalog(), for the reason
+ * section 4b spells out: two Decora feeds hit staticPageGenerationTimeout at
+ * 240 seconds by paying for a full eighteen-vendor fan-out to write out one
+ * shelf. The per-vendor cache entries are the same entries either way, so a
+ * narrowed caller warms the cache for the full one and nothing is duplicated.
+ *
+ * -----------------------------------------------------------------------------
+ * INDEXABLE AND IN THE SITEMAP, WHICH SECTION 7 ALLOWS
+ *
+ * The rule is "do not compete with a vendor for their own product page". This
+ * competes with nobody's: it is original editorial, same standing as the gift
+ * guides. No product URL goes in the sitemap.
  */
-export const revalidate = 86400 // a day; hand-written, not scraped
+export const revalidate = 21600 // 6 hours, must stay statically analysable
+export const maxDuration = 60
 
-const TITLE = '🌸 Anime shops we like | Kawaii Katz'
+const TITLE = 'Kawaii Katz Goes Anime'
 const DESC =
-  'Five anime shops worth knowing: bedding, backpacks, jackets, kimono and jigsaw ' +
-  'puzzles, each one a specialist rather than a general store. Curated by Kawaii Katz.'
+  'Anime bedding, jackets, kimono, backpacks and jigsaw puzzles, picked by Kawaii Katz ' +
+  'and sold by the shops that stock them. Live prices, no cart, no markup.'
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: `${TITLE} | Kawaii Katz`,
   description: DESC,
   alternates: { canonical: '/anime' },
-  openGraph: { title: TITLE, description: DESC, url: `${SITE_URL}/anime`, type: 'website' },
+  openGraph: {
+    title: TITLE,
+    description: DESC,
+    url: `${SITE_URL}/anime`,
+    type: 'website',
+    images: [`${SITE_URL}/anime/social-wide.webp`],
+  },
 }
 
-export default function Page() {
-  const tracked = animeHallTracked()
+export default async function Page() {
+  const { products } = await getVendorCatalog(ANIME_VENDORS)
+  const pool = animePool(products)
+  const sections = fillAnime(products)
+  const shopCount = ANIME_SHOPS.length
 
   return (
     <div className="min-h-screen">
-      {/* WebPage, not CollectionPage: this page lists shops, not products. */}
-      <JsonLd
-        nodes={[
-          pageNode({
-            path: '/anime',
-            name: 'Anime shops we like',
-            description: DESC,
-          }),
-        ]}
-      />
+      <JsonLd nodes={[pageNode({ path: '/anime', name: TITLE, description: DESC })]} />
 
-      <header className="relative overflow-hidden border-b-[3px] border-[#e6dcff] bg-[linear-gradient(160deg,#fff4f8_0%,#f6f0ff_55%,#eef8fb_100%)]">
-        {/*
-          Petals. Pure CSS, no image request, and aria-hidden because they are
-          decoration: a screen reader announcing eleven flower emoji before the
-          heading would be worse than no decoration at all.
-        */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 select-none">
-          {[
-            ['6%', '12%', '28px', '12deg', 0.5], ['18%', '62%', '18px', '-18deg', 0.4],
-            ['31%', '8%', '20px', '32deg', 0.35], ['44%', '78%', '30px', '-8deg', 0.45],
-            ['57%', '26%', '16px', '22deg', 0.3], ['70%', '90%', '24px', '-24deg', 0.4],
-            ['83%', '44%', '19px', '9deg', 0.35], ['92%', '16%', '26px', '-14deg', 0.4],
-          ].map(([left, top, size, rot, op]) => (
-            <span
-              key={`${left}-${top}`}
-              className="absolute"
-              style={{
-                left: left as string,
-                top: top as string,
-                fontSize: size as string,
-                transform: `rotate(${rot})`,
-                opacity: op as number,
-              }}
-            >
-              🌸
-            </span>
-          ))}
-        </div>
-
+      {/* ---- HERO -------------------------------------------------
+          The backdrop is a night street with its neon reduced to pure
+          shape, so nothing in the picture is readable text in any
+          script. Its centre is deliberately quiet, which is where the
+          type sits. */}
+      <header className="relative overflow-hidden border-b-[3px] border-[#e6dcff]">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/anime/hero-bg.webp)' }}
+        />
+        {/* A scrim, because the artwork is a picture and the words on
+            top of it have to stay words. */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(100deg, rgba(30,10,45,.88) 0%, rgba(30,10,45,.72) 46%, rgba(30,10,45,.28) 100%)',
+          }}
+        />
         <div className="relative max-w-[1180px] mx-auto px-4 sm:px-6 py-5">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-display font-extrabold text-[13px] text-[#b79cff] hover:text-[#ff8a65] transition-colors"
+            className="inline-flex items-center gap-1.5 font-display font-extrabold text-[13px] text-[#ffd9ec] hover:text-white transition-colors"
           >
             ← Back to Kawaii Katz
           </Link>
 
-          <div className="mt-5 max-w-[68ch]">
-            <div className="inline-flex items-center gap-2 bg-[#7fc4d4] text-white font-display font-extrabold text-[11px] uppercase tracking-[.8px] rounded-full px-3 py-1 mb-3">
-              ✨ Partner shops
+          <div className="mt-6 flex items-end gap-6 flex-wrap sm:flex-nowrap">
+            <div className="min-w-0 flex-1 pb-2">
+              <div className="inline-flex items-center gap-2 bg-[#ff8ac4] text-white font-display font-extrabold text-[11px] uppercase tracking-[.9px] rounded-full px-3 py-1 mb-3">
+                🌸 The anime room
+              </div>
+              <h1 className="font-display font-extrabold text-[36px] sm:text-[54px] text-white leading-[1.02] drop-shadow-[0_2px_18px_rgba(0,0,0,.5)]">
+                {TITLE}
+              </h1>
+              <p className="font-display text-[17px] sm:text-[21px] text-[#ffd9ec] mt-2">
+                Five shops, one shelf each
+              </p>
+              <p className="text-[14px] sm:text-[15.5px] text-[#f0e4f5] leading-relaxed mt-4 max-w-[62ch]">
+                Bedding, jackets, kimono, backpacks and jigsaws. Five specialists rather
+                than one shop that sells a bit of everything, which is why they are worth
+                a page. We hold no stock and take no payment: every price is the shop's
+                own and every link goes to them.
+              </p>
             </div>
-            <h1 className="font-display font-extrabold text-[34px] sm:text-[48px] text-[#4f4550] leading-[1.03]">
-              Anime shops we like
-            </h1>
-            <p className="font-display text-[17px] sm:text-[20px] text-[#ff8a65] mt-1.5">
-              Five specialists, one shelf each
-            </p>
-            <p className="text-[14px] sm:text-[15.5px] text-[#6f6473] leading-relaxed mt-4">
-              Most anime merch comes from shops that sell a bit of everything and are
-              excellent at none of it. These five each pick one thing and do only that,
-              which is why they are worth a page. Bedding, backpacks, jackets, kimono and
-              jigsaws.
-            </p>
-            <p className="text-[13.5px] sm:text-[14.5px] text-[#6f6473] leading-relaxed mt-3">
-              We do not list their pieces individually. Nobody here has been through their
-              full catalogues yet, and putting up a grid we have not read is how a shelf
-              fills with things we would not have chosen. So this is a way in, and the
-              shops keep their own prices, stock and delivery.
-            </p>
+            {/* The cast, as one composition rather than three cutouts
+                butted together. Hidden on narrow screens, where it
+                would push the type off the first screenful. */}
+            <div
+              aria-hidden
+              className="hidden sm:block shrink-0 w-[300px] lg:w-[380px] aspect-[1100/630] bg-contain bg-no-repeat bg-bottom"
+              style={{ backgroundImage: 'url(/anime/trio.webp)' }}
+            />
           </div>
         </div>
       </header>
 
-      <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-8">
-        <div className="grid gap-4 sm:gap-5 grid-cols-1 min-[560px]:grid-cols-2 lg:grid-cols-3">
-          {ANIME_SHOPS.map((shop) => (
-            <a
-              key={shop.key}
-              href={animeShopUrl(shop)}
-              target="_blank"
-              rel="sponsored noopener noreferrer"
-              className="group relative flex flex-col bg-white border-[3px] rounded-[20px] p-5 sm:p-6 transition-all duration-200 hover:-translate-y-1"
-              style={{ borderColor: '#e6dcff' }}
-            >
-              {/*
-                The accent lives on an overlay rather than on the card border,
-                because a Tailwind hover: class cannot carry a runtime colour
-                and five hard-coded border utilities would be five chances for
-                the data and the styling to disagree.
-              */}
-              <span
-                aria-hidden
-                className="absolute inset-0 rounded-[17px] border-[3px] border-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                style={{ borderColor: shop.accent, margin: '-3px' }}
-              />
+      <div
+        aria-hidden
+        className="h-[46px] bg-repeat-x bg-center"
+        style={{ backgroundImage: 'url(/anime/divider.webp)', backgroundSize: 'auto 46px' }}
+      />
 
-              <div
-                className="relative w-[58px] h-[58px] rounded-[16px] flex items-center justify-center text-[30px] leading-none mb-3.5"
-                style={{ backgroundColor: `${shop.accent}22` }}
-              >
-                {shop.emoji}
-              </div>
-
-              <h2 className="relative font-display font-extrabold text-[19px] sm:text-[20px] text-[#4f4550] leading-tight">
-                {shop.merchant}
-              </h2>
-              <p
-                className="relative font-display font-bold text-[13.5px] mt-1"
-                style={{ color: shop.accent }}
-              >
-                {shop.tagline}
-              </p>
-
-              <p className="relative text-[13.5px] text-[#6f6473] leading-relaxed mt-3 flex-1">
-                {shop.blurb}
-              </p>
-
-              <div className="relative flex flex-wrap gap-1.5 mt-4">
-                {shop.shelves.map((shelf) => (
-                  <span
-                    key={shelf}
-                    className="text-[11.5px] font-display font-bold text-[#6f6473] bg-[#f7f3ff] border border-[#e6dcff] rounded-full px-2.5 py-1"
-                  >
-                    {shelf}
-                  </span>
-                ))}
-              </div>
-
-              <div
-                className="relative font-display font-extrabold text-[13.5px] mt-4 inline-flex items-center gap-1.5"
-                style={{ color: shop.accent }}
-              >
-                Visit {shop.merchant}
-                <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
-              </div>
-            </a>
-          ))}
-
-          {/*
-            The sixth tile is not a shop. Five cards in a three-column grid
-            leaves a hole, and a hole at the end of a curated list reads as a
-            card that failed to load. This says what the page is instead.
-          */}
-          <div className="flex flex-col justify-center bg-[#faf7ff] border-[3px] border-dashed border-[#e6dcff] rounded-[20px] p-5 sm:p-6">
-            <div className="text-[30px] leading-none mb-3">🌱</div>
-            <h2 className="font-display font-extrabold text-[17px] text-[#4f4550] leading-tight">
-              More when we have read them
+      <main className="max-w-[1180px] mx-auto px-4 sm:px-6 pb-12">
+        {sections.length ? (
+          <AnimeClient sections={sections} pool={pool} />
+        ) : (
+          /* THE HONEST EMPTY STATE. Five merchants are signed and none
+             of their feeds has been read and cleared yet, and that is a
+             different sentence from "there is nothing here". Saying the
+             wrong one implies we opened these shops and turned them
+             down. The sister site learned this on a room with
+             twenty-five signed makers showing NOTHING HERE. */
+          <section className="mt-10 rounded-[20px] border-[3px] border-dashed border-[#e6dcff] bg-[#faf7ff] p-6 sm:p-8 max-w-[70ch]">
+            <div className="text-[32px] leading-none mb-3">🌱</div>
+            <h2 className="font-display font-extrabold text-[20px] text-[#4f4550]">
+              {shopCount} shops signed, none stocked yet.
             </h2>
-            <p className="text-[13px] text-[#6f6473] leading-relaxed mt-2">
-              Shops go on this page once somebody has actually opened them and looked at
-              what is on the shelves. It is slower than listing everyone who says yes, and
-              it is the only reason the five above are worth your time.
+            <p className="text-[14px] text-[#6f6473] leading-relaxed mt-2">
+              Nothing goes on a shelf here until somebody has read what a shop actually
+              sells, which is slower than trusting a feed and is the entire reason to do
+              it that way. The shops are below if you would rather not wait.
             </p>
-          </div>
-        </div>
+          </section>
+        )}
 
-        {/*
-          Affiliate disclosure on the page, not only in the footer. Same call as
-          the brand pages: where products are the point a footer line is enough,
-          but here the links ARE the page.
-        */}
+        {/* ---- THE SHOPS, credited plainly ------------------------
+            Named here rather than in the title, and the reasoning is
+            /decora's: a shop's name in display type at the top reads
+            as THEIR page even when every word on it is ours. */}
+        <section className="mt-14">
+          <h2 className="font-display font-extrabold text-[18px] text-[#4f4550] mb-1">
+            The shops
+          </h2>
+          <p className="text-[13.5px] text-[#6f6473] mb-4 max-w-[62ch]">
+            Five independents, each doing one thing. Prices, stock, sizing, delivery and
+            returns are all theirs.
+          </p>
+          <div className="grid gap-3 grid-cols-1 min-[520px]:grid-cols-2 lg:grid-cols-3">
+            {ANIME_SHOPS.map((shop) => (
+              <a
+                key={shop.key}
+                href={animeShopUrl(shop)}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                className="group flex items-center gap-3 bg-white border-[3px] border-[#e6dcff] hover:border-[#b79cff] rounded-[16px] px-4 py-3 transition-colors"
+              >
+                <span className="text-[26px] leading-none">{shop.emoji}</span>
+                <span className="min-w-0">
+                  <span className="block font-display font-extrabold text-[15px] text-[#4f4550] group-hover:text-[#b79cff] transition-colors">
+                    {shop.merchant}
+                  </span>
+                  <span className="block text-[12.5px] text-[#6f6473] truncate">
+                    {shop.tagline}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Disclosure on the page, not only in the footer: the links
+            are the point of it. */}
         <p className="text-[12.5px] text-[#9a8fa3] leading-relaxed mt-10 max-w-[70ch]">
-          {tracked
-            ? 'Links on this page are affiliate links: if you buy something after clicking one, we may earn a commission at no extra cost to you. It is how Kawaii Katz stays free.'
-            : 'Links on this page go straight to the shops. We are not currently earning a commission on all of them.'}{' '}
-          We are not these shops. Prices, stock, sizing, delivery and returns are all
-          theirs, and anything you buy is a purchase from them.
+          Links on this page are affiliate links: if you buy something after clicking one,
+          we may earn a commission at no extra cost to you. It is how Kawaii Katz stays
+          free. We are not these shops, and anything you buy is a purchase from them.
         </p>
       </main>
     </div>
