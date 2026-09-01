@@ -964,3 +964,130 @@ export function mapWooProducts(
   }
   return out
 }
+
+/* ============================================================
+   JSON-LD, the third door and the last one available.
+   ------------------------------------------------------------
+   Two merchants have no machine-readable catalogue at all: no
+   products.json, no wp-json, and no platform fingerprint in their
+   HTML. What they do have is product pages, and a product page
+   almost always carries schema.org Product markup, because that is
+   what puts a price in a Google result. It is published for a
+   crawler, which is what makes it fair game and also what makes it
+   the most stable thing on the page: a redesign moves the markup
+   around, a redesign that DROPS it costs the merchant its rich
+   snippets, so it tends to survive.
+
+   IT IS STILL THE WORST DOOR AND IS RANKED LAST FOR A REASON. A
+   feed is one request for a whole catalogue; this is one request
+   per product. That cost is why the caller caps it hard rather
+   than reading everything a sitemap offers.
+
+   SAME GATES AS EVERY OTHER DOOR. contentSafe, typeAllowed,
+   isKidSafeText, vendorDefaultCat, the replica-weapon rule: all of
+   it, because a row's provenance must not change what it has to
+   pass to reach a child's screen.
+   ============================================================ */
+
+export type JsonLdProduct = {
+  name?: string
+  description?: string
+  image?: unknown
+  sku?: string
+  offers?: unknown
+  category?: string
+}
+
+/** First Product node in any ld+json block on the page, or null. */
+export function findLdProduct(html: string): JsonLdProduct | null {
+  const blocks = html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)
+  for (const b of blocks) {
+    let parsed: unknown
+    try { parsed = JSON.parse(b[1].trim()) } catch { continue }
+    const stack: unknown[] = [parsed]
+    while (stack.length) {
+      const node = stack.pop() as Record<string, unknown>
+      if (!node || typeof node !== 'object') continue
+      if (Array.isArray(node)) { stack.push(...node); continue }
+      if (Array.isArray(node['@graph'])) stack.push(...(node['@graph'] as unknown[]))
+      const t = node['@type']
+      const isProduct = t === 'Product' || (Array.isArray(t) && (t as string[]).includes('Product'))
+      if (isProduct && typeof node.name === 'string') return node as JsonLdProduct
+    }
+  }
+  return null
+}
+
+/** Lowest price across whatever shape `offers` came in as. */
+function ldPrice(offers: unknown): number {
+  const found: number[] = []
+  const walk = (o: unknown) => {
+    if (!o) return
+    if (Array.isArray(o)) return o.forEach(walk)
+    if (typeof o !== 'object') return
+    const r = o as Record<string, unknown>
+    for (const k of ['price', 'lowPrice', 'lowprice']) {
+      const v = r[k]
+      const n = typeof v === 'number' ? v : parseFloat(String(v ?? ''))
+      if (Number.isFinite(n) && n > 0) found.push(n)
+    }
+    if (r.priceSpecification) walk(r.priceSpecification)
+    if (Array.isArray(r.offers)) walk(r.offers)
+  }
+  walk(offers)
+  return found.length ? Math.min(...found) : 0
+}
+
+function ldImage(image: unknown): string {
+  if (typeof image === 'string') return image
+  if (Array.isArray(image)) return ldImage(image[0])
+  if (image && typeof image === 'object') {
+    const u = (image as Record<string, unknown>).url
+    if (typeof u === 'string') return u
+  }
+  return ''
+}
+
+export function mapLdProducts(
+  cfg: typeof VENDORS[number],
+  rows: { url: string; ld: JsonLdProduct }[]
+): Product[] {
+  const out: Product[] = []
+  for (const { url, ld } of rows) {
+    const name = decodeEntities(String(ld.name || ''))
+    if (!name || !url) continue
+    if (ld.category && !typeAllowed(cfg, String(ld.category))) continue
+
+    const price = ldPrice(ld.offers)
+    if (!(price > 0)) continue   // a card with no price is not a card
+
+    let blurb = decodeEntities(
+      String(ld.description || '').replace(/<[^>]*>/g, ' ')
+    ).replace(/\s+/g, ' ').trim()
+    if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
+    const details = cfg.showcase && blurb.length > 140 ? blurb.slice(0, 1400).trim() : undefined
+    if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
+
+    const hay = `${name} ${ld.category || ''} ${blurb}`
+    if (!contentSafe(hay, name)) continue
+
+    let cat = cfg.forceCat ?? categorize(hay)
+    if (cat === 'other') cat = vendorDefaultCat(cfg.vendor)
+
+    /* The slug off the merchant's own URL, so the id is stable across
+       runs even though nothing here has a numeric product id. */
+    const slug = url.replace(/[?#].*$/, '').replace(/\/$/, '').split('/').pop() || ''
+    out.push({
+      id: `${cfg.prefix}-${slug}`,
+      vendor: cfg.vendor, domain: cfg.domain, name, cat,
+      character: detectCharacter(hay),
+      kidSafe: isKidSafeText(hay, cat, name),
+      price, unit: '', onSale: false, wasPrice: 0, discountPct: 0,
+      commissionPct: cfg.commissionPct, couponCode: cfg.couponCode, couponPct: cfg.couponPct,
+      image: proxied(ldImage(ld.image)),
+      url, badge: '', added: '', variants: [], blurb,
+      ...(details ? { details } : {}),
+    })
+  }
+  return out
+}

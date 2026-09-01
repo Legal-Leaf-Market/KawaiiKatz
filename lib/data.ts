@@ -99,7 +99,7 @@ export type VendorConfig = {
    * changes roughly never, and a sniffer that guesses wrong fails by scraping
    * nothing and reporting a healthy zero.
    */
-  platform?: 'shopify' | 'woo'
+  platform?: 'shopify' | 'woo' | 'ld'
   /**
    * Optional product_type allow-list. Present = ONLY these types are ingested,
    * matched case-insensitively against Shopify's `product_type`.
@@ -562,7 +562,7 @@ export const VENDORS: VendorConfig[] = [
   // what disambiguates when a word cannot, same call as jigsawdepot and
   // Montessori & Me.
   { vendor: 'Anime Bedding', domain: 'https://animebed.com', platform: 'woo', forceCat: 'home', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
-  { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', platform: 'ld', forceCat: 'accessories', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
     // READ 2026-09-01, 9 pages, 822 rows, 715 surviving. The 107 dropped are the
   // adult-apparel text filter doing its job on a garment catalogue, which is
   // the highest count of any vendor here and is expected on this category.
@@ -582,7 +582,7 @@ export const VENDORS: VendorConfig[] = [
   // is thinner across the site than it was. Raise budgetMs in catalog-source if
   // that stops being an acceptable trade.
   { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', forceCat: 'apparel', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
-  { vendor: 'Anime Kimono', domain: 'https://animekimono.com', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  { vendor: 'Anime Kimono', domain: 'https://animekimono.com', platform: 'ld', forceCat: 'apparel', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
     // READ 2026-09-01, 4 pages, 391 rows, 379 surviving. The cleanest of the
   // three by a distance: 366 of 379 classify as `puzzle` unaided, so NO
   // forceCat, and `puzzle` is a kid-native category so only 3 rows lack

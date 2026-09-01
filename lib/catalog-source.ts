@@ -4,7 +4,7 @@ import { unstable_cache } from 'next/cache'
 import { fetchAwinFeed, hasFeed } from './awin-feed'
 
 import { VENDORS, liveVendors, isUntracked, vendorForId, type Product } from '@/lib/data'
-import { mapShopifyProducts, mapWooProducts } from '@/lib/catalog-shared'
+import { mapShopifyProducts, mapWooProducts, mapLdProducts, findLdProduct } from '@/lib/catalog-shared'
 import { MODEL_SCAN_CATS, isAdultApparelByText } from '@/lib/adult-apparel'
 import { scanForBodyModels } from '@/lib/person-scan'
 import { rankSimilar } from '@/lib/similar'
@@ -200,12 +200,81 @@ async function scrapeWooVendor(vendorName: string): Promise<{ products: Product[
   return { products: all, capped: true }
 }
 
+/**
+ * The last door: read the sitemap, then read product pages for JSON-LD.
+ *
+ * For merchants with no machine-readable catalogue at all. Two of them exist
+ * here and both were nearly written off on the strength of a 404, which is the
+ * mistake this whole ladder is a correction for.
+ *
+ * IT IS EXPENSIVE AND SO IT IS CAPPED THREE WAYS. A feed is one request for a
+ * catalogue; this is one request per product, on a build that already runs
+ * thirteen minutes. A page cap, a wall-clock budget and a concurrency limit,
+ * and it FAILS OPEN: whatever was read by the deadline is what the vendor
+ * gets, so a slow merchant costs a short shelf rather than a failed build.
+ * A vendor here will usually be incomplete, and incomplete is the intended
+ * state rather than a bug to chase.
+ *
+ * The sitemap is read for /product/ links only. Both merchants publish a flat
+ * urlset rather than an index, so there is no second hop; if one ever switches
+ * to an index this returns nothing and the shelf empties, which is the honest
+ * failure and is visible in ?debug as fetched:0.
+ */
+const LD_MAX_PAGES = 110
+const LD_BUDGET_MS = 25000
+const LD_CONCURRENCY = 6
+
+async function scrapeLdVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
+  const vendor = VENDORS.find((v) => v.vendor === vendorName)
+  if (!vendor) return { products: [], capped: false }
+  const deadline = Date.now() + LD_BUDGET_MS
+
+  let urls: string[] = []
+  try {
+    const res = await fetch(`${vendor.domain}/sitemap.xml`, {
+      headers: { 'User-Agent': SCRAPE_UA }, cache: 'no-store',
+    })
+    if (!res.ok) return { products: [], capped: false }
+    const xml = await res.text()
+    const locs = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1])
+    urls = [...new Set(locs.filter((u) => /\/product\//.test(u)))]
+  } catch {
+    return { products: [], capped: false }
+  }
+
+  const capped = urls.length > LD_MAX_PAGES
+  const todo = urls.slice(0, LD_MAX_PAGES)
+  const rows: { url: string; ld: NonNullable<ReturnType<typeof findLdProduct>> }[] = []
+
+  let i = 0
+  async function worker() {
+    while (i < todo.length && Date.now() < deadline) {
+      const url = todo[i++]
+      try {
+        const r = await fetch(url, { headers: { 'User-Agent': SCRAPE_UA }, cache: 'no-store' })
+        if (!r.ok) continue
+        const ld = findLdProduct(await r.text())
+        if (ld) rows.push({ url, ld })
+      } catch { /* one dead page is not a dead vendor */ }
+    }
+  }
+  await Promise.all(Array.from({ length: LD_CONCURRENCY }, worker))
+
+  const products = mapLdProducts(vendor, rows)
+  console.warn(
+    `[catalog] ${vendorName}: ${urls.length} product urls in sitemap, ${todo.length} attempted, ` +
+    `${rows.length} carried JSON-LD, ${products.length} survived the pipeline`
+  )
+  return { products, capped }
+}
+
 async function sourceVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
   if (hasFeed(vendorName)) {
     return { products: await fetchAwinFeed(vendorName), capped: false }
   }
   const cfg = VENDORS.find((v) => v.vendor === vendorName)
   if (cfg?.platform === 'woo') return scrapeWooVendor(vendorName)
+  if (cfg?.platform === 'ld') return scrapeLdVendor(vendorName)
   return scrapeVendor(vendorName)
 }
 
@@ -213,7 +282,7 @@ async function sourceVendor(vendorName: string): Promise<{ products: Product[]; 
    door. Without the bump a warm 6h entry would go on serving the old
    code's answer for those vendors, which was an empty list, and the
    whole change would look like it silently did nothing. */
-const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v10'], {
+const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v11'], {
   revalidate: CATALOG_REVALIDATE_SECONDS,
   tags: ['catalog'],
 })
