@@ -571,6 +571,16 @@ export const VENDORS: VendorConfig[] = [
   // forceCat FOR THE SAME REASON AS THE BEDDING SHOP: 639 of 715 reached
   // apparel on their own and the strays went somewhere indefensible, 45 into
   // tech and 18 into plush. A Pokemon bomber jacket is not a gadget.
+  //
+  // IT ALSO PUTS 715 GARMENT PHOTOS INTO THE coco-ssd SCAN QUEUE, because
+  // `apparel` is one of MODEL_SCAN_CATS, and that is a real trade rather than a
+  // free win. The scan is budgeted at 35 seconds and fails open, so the build
+  // cannot hang on it; what happens instead is that the same budget now covers
+  // far more images, so a smaller share of EVERY apparel vendor's photos gets
+  // scanned. Not a safety hole, because the text filter is the backstop and
+  // already removed 107 rows from this vendor on its own, but the image layer
+  // is thinner across the site than it was. Raise budgetMs in catalog-source if
+  // that stops being an acceptable trade.
   { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', forceCat: 'apparel', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Anime Kimono', domain: 'https://animekimono.com', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
     // READ 2026-09-01, 4 pages, 391 rows, 379 surviving. The cleanest of the
