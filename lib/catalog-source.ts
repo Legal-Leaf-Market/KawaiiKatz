@@ -315,8 +315,47 @@ async function buildCatalog(
   // It is not an escape hatch: that function does the screening itself and
   // never hands the unscanned list to anybody, because a safety filter a caller
   // can skip is a safety filter with a hole in it.
+  // INTERLEAVED BY VENDOR, because the budget is a fixed 35 seconds and
+  // whoever sorts first eats it.
+  //
+  // This was a straight `filter`, which was fine while apparel was spread
+  // thinly across the catalogue and stopped being fine the moment Anime Jacket
+  // arrived: forcing 715 garments into `apparel` put all 715 into this queue at
+  // once. In list order that is one vendor's block of 715 sitting in front of
+  // everybody else, so the vendors that were being scanned before could stop
+  // being reached at all. Not a filter getting weaker, a filter getting pointed
+  // somewhere else, which is worse because the number of scans does not drop
+  // and nothing looks wrong.
+  //
+  // Round-robin gives every vendor the same share of whatever the budget
+  // reaches. A vendor with 715 photos still gets more scans than one with 30,
+  // it just cannot go first with all of them.
+  //
+  // THE REAL FIX IS PERSISTENCE AND IT IS NOT THIS. `verdictCache` in
+  // person-scan is an in-process Map, so it dies with the build worker and
+  // every deploy re-scans from zero against the same 35 seconds. Caching
+  // verdicts by image URL across builds would make coverage compound toward
+  // complete instead of resetting. It is not done here because this container
+  // cannot reach an image to test a change to a safety path, and an untested
+  // rewrite of the filter is a worse trade than an untested ordering of it.
+  const interleaveByVendor = (rows: Product[]): Product[] => {
+    const byVendor = new Map<string, Product[]>()
+    for (const p of rows) {
+      const q = byVendor.get(p.vendor)
+      if (q) q.push(p)
+      else byVendor.set(p.vendor, [p])
+    }
+    const queues = [...byVendor.values()]
+    const out: Product[] = []
+    for (let i = 0; out.length < rows.length; i++) {
+      for (const q of queues) if (i < q.length) out.push(q[i])
+    }
+    return out
+  }
   const scanTargets =
-    opts.bulkScan === false ? [] : list.filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image)
+    opts.bulkScan === false
+      ? []
+      : interleaveByVendor(list.filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image))
   try {
     const flagged = await scanForBodyModels(
       scanTargets.map((p) => p.image),
