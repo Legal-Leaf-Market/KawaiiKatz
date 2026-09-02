@@ -379,6 +379,22 @@ Every live vendor, read from a real feed. Re-measure with the probe recipe above
 | Kawaii Unicorn | 1250 | 1234 | GoAffPro 15%, **live 2026-08-30**. 8 of 703 dropped by the phrase filter, the cleanest feed here. No `include` (empty types) |
 | KawaiiMoriStore | 1250 | 943 | GoAffPro 10%, **live 2026-08-30**. J-fashion, so it is a `/decora` source too. **Hits the 5-page cap.** 156 of 784 dropped |
 | Kawaii mood | 0 | 0 | GoAffPro 10%, joined and **frozen**: HTTP 402 `{"errors":"Unavailable Shop"}`. Stays `pending` |
+| Anime Backpacks | 1001 | capped 110 | GoAffPro 15%, `ld` door. **Live 2026-09-02.** Sitemap 200, 40/40 sampled carried JSON-LD, 0 dropped, all `accessories`, flat $36.90. **Capped by design**, see below |
+| Anime Kimono | 377 | capped 110 | GoAffPro 15%, `ld` door. **Live 2026-09-02.** 40/40 carried JSON-LD, 0 dropped, all `apparel`, flat $45 |
+
+### `capped` means something different on the `ld` door
+
+The Shopify door reads one `products.json` per page of 250, so a `capped` vendor is one whose
+catalogue ran past five of those. The `ld` door fetches **one page per product**, parses its
+JSON-LD, and is bounded by `LD_MAX_PAGES = 110` and a 25s budget. So Anime Backpacks shows 110
+of 1,001 URLs, about 11% of the shop, and `?debug` will list it as `capped` for as long as it
+is live.
+
+That is the door working, not a truncation to fix. Raising the cap costs one HTTP request per
+product on every cold build, against a per-page budget that is already being hit by eight
+routes (§4b). If more of that shop is wanted, the answer is a real feed from the merchant, not
+a bigger number here.
+
 | Egirldoll | 1250 | 951 | GoAffPro 10%, **probed 2026-08-31 and readable**. Lolita / e-girl, **hits the 5-page cap**. 148 of 799 dropped, the highest share here. Stays `pending` on a brand call, not a technical one |
 | Everblog US | 7 | 6 | AWIN 128579, 10%. Live 2026-08-31 as a **showcase** (`/everblog`). Two calendars ($249 / $349) plus accessories. The 7th row is a checkout add-on, not a product |
 

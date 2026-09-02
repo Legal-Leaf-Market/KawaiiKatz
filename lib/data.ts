@@ -561,7 +561,22 @@ export const VENDORS: VendorConfig[] = [
   // what disambiguates when a word cannot, same call as jigsawdepot and
   // Montessori & Me.
   { vendor: 'Anime Bedding', domain: 'https://animebed.com', platform: 'woo', forceCat: 'home', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
-  { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', platform: 'ld', forceCat: 'accessories', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  // READ 2026-09-02 through /api/vendor-probe, which is what took the pending
+  // flag off. Sitemap 200, 1,095 locs, 1,001 product URLs; 40 of 40 sampled
+  // carried JSON-LD, 40 mapped, NOTHING dropped by the pipeline. All 40 land in
+  // `accessories`, price is a flat $36.90, and the shelf is franchise
+  // backpacks: Genshin Impact, Demon Slayer.
+  //
+  // kidSafe false on 0 of 40, the cleanest of the five on that measure. That is
+  // positive evidence rather than the absence of a problem (§4e): a school bag
+  // reads as kid stock where a garment does not.
+  //
+  // IT IS CAPPED HARD AND THAT IS THE POINT. LD_MAX_PAGES is 110 against 1,001
+  // product URLs, so this door takes about 11% of the shop. The `ld` reader
+  // fetches one page per product rather than one file per shop, so the cap is a
+  // build-time budget and not a preference. `?debug` will list this vendor as
+  // `capped` forever; that is expected here rather than a truncation to fix.
+  { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', platform: 'ld', forceCat: 'accessories', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
     // READ 2026-09-01, 9 pages, 822 rows, 715 surviving. The 107 dropped are the
   // adult-apparel text filter doing its job on a garment catalogue, which is
   // the highest count of any vendor here and is expected on this category.
@@ -581,7 +596,24 @@ export const VENDORS: VendorConfig[] = [
   // is thinner across the site than it was. Raise budgetMs in catalog-source if
   // that stops being an acceptable trade.
   { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', forceCat: 'apparel', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
-  { vendor: 'Anime Kimono', domain: 'https://animekimono.com', platform: 'ld', forceCat: 'apparel', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+  // READ 2026-09-02 through /api/vendor-probe. Sitemap 200, 700 locs, 377
+  // product URLs; 40 of 40 sampled carried JSON-LD, 40 mapped, nothing dropped.
+  // All 40 land in `apparel`, flat $45, and the shelf is character kimono:
+  // Demon Slayer's Hashira, Luffy, Jujutsu Kaisen.
+  //
+  // kidSafe false on 40 of 40, AND THAT IS NOT WHAT IT SOUNDS LIKE. The flag is
+  // positive evidence of kid stock, not the inverse of the adult filter (§4e),
+  // so 40 of 40 means "no kid signal either way" rather than "40 adult items".
+  // The bedding shop's note records the same shape: 3 rows lacking evidence
+  // there against 275 and 561 on the two garment shops. A robe with a
+  // character's name on it is simply not a thing the kid-safety terms fire on.
+  //
+  // The number that would have mattered is droppedByPipeline, and it is 0 of
+  // 40, against 107 of 822 on Anime Jacket. A kimono is a loose robe, so the
+  // cut phrases the adult-apparel filter looks for are not in its vocabulary.
+  // Sampled rather than exhaustive, so this is a floor: LD_MAX_PAGES is 110 of
+  // 377 URLs, and the filter still runs on every row that reaches the build.
+  { vendor: 'Anime Kimono', domain: 'https://animekimono.com', platform: 'ld', forceCat: 'apparel', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
     // READ 2026-09-01, 4 pages, 391 rows, 379 surviving. The cleanest of the
   // three by a distance: 366 of 379 classify as `puzzle` unaided, so NO
   // forceCat, and `puzzle` is a kid-native category so only 3 rows lack
