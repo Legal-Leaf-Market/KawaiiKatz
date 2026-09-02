@@ -344,6 +344,15 @@ export default function DecoraClient({
               ← Back to Kawaii Katz
             </Link>
             <div className="flex gap-2">
+              {/* A door to the other room. Both rooms are dark, loud and built
+                  on the same bones, and somebody standing in one is the most
+                  likely person to want the other. */}
+              <Link
+                href="/anime"
+                className="border-[3px] border-white bg-transparent text-white rounded-full h-9 px-3.5 inline-flex items-center font-display font-extrabold text-[13px] hover:bg-white hover:text-[#12071f] transition-colors"
+              >
+                Anime room →
+              </Link>
               <button
                 onClick={() => setWishOpen(true)}
                 className="border-[3px] border-white bg-[#ff2d92] text-white rounded-full h-9 px-3.5 font-display font-extrabold text-[13px] cursor-pointer hover:bg-white hover:text-[#ff2d92] transition-colors"

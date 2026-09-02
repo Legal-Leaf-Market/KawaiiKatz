@@ -45,6 +45,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
+    // The second room, on the same footing and for the same reason.
+    {
+      url: `${SITE_URL}/anime`,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
     // Articles. Listed for the same reason the guides are: they compete with no
     // vendor because no vendor wrote them, and they are the only pages here
     // that answer a question rather than list stock.

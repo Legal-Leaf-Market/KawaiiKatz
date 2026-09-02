@@ -139,7 +139,12 @@ export default function DecoraDecor() {
       {/* RAIL CAST. Only at 2xl, where the margin beside the 1180px shelf is
           genuinely empty. Absolute inside the page, so `top` is a share of the
           document and a character stays with its band of content. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 hidden 2xl:block">
+      {/* `overflow-hidden` was missing and it is load-bearing: the twinkle is
+          `inset-[-26%]`, so on the right-hand side it reaches past the viewport
+          edge and gave this page a horizontal scrollbar from the day it
+          shipped. Measured at 1900px: 1,924 scroll width against 1,900 client
+          width. A glow whose outer quarter is clipped is still a glow. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 hidden overflow-hidden 2xl:block">
         {RAIL.map((r, i) => (
           <div
             key={`${r.src}-${i}`}

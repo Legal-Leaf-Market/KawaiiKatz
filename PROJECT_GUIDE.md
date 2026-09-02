@@ -1349,6 +1349,101 @@ so that is a week of publishing: connect them a couple at a time and expect the 
 
 ---
 
+## 4f-c. Kawaii Katz Goes Anime: the third room
+
+`/anime`, `lib/anime.ts`, `components/AnimeDecor.tsx`. Built on `/decora`'s bones on purpose:
+sections that fill in order, a paged deal with Shuffle and Load more per shelf, Ada Mode on
+every tile, a Pin per shelf and a Pin for the room. Every one of those has a note in the
+Decora files explaining what it cost to get right, and re-deriving them would be paying twice.
+
+**`/decora`'s own "Anime mode" shelf is the argument FOR this page, not against it.** That
+shelf is capped at twelve tiles and reads only the seven J-fashion shops, so it was showing
+about 1% of the character stock the site actually carries. Measured across all 6,777 products:
+**333 rows, over seven vendors, 39% of them tracked**, and most of them in categories `/decora`
+never looks at (kitchen, plush, food, tech).
+
+### Four terms were measured and cut, and every one looked obviously right first
+
+This is the `elf` ⊂ SHELF class again, now on its fourth room, and the same two-list shape
+`/decora` uses: a HOUSE is decisive and may be matched on name, blurb and character together;
+a GENRE word is descriptive and is matched **on the name only**.
+
+| Term | Hits | What it actually caught |
+|---|---:|---|
+| `sailor` | 32 | A COLLAR. "Cute Strawberry Bunny Sailor Sweater", "Sailor Duck Plushies". `sailor moon` is kept and finds the five real ones |
+| `one piece` | 8 | A GARMENT. "Striped Girls Unicorn One Piece Swimsuit". Three genuine rows did not justify it |
+| `nintendo` | 27 | Kawaii Switch shells and joystick caps. Real products, no licence, nothing to do with anime |
+| `anime` on the blurb | 59 | Kore Kawaii writes "anime" in the body copy of half its shop, so it returned platform sneakers and a bedding set. Name-only fixes it |
+
+### The brief guessed six sections and the shelf disagreed with two of them
+
+The art brief's six were Bedding / Backpacks / Jackets / Kimono / Puzzles / New, written before
+anybody counted. Measured: **`kimono` matched one product in the whole room and `puzzle`
+matched none**, so a third of the page would have shipped empty. The sections are now the
+buckets the stock actually falls into, and each of the six delivered poses still lands on a
+shelf its joke fits.
+
+| Shelf | Round 0 | Reachable | Pose |
+|---|---:|---:|---|
+| New this week | 12 | 96 | Panda with a parcel |
+| Wear the fandom | 12 | 47 | Katz in a bomber jacket |
+| Carry it with you | 8 | 28 | Bunny under an oversized backpack |
+| The collection | 12 | 38 | Katz losing to a puzzle |
+| The room at 2am | 12 | 55 | Panda asleep in a duvet |
+| The kitchen table | 12 | 57 | Bunny in a haori, unimpressed |
+
+**Six sections because there are six poses.** A seventh shelf would go bare or repeat one, and
+a repeated mascot two shelves apart reads as the page having run out.
+
+### What makes it look like a different room from /decora
+
+Same cast, same motion vocabulary (§4e-b), and the styling is what tells you where you are.
+
+- **A drifting print screen.** Three tiled textures (halftone, speed lines, sakura) scrolling
+  slowly in different directions behind everything, as background-position animations rather
+  than elements: no DOM, nothing to get between a visitor and a Pin button. This is the single
+  thing that stops the page reading as /decora in another palette, because speed lines and
+  screentone are what a manga page does when something is moving.
+- **The hero is allowed to be a picture.** /decora runs its hero art at 0.22 as a texture
+  because that art fights a headline. This one was drawn to the brief's instruction to "keep
+  the centre visually quiet", so it runs at full strength with a bottom-weighted scrim.
+- **The falling pieces are inline SVG petals, not the sakura tile.** `pat-sakura.webp` is a
+  seamless TILE holding a scattered field, which is the right shape for a background and the
+  wrong shape for 22 independently-falling sprites. Same three reasons §4e-b gives for the
+  kawaii confetti: exactly on palette, cannot blur at any size, a few hundred bytes each.
+- **The section screen is a full wash, not /decora's narrow strip.** A leopard print behind a
+  product grid is unreadable; a halftone at 10% is what a manga page looks like under its
+  panels.
+
+### `overflow-hidden` on a rail layer, and /decora had the bug too
+
+The twinkle behind each rail character is `inset-[-24%]`, so on the right-hand side it reaches
+past the viewport edge and gives the whole document a horizontal scrollbar. Measured at 1900px:
+**1,921 scroll width against 1,900 client, and /decora was 1,924 - it has carried the identical
+defect since it shipped.** Both rail wrappers are clipped now. A glow whose outer quarter is
+cut is still a glow.
+
+### No feeds, deliberately
+
+A `BOARDS`-style entry generates a page AND an RSS feed apiece, and §4b's standing advice after
+the Decora pass is that the next thing added should share a route rather than multiply them.
+This adds **one** catalogue-backed prerender, built over seven vendors rather than twenty
+(§4f-b's narrow build). The room Pin, six shelf Pins and a Pin on every tile cover the
+Pinterest surface in the meantime; the room Pin uses `social-pin.webp` because the brief
+delivered a 1000x1500 crop and that is Pinterest's native ratio.
+
+### The legal line is stricter here than anywhere else on the site
+
+The shops behind this page sell LICENSED merchandise, so their product photos are full of
+characters other people own. **Our own artwork contains none of them** - that is rule 3 of the
+art brief and the reason this room needed a brief of its own rather than a paragraph in
+Decora's. The cast is Katz, Panda and the bunny drawn in this room's register; the only
+licensed images on the page are the merchants' own photographs, served from their CDNs and
+credited to their shops. The footer says so in as many words, and no series or character is
+named anywhere except as an owner's trademark.
+
+---
+
 ## 4g. IG Studio: the carousel exporter
 
 `/studio` + `lib/carousel.ts` (deck model) + `lib/carousel-render.ts` (canvas) +
