@@ -281,6 +281,24 @@ It is still 2.5x the last measurement, and the next thing added here should be a
 rather than a thirteenth pair. **Re-measure on the deploy after any `BOARDS` change**; the
 number is in the build log as "Generating static pages ... in Nmin".
 
+**The 240s cap is now being hit routinely, and the catalogue growing is why.** Measured on
+2026-09-02 at 7,920 products (up from 6,777 a week earlier, after the five-shop anime intake):
+the `main` build of `ff51aef` generated 61 pages in **10.5 minutes** with `/giftlab` and one
+gift guide failing at the cap and going to a retry, and a branch build of the same tree the
+same day lost **eight** routes to it. Nothing fails, because the retries succeed, and that is
+exactly why it goes unnoticed.
+
+Every one of the eight is a route that builds the WHOLE catalogue: `/giftlab` and the twelve
+`/gifts/[slug]` entries. The guides genuinely need it, since a season takes every category.
+`/giftlab` did not: it renders one vendor and was calling `getCatalog()`, and because GiftLAB
+is `pending` it was assembling 7,920 products in order to render its empty state. It takes
+`getVendorCatalog(['GiftLAB'])` now, which is §4f-b's rule applied to the one route nobody had
+applied it to.
+
+**The gift guides are the next thing to fix and the fix is already written down**, twice: one
+route rendering every guide, or `/gifts` dropping back to a static list that never calls
+`getCatalog()`. Do not add another whole-catalogue prerender before that happens.
+
 **Pages are a server shell + client component** (`page.tsx` → `HomeClient.tsx` /
 `BrkoxClient.tsx`). The shell inlines a real slice of the catalogue as first-paint data;
 `FIRST_PAINT_COUNT` bounds it, because serialising all ~1,600 products would put 1.9MB in

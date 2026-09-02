@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { getCatalog } from '@/lib/catalog-source'
+import { getVendorCatalog } from '@/lib/catalog-source'
 import { SITE_URL } from '@/lib/site'
 import { pageNode } from '@/lib/schema'
 import JsonLd from '@/components/JsonLd'
@@ -43,9 +43,28 @@ export const metadata: Metadata = {
   },
 }
 
+const VENDOR = 'GiftLAB'
+
 export default async function Page() {
-  const { products } = await getCatalog()
-  const initialProducts = products.filter((p) => p.vendor === 'GiftLAB').slice(0, FIRST_PAINT)
+  /**
+   * ONE VENDOR, NOT TWENTY-FIVE, AND THIS ROUTE WAS TIMING OUT WITHOUT IT.
+   *
+   * §4f-b states the rule: a route's cost should be the size of its output.
+   * This page renders GiftLAB and nothing else, and it was calling getCatalog(),
+   * so it fanned out across every vendor and paid for a coco-ssd pass over the
+   * whole shop to render one merchant's slice.
+   *
+   * That was affordable when the catalogue was 4,426 products. It is not now.
+   * Measured on the builds of 2026-09-02, at 7,920 products: this route failed
+   * at the 240s per-page cap and went to a retry on BOTH the main build and the
+   * branch build, and it is the cheapest of the eight routes that did.
+   *
+   * The sharper edge: GiftLAB is `pending`, so getCatalog() skips it entirely
+   * and this page renders its empty state. It was building 7,920 products in
+   * order to show nothing.
+   */
+  const { products } = await getVendorCatalog([VENDOR])
+  const initialProducts = products.filter((p) => p.vendor === VENDOR).slice(0, FIRST_PAINT)
 
   return (
     <>
