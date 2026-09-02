@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { getVendorCatalog } from '@/lib/catalog-source'
-import { ANIME_VENDORS, animePool, fillAnime } from '@/lib/anime'
+import { ANIME_VENDORS, animePool, fillAnimePages } from '@/lib/anime'
 import { ANIME_SHOPS, animeShopUrl } from '@/lib/data'
 import { SITE_URL } from '@/lib/site'
 import { pageNode } from '@/lib/schema'
@@ -68,10 +68,37 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * PAGES PER SHELF INLINED INTO THE HTML.
+ *
+ * One page was the bug /decora shipped and had to fix: Shuffle and Load more
+ * only render when a shelf has more than one page behind it, so with a single
+ * page inlined the buttons were absent from the served HTML and appeared a
+ * second later when the live catalogue landed, which reads to a visitor as them
+ * not existing.
+ *
+ * Three is the trade. One is broken; all eight would serialise most of 1,441
+ * products into the document, and §4b is explicit about why that is the wrong
+ * direction: FIRST_PAINT_COUNT exists because ~1,600 products put 1.9MB in the
+ * home page's HTML and traded a fast background fetch for a slow first byte.
+ */
+const FIRST_PAINT_PAGES = 3
+
 export default async function Page() {
   const { products } = await getVendorCatalog(ANIME_VENDORS)
   const pool = animePool(products)
-  const sections = fillAnime(products)
+
+  /* The union of what the shelves actually chose, rather than the newest N.
+     A section appearing after hydration is a layout shift on the one page
+     where the layout IS the product. */
+  const seen = new Set<string>()
+  const initialProducts = fillAnimePages(products, FIRST_PAINT_PAGES)
+    .flatMap((x) => x.pages.flat())
+    .filter((p) => {
+      if (seen.has(p.id)) return false
+      seen.add(p.id)
+      return true
+    })
 
   return (
     <div className={`${s.room} min-h-screen`}>
@@ -125,8 +152,8 @@ export default async function Page() {
       </header>
 
       <main className="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-6 pb-14 -mt-6">
-        {sections.length ? (
-          <AnimeClient sections={sections} pool={pool} />
+        {initialProducts.length ? (
+          <AnimeClient initialProducts={initialProducts} />
         ) : (
           /* Five merchants are signed and none of their feeds has been read
              and cleared, which is a different sentence from "there is nothing

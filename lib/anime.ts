@@ -204,46 +204,179 @@ export type AnimeSectionView = Omit<AnimeSection, 'match'>
 export type FilledSection = { section: AnimeSectionView; products: Product[] }
 
 export function fillAnime(all: Product[]): FilledSection[] {
-  /* Newest first, so "New in the room" is true of the first section and every
-     later one still gets recent stock rather than whatever sorted last. */
-  const pool = all
-    .filter((p) => ANIME_VENDORS.includes(p.vendor))
-    .slice()
-    .sort((a, b) => String(b.added || '').localeCompare(String(a.added || '')))
-
-  const used = new Set<string>()
-  const out: FilledSection[] = []
-
-  for (const section of ANIME_SECTIONS) {
-    const perVendor = new Map<string, number>()
-    const picked: Product[] = []
-    for (const p of pool) {
-      if (picked.length >= section.max) break
-      if (used.has(p.id)) continue
-      if (!section.match(p)) continue
-      if (section.maxPerVendor != null) {
-        const n = perVendor.get(p.vendor) ?? 0
-        if (n >= section.maxPerVendor) continue
-        perVendor.set(p.vendor, n + 1)
-      }
-      picked.push(p)
-      used.add(p.id)
-    }
-    /* An empty section is DROPPED, not rendered empty. A heading standing over
-       nothing is a promise of content, which reads worse than not offering it:
-       the same call the main shelf already makes by staying hidden until there
-       is stock. */
-    if (picked.length) {
-      /* Destructured rather than spread, so the matcher is dropped by name and
-         a future field on AnimeSection is carried across automatically. */
-      const { match: _match, ...view } = section
-      out.push({ section: view, products: picked })
-    }
-  }
-  return out
+  /* Literally round 0 of the paged fill, so the one-page view and page one of
+     the paged view cannot drift apart. See fillAnimePages for the rounds model
+     and for why the per-vendor cap is applied per round. */
+  return fillAnimePages(all, 1).map(({ section, pages }) => ({ section, products: pages[0] }))
 }
 
 /** Everything the room drew on, for the count in the standfirst. */
 export function animePool(all: Product[]): Product[] {
   return all.filter((p) => ANIME_VENDORS.includes(p.vendor))
+}
+
+export type PagedSection = { section: AnimeSectionView; pages: Product[][] }
+
+/**
+ * Every section dealt into pages, so a shelf can shuffle and load more.
+ *
+ * -----------------------------------------------------------------------------
+ * WHY THIS EXISTS: 72 TILES OVER 1,441 PRODUCTS
+ *
+ * Six shelves capped at twelve is 72 slots, and the three live shops carry 1,441
+ * products between them (measured on production, 2026-09-02: Anime Jacket 715,
+ * Anime Puzzles 378, Anime Bedding 348). So 95% of the room was unreachable, the
+ * same arithmetic that put Shuffle and Load more on /decora.
+ *
+ * -----------------------------------------------------------------------------
+ * PAGING IS ROUNDS OF THE SAME PASS, NOT A BIGGER VERSION OF IT
+ *
+ * lib/boards.ts paid for this lesson and lib/decora.ts repeats it: letting each
+ * section claim `max * maxPages` up front starves the sections below it. On the
+ * gift guides that cut the jigsaw page from 36 tiles to 11, because one section
+ * had claimed 48 puzzles before the price bands got a look.
+ *
+ * Running the one-round pass repeatedly over what is left makes round 0
+ * IDENTICAL to `fillAnime` by construction, which is what keeps the server's
+ * prerender and the browser's first render agreeing. `fillAnime` is now literally
+ * round 0 of this, so the two cannot drift.
+ *
+ * The per-vendor cap is applied PER ROUND rather than across the whole deal, for
+ * the reason the note on `maxPerVendor` already gives: it exists so the shop that
+ * uploaded most recently does not own the top of the page. Applied across eight
+ * rounds it would instead cap the section at 4 products total.
+ *
+ * -----------------------------------------------------------------------------
+ * TWENTY-FOUR ROUNDS, NOT /decora's EIGHT, AND THE SHELF DECIDED THAT
+ *
+ * Measured on the production catalogue, 2026-09-02, over 1,441 products:
+ *
+ *     8 rounds    384 tiles   27%
+ *    12 rounds    576 tiles   40%
+ *    16 rounds    768 tiles   53%
+ *    24 rounds  1,109 tiles   77%
+ *    40 rounds  1,365 tiles   95%
+ *
+ * /decora's eight is right THERE because its sections are narrow and most of
+ * them run out well before round eight, so a higher number would buy nothing.
+ * Here four shelves are still full at round eight, because one shop alone
+ * carries 715 jackets. Twenty-four is where the curve flattens: it reaches
+ * three quarters of the room, and past it the extra rounds are mostly the two
+ * shelves that never run out.
+ *
+ * It costs one pass over a 1,441-row array per round, on a list that only
+ * changes when the catalogue does, and it is memoised behind `visible`.
+ *
+ * -----------------------------------------------------------------------------
+ * Pure and deterministic: no Math.random, no Date.now. This runs during a
+ * prerender and again in the browser, and the two have to agree.
+ */
+export function fillAnimePages(all: Product[], maxPages = 24): PagedSection[] {
+  const pool = all
+    .filter((p) => ANIME_VENDORS.includes(p.vendor))
+    .slice()
+    .sort((a, b) => String(b.added || '').localeCompare(String(a.added || '')))
+
+  function round(used: Set<string>): { key: string; products: Product[] }[] {
+    return ANIME_SECTIONS.map((section) => {
+      const perVendor = new Map<string, number>()
+      const picked: Product[] = []
+      for (const p of pool) {
+        if (picked.length >= section.max) break
+        if (used.has(p.id)) continue
+        if (!section.match(p)) continue
+        if (section.maxPerVendor != null) {
+          const n = perVendor.get(p.vendor) ?? 0
+          if (n >= section.maxPerVendor) continue
+          perVendor.set(p.vendor, n + 1)
+        }
+        picked.push(p)
+        used.add(p.id)
+      }
+      return { key: section.key, products: picked }
+    })
+  }
+
+  const used = new Set<string>()
+  const rounds: { key: string; products: Product[] }[][] = []
+  for (let r = 0; r < maxPages; r++) {
+    const got = round(used)
+    if (!got.some((x) => x.products.length)) break
+    rounds.push(got)
+  }
+
+  return ANIME_SECTIONS.map((section, i) => {
+    const { match: _match, ...view } = section
+    return { section: view, pages: rounds.map((r) => r[i].products).filter((pg) => pg.length > 0) }
+  }).filter((x) => x.pages.length > 0)
+}
+
+/* ---------------------------------------------------------------------------
+ * THE PIN VOICE
+ *
+ * §4f-b in one line: the site's default caption calls everything "a kawaii
+ * <category> pick ... cute, clever & kind" under #KawaiiFinds, and a duvet
+ * pinned to an anime board under that caption tells Pinterest the board is about
+ * bedding. `PinContext` carries the four overrides and this fills them in per
+ * shelf, so a tile's Pin button and its shelf's Pin agree.
+ *
+ * The rows here are also miscategorised at source in a way that makes the
+ * default worse than usual: every one of these vendors carries `forceCat`, so a
+ * kimono is `apparel` and a duvet is `home` regardless of what it depicts.
+ * ------------------------------------------------------------------------- */
+
+const PIN_LEAD: Record<string, string> = {
+  new: 'anime',
+  fit: 'anime jacket',
+  layer: 'anime kimono',
+  carry: 'anime backpack',
+  sleep: 'anime bedding',
+  build: 'anime jigsaw',
+}
+
+const PIN_TAGS: Record<string, string[]> = {
+  new: ['AnimeMerch', 'AnimeAesthetic', 'OtakuLife', 'AnimeGifts', 'KawaiiKatz'],
+  fit: ['AnimeJacket', 'AnimeFashion', 'AnimeOutfit', 'BomberJacket', 'AnimeMerch'],
+  layer: ['AnimeKimono', 'HaoriJacket', 'JapaneseFashion', 'AnimeFashion', 'AnimeMerch'],
+  carry: ['AnimeBackpack', 'AnimeBag', 'SchoolBackpack', 'AnimeMerch', 'OtakuStyle'],
+  sleep: ['AnimeBedding', 'AnimeRoomDecor', 'OtakuRoom', 'AnimeBedroom', 'AnimeMerch'],
+  build: ['AnimeJigsaw', 'JigsawPuzzle', 'PuzzleLover', 'AnimeArt', 'AnimeMerch'],
+}
+
+/** The Pin voice for one shelf, and for the tiles standing on it. */
+export function animeSectionPin(key: string): {
+  tag: string
+  catLead: string
+  catTags: string[]
+  style: string
+  tail: string
+} {
+  return {
+    tag: 'AnimeMerch',
+    catLead: PIN_LEAD[key] ?? 'anime',
+    catTags: PIN_TAGS[key] ?? PIN_TAGS.new,
+    style: 'anime',
+    tail: 'Anime rooms and wardrobes, curated on Kawaii Katz.',
+  }
+}
+
+/**
+ * The shelf each product stands on, so a tile's Pin button carries the same
+ * voice as the feed-shaped Pin of the shelf it is on.
+ *
+ * Without this the two halves disagree on the identical tile, one saying "an
+ * anime bedding pick #AnimeBedding" and the other "a kawaii home decor pick
+ * #KidsRoomDecor", and the same board ends up holding both. §4f shipped that
+ * defect twice before it was written down.
+ */
+export function animeSectionIndex(all: Product[]): Map<string, string> {
+  const out = new Map<string, string>()
+  // Default depth, so every tile a visitor can actually reach has a Pin voice.
+  // Passing a smaller number here would leave the deeper pages falling back to
+  // the generic 'new' caption, which is the mismatch this function exists to
+  // prevent.
+  for (const { section, pages } of fillAnimePages(all)) {
+    for (const page of pages) for (const p of page) out.set(p.id, section.key)
+  }
+  return out
 }
