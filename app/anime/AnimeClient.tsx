@@ -59,7 +59,23 @@ import s from './anime.module.css'
  * still returns the matcher-free `AnimeSectionView`, so the server's own render
  * is unchanged and the type still refuses a function.
  */
-export default function AnimeClient({ initialProducts }: { initialProducts: Product[] }) {
+export default function AnimeClient({
+  initialProducts,
+  totalCount,
+}: {
+  initialProducts: Product[]
+  /**
+   * The room's REAL size, counted server-side over the whole source set.
+   *
+   * `pool` below is only what this render has in hand, and at first paint that
+   * is the three-page section union: 144 products, where the room is 1,441. The
+   * served HTML said "144 pieces across the five shelves" and then jumped when
+   * the live catalogue landed, which understates the shop to everybody who
+   * reads the line before the fetch returns. /decora carries the same prop for
+   * the same reason.
+   */
+  totalCount: number
+}) {
   const { products: live } = useLiveCatalog(initialProducts)
   const { excludedIds, exclude, restore } = useExclusions()
   const { pickedIds, togglePick } = usePicks()
@@ -169,7 +185,7 @@ export default function AnimeClient({ initialProducts }: { initialProducts: Prod
         </button>
         {pool.length > 0 && (
           <span className="font-display text-[13px] font-bold text-[#efe2f6]">
-            {pool.length.toLocaleString()} pieces across the five shelves
+            {Math.max(totalCount, pool.length).toLocaleString()} pieces across the shelves
           </span>
         )}
       </div>

@@ -153,7 +153,7 @@ export default async function Page() {
 
       <main className="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-6 pb-14 -mt-6">
         {initialProducts.length ? (
-          <AnimeClient initialProducts={initialProducts} />
+          <AnimeClient initialProducts={initialProducts} totalCount={pool.length} />
         ) : (
           /* Five merchants are signed and none of their feeds has been read
              and cleared, which is a different sentence from "there is nothing
