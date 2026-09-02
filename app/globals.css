@@ -293,26 +293,3 @@ a { color: inherit; text-decoration: none; }
      keep the static rail cast, which still decorates the page. */
   .kk-charm { display: none; }
 }
-
-/* ---------------------------------------------------------------------------
- * The Anime room's drifting print screen (components/AnimeDecor.tsx).
- *
- * Three tiled textures moving slowly in different directions. Backgrounds
- * rather than elements on purpose: a background-position animation costs no DOM
- * and cannot get between a visitor and a Pin button.
- *
- * They live here rather than inline for the same reason kkCharmFall does: the
- * two rooms share their motion vocabulary, and a keyframe defined twice is a
- * keyframe that drifts the first time one copy is fixed.
- * ------------------------------------------------------------------------- */
-@keyframes kkDriftA { from { background-position: 0 0; } to { background-position: 340px 340px; } }
-@keyframes kkDriftB { from { background-position: 0 0; } to { background-position: -190px 190px; } }
-@keyframes kkDriftC { from { background-position: 0 0; } to { background-position: 210px 420px; } }
-
-.kk-drift-a { animation: kkDriftA 26s linear infinite; }
-.kk-drift-b { animation: kkDriftB 44s linear infinite; }
-.kk-drift-c { animation: kkDriftC 62s linear infinite; }
-
-@media (prefers-reduced-motion: reduce) {
-  .kk-drift-a, .kk-drift-b, .kk-drift-c { animation: none; }
-}

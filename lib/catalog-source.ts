@@ -4,7 +4,7 @@ import { unstable_cache } from 'next/cache'
 import { fetchAwinFeed, hasFeed } from './awin-feed'
 
 import { VENDORS, liveVendors, isUntracked, vendorForId, type Product } from '@/lib/data'
-import { mapShopifyProducts } from '@/lib/catalog-shared'
+import { mapShopifyProducts, mapWooProducts, mapLdProducts, findLdProduct } from '@/lib/catalog-shared'
 import { MODEL_SCAN_CATS, isAdultApparelByText } from '@/lib/adult-apparel'
 import { scanForBodyModels } from '@/lib/person-scan'
 import { rankSimilar } from '@/lib/similar'
@@ -155,14 +155,134 @@ async function scrapeVendor(vendorName: string): Promise<{ products: Product[]; 
  * `capped` is always false for a feed: a feed is the whole catalogue in one
  * file, so there is no page limit to run into and nothing to warn about.
  */
+/**
+ * The WooCommerce Store API: public, unauthenticated, read-only, and built to
+ * be read. Three approved merchants answer here and answered 404 on
+ * products.json, which is the whole reason this function exists.
+ *
+ * PAGINATION IS `page`, AND THE CAP IS SMALLER THAN SHOPIFY'S. Woo's per_page
+ * maxes out at 100 against Shopify's 250, so the same MAX_PAGES would read less
+ * than half as deep. WOO_MAX_PAGES is raised to keep the reach comparable.
+ *
+ * A page that comes back short is the last page, same rule as the Shopify door.
+ * Every exit other than exhausting the cap returns directly, for the reason
+ * written on that door: `break` here would fall through to the cap warning and
+ * report a vendor that failed on page 1 as a vendor too big to fit.
+ */
+const WOO_PER_PAGE = 100
+const WOO_MAX_PAGES = 12
+
+async function scrapeWooVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
+  const vendor = VENDORS.find((v) => v.vendor === vendorName)
+  if (!vendor) return { products: [], capped: false }
+
+  const all: Product[] = []
+  try {
+    for (let page = 1; page <= WOO_MAX_PAGES; page++) {
+      const url =
+        `${vendor.domain}/wp-json/wc/store/v1/products?per_page=${WOO_PER_PAGE}&page=${page}`
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', 'User-Agent': SCRAPE_UA },
+        cache: 'no-store',
+      })
+      if (!res.ok) return { products: all, capped: false }
+      const raw = (await res.json()) as Parameters<typeof mapWooProducts>[1]
+      if (!Array.isArray(raw) || !raw.length) return { products: all, capped: false }
+      all.push(...mapWooProducts(vendor, raw))
+      if (raw.length < WOO_PER_PAGE) return { products: all, capped: false }
+    }
+  } catch {
+    return { products: all, capped: false }
+  }
+  console.warn(
+    `[catalog] ${vendorName} still had a full page at the ${WOO_MAX_PAGES}-page Woo cap; catalogue may be truncated`
+  )
+  return { products: all, capped: true }
+}
+
+/**
+ * The last door: read the sitemap, then read product pages for JSON-LD.
+ *
+ * For merchants with no machine-readable catalogue at all. Two of them exist
+ * here and both were nearly written off on the strength of a 404, which is the
+ * mistake this whole ladder is a correction for.
+ *
+ * IT IS EXPENSIVE AND SO IT IS CAPPED THREE WAYS. A feed is one request for a
+ * catalogue; this is one request per product, on a build that already runs
+ * thirteen minutes. A page cap, a wall-clock budget and a concurrency limit,
+ * and it FAILS OPEN: whatever was read by the deadline is what the vendor
+ * gets, so a slow merchant costs a short shelf rather than a failed build.
+ * A vendor here will usually be incomplete, and incomplete is the intended
+ * state rather than a bug to chase.
+ *
+ * The sitemap is read for /product/ links only. Both merchants publish a flat
+ * urlset rather than an index, so there is no second hop; if one ever switches
+ * to an index this returns nothing and the shelf empties, which is the honest
+ * failure and is visible in ?debug as fetched:0.
+ */
+const LD_MAX_PAGES = 110
+const LD_BUDGET_MS = 25000
+const LD_CONCURRENCY = 6
+
+async function scrapeLdVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
+  const vendor = VENDORS.find((v) => v.vendor === vendorName)
+  if (!vendor) return { products: [], capped: false }
+  const deadline = Date.now() + LD_BUDGET_MS
+
+  let urls: string[] = []
+  try {
+    const res = await fetch(`${vendor.domain}/sitemap.xml`, {
+      headers: { 'User-Agent': SCRAPE_UA }, cache: 'no-store',
+    })
+    if (!res.ok) return { products: [], capped: false }
+    const xml = await res.text()
+    const locs = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1])
+    urls = [...new Set(locs.filter((u) => /\/product\//.test(u)))]
+  } catch {
+    return { products: [], capped: false }
+  }
+
+  const capped = urls.length > LD_MAX_PAGES
+  const todo = urls.slice(0, LD_MAX_PAGES)
+  const rows: { url: string; ld: NonNullable<ReturnType<typeof findLdProduct>> }[] = []
+
+  let i = 0
+  async function worker() {
+    while (i < todo.length && Date.now() < deadline) {
+      const url = todo[i++]
+      try {
+        const r = await fetch(url, { headers: { 'User-Agent': SCRAPE_UA }, cache: 'no-store' })
+        if (!r.ok) continue
+        const ld = findLdProduct(await r.text())
+        if (ld) rows.push({ url, ld })
+      } catch { /* one dead page is not a dead vendor */ }
+    }
+  }
+  await Promise.all(Array.from({ length: LD_CONCURRENCY }, worker))
+
+  const products = mapLdProducts(vendor, rows)
+  console.warn(
+    `[catalog] ${vendorName}: ${urls.length} product urls in sitemap, ${todo.length} attempted, ` +
+    `${rows.length} carried JSON-LD, ${products.length} survived the pipeline`
+  )
+  return { products, capped }
+}
+
 async function sourceVendor(vendorName: string): Promise<{ products: Product[]; capped: boolean }> {
   if (hasFeed(vendorName)) {
     return { products: await fetchAwinFeed(vendorName), capped: false }
   }
+  const cfg = VENDORS.find((v) => v.vendor === vendorName)
+  if (cfg?.platform === 'woo') return scrapeWooVendor(vendorName)
+  if (cfg?.platform === 'ld') return scrapeLdVendor(vendorName)
   return scrapeVendor(vendorName)
 }
 
-const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v9'], {
+/* v9 -> v10: sourceVendor can now return rows built by the WooCommerce
+   door. Without the bump a warm 6h entry would go on serving the old
+   code's answer for those vendors, which was an empty list, and the
+   whole change would look like it silently did nothing. */
+const fetchVendorCatalog = unstable_cache(sourceVendor, ['vendor-catalog-v11'], {
   revalidate: CATALOG_REVALIDATE_SECONDS,
   tags: ['catalog'],
 })
@@ -264,8 +384,47 @@ async function buildCatalog(
   // It is not an escape hatch: that function does the screening itself and
   // never hands the unscanned list to anybody, because a safety filter a caller
   // can skip is a safety filter with a hole in it.
+  // INTERLEAVED BY VENDOR, because the budget is a fixed 35 seconds and
+  // whoever sorts first eats it.
+  //
+  // This was a straight `filter`, which was fine while apparel was spread
+  // thinly across the catalogue and stopped being fine the moment Anime Jacket
+  // arrived: forcing 715 garments into `apparel` put all 715 into this queue at
+  // once. In list order that is one vendor's block of 715 sitting in front of
+  // everybody else, so the vendors that were being scanned before could stop
+  // being reached at all. Not a filter getting weaker, a filter getting pointed
+  // somewhere else, which is worse because the number of scans does not drop
+  // and nothing looks wrong.
+  //
+  // Round-robin gives every vendor the same share of whatever the budget
+  // reaches. A vendor with 715 photos still gets more scans than one with 30,
+  // it just cannot go first with all of them.
+  //
+  // THE REAL FIX IS PERSISTENCE AND IT IS NOT THIS. `verdictCache` in
+  // person-scan is an in-process Map, so it dies with the build worker and
+  // every deploy re-scans from zero against the same 35 seconds. Caching
+  // verdicts by image URL across builds would make coverage compound toward
+  // complete instead of resetting. It is not done here because this container
+  // cannot reach an image to test a change to a safety path, and an untested
+  // rewrite of the filter is a worse trade than an untested ordering of it.
+  const interleaveByVendor = (rows: Product[]): Product[] => {
+    const byVendor = new Map<string, Product[]>()
+    for (const p of rows) {
+      const q = byVendor.get(p.vendor)
+      if (q) q.push(p)
+      else byVendor.set(p.vendor, [p])
+    }
+    const queues = [...byVendor.values()]
+    const out: Product[] = []
+    for (let i = 0; out.length < rows.length; i++) {
+      for (const q of queues) if (i < q.length) out.push(q[i])
+    }
+    return out
+  }
   const scanTargets =
-    opts.bulkScan === false ? [] : list.filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image)
+    opts.bulkScan === false
+      ? []
+      : interleaveByVendor(list.filter((p) => MODEL_SCAN_CATS.has(p.cat) && p.image))
   try {
     const flagged = await scanForBodyModels(
       scanTargets.map((p) => p.image),

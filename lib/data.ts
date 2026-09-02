@@ -86,6 +86,21 @@ export type VendorConfig = {
    */
   network?: 'impact' | 'awin' | 'refersion' | 'goaffpro' | 'direct'
   /**
+   * Which shop engine to READ. Not the same question as `network`, which is
+   * who pays: a merchant can be on GoAffPro and run WooCommerce, and three of
+   * them are.
+   *
+   * Omitted means Shopify, because eleven of twelve vendors are and defaulting
+   * the other way would silently break all of them. 'woo' routes to the
+   * WooCommerce Store API instead of products.json.
+   *
+   * It is stated rather than sniffed. Probing every vendor for every engine on
+   * every build costs a round trip per door per vendor to learn something that
+   * changes roughly never, and a sniffer that guesses wrong fails by scraping
+   * nothing and reporting a healthy zero.
+   */
+  platform?: 'shopify' | 'woo' | 'ld'
+  /**
    * Optional product_type allow-list. Present = ONLY these types are ingested,
    * matched case-insensitively against Shopify's `product_type`.
    *
@@ -159,7 +174,6 @@ export const CATEGORIES: Category[] = [
 ]
 
 export const VENDORS: VendorConfig[] = [
-  { vendor: 'Plushible', domain: 'https://plushible.com', prefix: 'plbl', affiliateParam: 'ref=kawaiikatz', commissionPct: 20, couponCode: '', couponPct: 0 },
   { vendor: 'Kore Kawaii', domain: 'https://korekawaii.com', prefix: 'kore', affiliateParam: 'ref=kawaiikatz', commissionPct: 15, couponCode: '', couponPct: 0 },
   { vendor: 'Hello Kitty Camp', domain: 'https://hellokittycamp.com', prefix: 'hkc', affiliateParam: 'ref=kawaiikatz', commissionPct: 10, couponCode: 'JACOBKENNEDY', couponPct: 10 },
   { vendor: 'Squishy Bottle', domain: 'https://stopshop9.myshopify.com', prefix: 'sqb', affiliateParam: 'ref=kawaiikatz', commissionPct: 25, couponCode: 'JACOBKENNEDY', couponPct: 15 },
@@ -503,6 +517,83 @@ export const VENDORS: VendorConfig[] = [
   // Left pending rather than deleted: a frozen store can be unfrozen, and the
   // approval survives. Re-probe before writing it off (§4).
   { vendor: 'Kawaii mood', domain: 'https://kawaiimood.com', prefix: 'kmood', affiliateParam: 'ref=kawaiikatz', network: 'goaffpro', commissionPct: 10, couponCode: '', couponPct: 0, pending: true },
+
+  // THE ANIME CLUSTER, 2026-08-31. Five GoAffPro programmes approved in one
+  // afternoon, and the ANIME_SHOPS doc further down carries the full reasoning:
+  // one operator, five keyword domains, one identical rate on one identical
+  // window, niched by product rather than by branding.
+  //
+  // ON THE MAIN GRID, not only on /anime. Anime bedding, backpacks, jackets,
+  // kimono and jigsaws are all things this catalogue already sells in other
+  // forms, so keeping them off the main feed would be filing them by supplier
+  // rather than by what they are, which is the one thing a browse-first
+  // catalogue must never do.
+  //
+  // EVERY ONE IS PENDING AND NONE HAS AN `include` LIST, because nobody has
+  // read a single one of these feeds. §4's rule, and the reason for it is the
+  // reason it is a rule: guess too wide and the shelf fills with gift cards,
+  // guess too narrow and the vendor matches nothing and reads as a shop with
+  // no stock. `platform` is unconfirmed too. GoAffPro is overwhelmingly a
+  // Shopify app, which makes products.json likely and does not make it true.
+  //
+  // THE TRACKING VALUE IS THE SISTER SITE'S. `verdastudio` is the code these
+  // merchants issued, and they issued it to the Verda Studio account. It pays
+  // the same person; what it cannot do is tell the two sites apart in
+  // reporting. Every other GoAffPro row above carries `ref=kawaiikatz`. One
+  // form per merchant from this account fixes it, one line each.
+  //
+  // animeswimsuit.com is the sixth and is deliberately absent. See ANIME_SHOPS.
+    // READ 2026-09-01 through the real mapper, 4 pages, 353 rows in the feed,
+  // 351 surviving. Categories are franchise names end to end: Ghibli, Jujutsu
+  // Kaisen, Haikyuu, Dragon Ball, My Hero Academia, Naruto, One Piece, Demon
+  // Slayer, Tokyo Ghoul, Attack on Titan. $17.99 to $138, median $99.89.
+  //
+  // NO include LIST, deliberately. The categories here are franchises rather
+  // than product types, and a new series arrives every season: an allow-list
+  // would silently hide new stock and read as a shop that stopped restocking.
+  // The shop sells exactly one kind of thing, so there is nothing to allow-list
+  // against.
+  //
+  // forceCat BECAUSE THE CLASSIFIER SCATTERED IT. 323 of 351 landed in `home`
+  // and the rest did not: 11 in apparel, 10 in stationery, 2 in plush, one each
+  // in puzzle and food. Every one of them is a duvet. "Demon Slayer Bedding -
+  // Kamado Tanjiro Nezuko Soft Bedding" was filed as stationery. The vendor is
+  // what disambiguates when a word cannot, same call as jigsawdepot and
+  // Montessori & Me.
+  { vendor: 'Anime Bedding', domain: 'https://animebed.com', platform: 'woo', forceCat: 'home', prefix: 'abed', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
+  { vendor: 'Anime Backpacks', domain: 'https://animebackpack.com', platform: 'ld', forceCat: 'accessories', prefix: 'abpk', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+    // READ 2026-09-01, 9 pages, 822 rows, 715 surviving. The 107 dropped are the
+  // adult-apparel text filter doing its job on a garment catalogue, which is
+  // the highest count of any vendor here and is expected on this category.
+  // $39.95 to $125.95, median $59.95.
+  //
+  // forceCat FOR THE SAME REASON AS THE BEDDING SHOP: 639 of 715 reached
+  // apparel on their own and the strays went somewhere indefensible, 45 into
+  // tech and 18 into plush. A Pokemon bomber jacket is not a gadget.
+  //
+  // IT ALSO PUTS 715 GARMENT PHOTOS INTO THE coco-ssd SCAN QUEUE, because
+  // `apparel` is one of MODEL_SCAN_CATS, and that is a real trade rather than a
+  // free win. The scan is budgeted at 35 seconds and fails open, so the build
+  // cannot hang on it; what happens instead is that the same budget now covers
+  // far more images, so a smaller share of EVERY apparel vendor's photos gets
+  // scanned. Not a safety hole, because the text filter is the backstop and
+  // already removed 107 rows from this vendor on its own, but the image layer
+  // is thinner across the site than it was. Raise budgetMs in catalog-source if
+  // that stops being an acceptable trade.
+  { vendor: 'Anime Jacket', domain: 'https://animejacket.com', platform: 'woo', forceCat: 'apparel', prefix: 'ajkt', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
+  { vendor: 'Anime Kimono', domain: 'https://animekimono.com', platform: 'ld', forceCat: 'apparel', prefix: 'akim', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0, pending: true },
+    // READ 2026-09-01, 4 pages, 391 rows, 379 surviving. The cleanest of the
+  // three by a distance: 366 of 379 classify as `puzzle` unaided, so NO
+  // forceCat, and `puzzle` is a kid-native category so only 3 rows lack
+  // positive kid-safety evidence against 275 and 561 on the other two.
+  //
+  // IT ALSO CARRIED THE ONE THING THAT HAD NO BUSINESS HERE: a 100cm replica
+  // katana at $124, uncategorised, which would have sat on a kid-facing shelf
+  // between two Ghibli jigsaws. It is blocked by the replica-weapon rule in
+  // catalog-shared rather than by an include list here, because the problem is
+  // not this shop's taxonomy, it is that no shop on this site should ever be
+  // able to list a replica weapon.
+  { vendor: 'Anime Puzzles', domain: 'https://animepuzzle.com', platform: 'woo', prefix: 'apzl', affiliateParam: 'ref=verdastudio', network: 'goaffpro', commissionPct: 15, couponCode: '', couponPct: 0 },
 
   // Everblog US. AWIN 128579, joined 2026-08-31, 10% on a 30-day cookie.
   //
@@ -974,9 +1065,160 @@ export function linkShowcase(slug: string): LinkShowcase | undefined {
   return LINK_SHOWCASES.find((s) => s.slug === slug)
 }
 
+/**
+ * THE ANIME HALL — /anime.
+ *
+ * A third shape, and it exists because neither of the first two fits.
+ * `VendorConfig.showcase` (BRKOX) renders scraped products and needs a feed we
+ * have read. `LinkShowcase` (Claire's, Smiggle) is one merchant per page and is
+ * hard-wired to AWIN's redirect. What arrived on 2026-08-31 is five approved
+ * GoAffPro merchants who belong together on ONE page and whose catalogues
+ * nobody has read.
+ *
+ * WHY ONE PAGE AND NOT FIVE. They are one operator. The sister site's registry
+ * spotted the pattern before a single application went in, and the approvals
+ * confirmed it with data: five programmes, five keyword domains, and every one
+ * of them paying an identical rate on an identical window. Five separate brand
+ * pages would present one supplier as five partners, which is the failure that
+ * makes a comparison site worthless. One hall presents it as what it is: a
+ * cluster of anime shops, each holding a different shelf.
+ *
+ * WHY NO PRODUCTS AND NO DEEP LINKS. Every link here points at a merchant's
+ * home page, and that is deliberate rather than lazy. The only URL on these
+ * five domains that is certain to exist is the one their affiliate programme is
+ * attached to. Nothing in this container can reach them to check anything
+ * deeper, so a curated `/collections/...` link would be a guess, and a guessed
+ * deep link does not degrade politely: it 404s in front of a shopper who
+ * already trusted us enough to click. Sections get added when somebody has
+ * opened the shops in a real browser, and not before.
+ *
+ * WHY THE SWIMWEAR SHOP IS NOT HERE, AND MUST NOT BE ADDED LATER. The cluster
+ * has six domains and this page carries five. `animeswimsuit.com` was left off
+ * by Jacob's own call on 2026-08-31, and the reasoning is the whole reason this
+ * site has a `CUT_PHRASES` list at all: Kawaii Katz is the kid-facing sibling.
+ * The phrase filter cannot help here, because it screens ingested product
+ * titles and nothing on this page is ingested. A human deciding which shops to
+ * name IS the filter on a page of hand-written links, and it has already been
+ * applied. Do not "complete the set".
+ *
+ * THE TRACKING CODE IS THE SISTER SITE'S, AND THAT IS A KNOWN COST.
+ * `ref=verdastudio` is the code these five merchants issued, and they issued it
+ * to the Verda Studio account. It pays, and it pays the same person. What it
+ * does not do is separate the two sites' earnings: a sale driven from here
+ * lands in Verda Studio's GoAffPro reporting, so neither dashboard can answer
+ * "which site earned this". Every other GoAffPro row on this site carries
+ * `ref=kawaiikatz` for exactly that reason.
+ *
+ * The fix is one form per merchant from the Kawaii Katz account and then one
+ * line per shop below. Until then the choice is between merged reporting and
+ * handing five merchants free traffic, and the sock vendors already settled
+ * which of those is worse: 466 products with an empty `affiliateParam` earned
+ * nothing at all, and nothing in the UI said so.
+ */
+export type AnimeShop = {
+  key: string
+  merchant: string
+  /** Home page. The one URL on this domain we know exists. */
+  domain: string
+  emoji: string
+  /** Two or three words. Sits under the name. */
+  tagline: string
+  blurb: string
+  /** What is actually on their shelves. Chips, not links. */
+  shelves: string[]
+  /**
+   * Query param appended to the destination, GoAffPro's `?ref=` shape. Empty
+   * means the link earns nothing, and the page says so rather than hiding it.
+   */
+  affiliateParam: string
+  /** Tailwind-ready accent, so the five cards read as five shops. */
+  accent: string
+}
+
+export const ANIME_SHOPS: AnimeShop[] = [
+  {
+    key: 'animebed',
+    merchant: 'Anime Bedding',
+    domain: 'https://animebed.com',
+    emoji: '🛏️',
+    tagline: 'Your favourite series, at duvet scale',
+    blurb:
+      'Duvet covers, pillowcases and full bedding sets printed with anime art. It is the ' +
+      'biggest surface in a bedroom and the one nobody thinks to decorate, which is why a ' +
+      'set here changes a room more than anything else on this page.',
+    shelves: ['Duvet covers', 'Bedding sets', 'Pillowcases', 'Throw blankets'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#b79cff',
+  },
+  {
+    key: 'animebackpack',
+    merchant: 'Anime Backpacks',
+    domain: 'https://animebackpack.com',
+    emoji: '🎒',
+    tagline: 'School bags with a fandom on them',
+    blurb:
+      'Backpacks, rucksacks and shoulder bags in anime prints. The one item on this page ' +
+      'that gets used every single day, which makes it the one where the print actually ' +
+      'has to be good.',
+    shelves: ['Backpacks', 'School bags', 'Shoulder bags', 'Drawstring bags'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#7fc4d4',
+  },
+  {
+    key: 'animejacket',
+    merchant: 'Anime Jacket',
+    domain: 'https://animejacket.com',
+    emoji: '🧥',
+    tagline: 'Bombers, hoodies and varsity coats',
+    blurb:
+      'Jackets and hoodies built around anime artwork rather than a logo slapped on a ' +
+      'blank. Bomber and varsity cuts, embroidered as often as printed.',
+    shelves: ['Bomber jackets', 'Hoodies', 'Varsity coats', 'Windbreakers'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#ff8a65',
+  },
+  {
+    key: 'animekimono',
+    merchant: 'Anime Kimono',
+    domain: 'https://animekimono.com',
+    emoji: '👘',
+    tagline: 'Haori, yukata and kimono cardigans',
+    blurb:
+      'The loose open-front layer that goes over everything else, in anime prints and in ' +
+      'plain traditional patterns. The most wearable piece of costume on this page: it ' +
+      'reads as a cardigan anywhere that is not a convention.',
+    shelves: ['Haori jackets', 'Yukata', 'Kimono cardigans', 'Obi belts'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#f2a2c0',
+  },
+  {
+    key: 'animepuzzle',
+    merchant: 'Anime Puzzles',
+    domain: 'https://animepuzzle.com',
+    emoji: '🧩',
+    tagline: 'Key art, one thousand pieces at a time',
+    blurb:
+      'Jigsaws printed with anime key art, mostly in the 300 to 1000 piece range. A poster ' +
+      'you have to earn, and the quietest thing on this page by a distance.',
+    shelves: ['1000 piece', '500 piece', 'Kids puzzles', 'Poster art'],
+    affiliateParam: 'ref=verdastudio',
+    accent: '#8fd0a8',
+  },
+]
+
+/** Append a shop's tracking param to one of its URLs. Empty param = untouched. */
+export function animeShopUrl(shop: AnimeShop, url?: string): string {
+  const dest = url || shop.domain
+  if (!shop.affiliateParam) return dest
+  return dest + (dest.includes('?') ? '&' : '?') + shop.affiliateParam
+}
+
+/** True when every shop on the hall is tracked, i.e. the page earns. */
+export function animeHallTracked(): boolean {
+  return ANIME_SHOPS.every((s) => Boolean(s.affiliateParam))
+}
+
 export const SEED_PRODUCTS: Product[] = [
-  { id: 'plbl-14-inch-brown-plush-bunny', vendor: 'Plushible', domain: 'https://plushible.com', name: 'Poppy the Plush Unicorn', cat: 'plush', character: '', price: 12.99, unit: 'from', onSale: false, wasPrice: 0, discountPct: 0, commissionPct: 20, couponCode: '', couponPct: 0, image: '', url: 'https://plushible.com/products/14-inch-brown-plush-bunny', badge: '', added: '2026-07-22', variants: [{ id: 'seed-plbl-1', title: '10 in', price: 12.99, available: true }, { id: 'seed-plbl-2', title: '34 in Jumbo', price: 49.99, available: true }], blurb: 'Soft huggable plush bunny. A classic cuddle buddy for all ages.' },
-  { id: 'plbl-manhattan-toy-kreecher-pillow', vendor: 'Plushible', domain: 'https://plushible.com', name: 'Pawley the Plush Pillow Pal', cat: 'plush', character: '', price: 15.29, unit: '', onSale: true, wasPrice: 17.99, discountPct: 15, commissionPct: 20, couponCode: '', couponPct: 0, image: '', url: 'https://plushible.com/products/manhattan-toy-kreecher-pillow', badge: '', added: '2026-07-20', variants: [], blurb: 'Classic pillow pal plush, timeless and squishy-soft.' },
   { id: 'kore-spring-bun-buns-meadow-switch-case-ns-oled-ns2', vendor: 'Kore Kawaii', domain: 'https://korekawaii.com', name: 'Kawaii Bunny Meadow Switch Case', cat: 'tech', character: '', price: 36.99, unit: 'from', onSale: false, wasPrice: 0, discountPct: 0, commissionPct: 15, couponCode: '', couponPct: 0, image: '', url: 'https://korekawaii.com/products/spring-bun-buns-meadow-switch-case-ns-oled-ns2', badge: '', added: '2026-07-23', variants: [], blurb: 'Protective, adorable case for your Switch. Kawaii lifestyle brand, 9,200+ reviews.' },
   { id: 'kore-kawaii-kittys-under-sakura-switch-2-case', vendor: 'Kore Kawaii', domain: 'https://korekawaii.com', name: 'Kawaii Kitty Sakura Switch Case', cat: 'tech', character: '', price: 39.99, unit: 'from', onSale: false, wasPrice: 0, discountPct: 0, commissionPct: 15, couponCode: '', couponPct: 0, image: '', url: 'https://korekawaii.com/products/kawaii-kittys-under-sakura-switch-2-case', badge: 'Switch 2', added: '2026-07-19', variants: [], blurb: 'Sakura season kitty Switch 2 case, cosy kawaii protection.' },
   { id: 'kore-kawaii-gamer-girl-pouch-bag', vendor: 'Kore Kawaii', domain: 'https://korekawaii.com', name: 'Kawaii Gamer Girl Pouch', cat: 'accessories', character: '', price: 24.99, unit: '', onSale: false, wasPrice: 0, discountPct: 0, commissionPct: 15, couponCode: '', couponPct: 0, image: '', url: 'https://korekawaii.com/products/kawaii-gamer-girl-pouch-bag', badge: '', added: '2026-07-21', variants: [], blurb: 'Carry your gamer gear in style, cute pouch bag from Kore Kawaii.' },

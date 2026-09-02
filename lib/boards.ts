@@ -402,6 +402,8 @@ export const SPORTS_LICENCE_TERMS = [
   // "Georgia Tech Buzz Bee", "Virginia Tech Hokiebird". "Buckeye" is the Ohio
   // State nickname and appears nowhere in the Ohio State row's own title.
   //
+  // NOW UNUSED. Plushible was delisted 2026-09-01, so these terms now match nothing: kept rather than deleted because they are harmless and the reasoning is worth having if a similar catalogue arrives.
+  //
   // Measured against the live catalogue before adding: these three terms match
   // 6 products, every one of them a college licence, and nothing else in 4,426.
   // Narrow terms, no false positives, the same discipline the `racing` note
@@ -814,7 +816,9 @@ export const BOARDS: Board[] = [
     // `blankie` is deliberately absent, unlike on plushies and squishies: Russ
     // Berrie's "Activity Blankie" is a genuine baby development toy, where
     // Plushible's "Blankie Bestie" is a blanket. Same word, opposite verdict,
-    // which is why these lists are per board and not one global one.
+    // which is why these lists are per board and not one global one. The
+    // Plushible half is now hypothetical (delisted 2026-09-01); the Russ
+    // Berrie half is not, so the absence still stands for its own reason.
     notWords: [
       'shelf', 'shelves', 'shelving', 'spatula', 'dustpan', 'organiser',
       'organizer', 'hoop art', 'backpack', 'backpacks', 'bookbag',

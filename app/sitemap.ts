@@ -45,11 +45,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
-    // The second room, on the same footing and for the same reason.
+    // The anime hall. Listed for the same reason a guide is: it is our own
+    // editorial page and competes with no vendor for their own URL. It is a
+    // static route, so unlike the link showcases there is no pending flag to
+    // check — if the page exists it is meant to be found.
     {
       url: `${SITE_URL}/anime`,
-      changeFrequency: 'daily' as const,
-      priority: 0.9,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
     },
     // Articles. Listed for the same reason the guides are: they compete with no
     // vendor because no vendor wrote them, and they are the only pages here

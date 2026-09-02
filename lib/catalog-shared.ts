@@ -76,11 +76,72 @@ const SAFE_EXCEPTIONS: RegExp[] = [
   // Craft/decor uses of "strip" that must not be caught by stripper/strip-tease rules.
   /(sticker|led|light|comic|test|washi|bacon|film)\s*strip/,
 ]
+/**
+ * Decode the handful of HTML entities a merchant title actually carries.
+ *
+ * WooCommerce returns product names HTML-encoded, so a real feed hands over
+ * "Ghibli Puzzles &#8211; Kiki&#8217;s Delivery Service" and the card prints
+ * that character for character. The Shopify path never needed this because
+ * products.json gives plain text, which is exactly why the first Woo mapper
+ * did not have it: the blurb was being cleaned and the NAME was not.
+ *
+ * Numeric entities are handled generally; the five named ones are the only
+ * named entities that appear in practice, and a full table would be a
+ * dependency for nothing.
+ */
+export function decodeEntities(input: string): string {
+  return String(input || '')
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * A REPLICA WEAPON IS NOT MERCHANDISE ON A SITE FOR CHILDREN.
+ *
+ * Found in a real feed: a 100cm steel-look katana sitting in a jigsaw shop's
+ * catalogue at $124, uncategorised, which would have gone onto a kid-facing
+ * shelf between two Ghibli puzzles.
+ *
+ * WHY IT IS NOT JUST A WORD IN UNSAFE_TERMS. Anime merchandise is full of
+ * weapon words that describe a PICTURE rather than an object: "Sword Art
+ * Online" is a franchise name, "Naruto Sasuke Sword Intense Battle Soft
+ * Bedding" is a duvet, and a Nichirin sword jigsaw is a jigsaw. Blocking the
+ * noun would delete a large slice of legitimate stock and look like a bug.
+ *
+ * So the test is whether the product IS the weapon, by two signals that a
+ * printed design does not produce:
+ *   a length in centimetres near the weapon noun, which is how a replica is
+ *   listed and never how a bedspread is;
+ *   the weapon noun in the trailing product-noun position, since a duvet's
+ *   title ends in "Bedding" and a puzzle's ends in "Puzzle".
+ */
+const REPLICA_WEAPON_RX: RegExp[] = [
+  /\b\d{2,3}\s*(cm|inch|in|")\b[^.]{0,70}\b(katana|sword|blade|dagger|knife|scythe|axe)\b/i,
+  /\b(katana|sword|blade|dagger|knife|scythe|nunchaku|kunai)\s*$/i,
+]
+function replicaWeapon(name: string): boolean {
+  const n = decodeEntities(name)
+  return REPLICA_WEAPON_RX.some((rx) => rx.test(n))
+}
+
 const TERM_RX = UNSAFE_TERMS.map((t) => {
   const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')
   return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)', 'i')
 })
-function contentSafe(hay: string): boolean {
+function contentSafe(hay: string, name = ''): boolean {
+  /* The weapon test reads the NAME, not the haystack, because it depends on
+     where the noun sits in the title and the haystack has tags and a blurb
+     glued to the end of it. It runs before the exceptions: nothing in that
+     list should be able to wave a replica sword through. */
+  if (name && replicaWeapon(name)) return false
   const s = hay.toLowerCase()
   for (const ex of SAFE_EXCEPTIONS) if (ex.test(s)) return true
   for (const rx of TERM_RX) if (rx.test(s)) return false
@@ -286,7 +347,9 @@ export function categorize(hay: string): string {
   // it earlier would break them, so the early test takes word boundaries and
   // only the nouns that cannot mean anything else. 'dress', 'hat' and 'shirt'
   // deliberately stay below ('dress' matches "dressing").
-  // ...but an explicit PLUSH signal still wins. Plushible's "Snugible | Blanket
+  // ...but an explicit PLUSH signal still wins. (The worked example below is
+  // Plushible, delisted 2026-09-01, so `snugible` matches nothing today. The
+  // rule it illustrates is general and stays.) Plushible's "Snugible | Blanket
   // Hoodie & Pillow" is a wearable, so the garment test claimed all 56 of them
   // for apparel — and `snugible` being in the plush list at all is somebody
   // deciding, on purpose, that these belong in Plushies. A soft-goods hybrid is
@@ -710,7 +773,7 @@ export function mapShopifyProducts(
 
     const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ') : String(p.tags || '')
     const hay = `${p.title || ''} ${p.product_type || ''} ${tagsStr} ${blurb}`
-    if (!contentSafe(hay)) continue
+    if (!contentSafe(hay, p.title || '')) continue
 
     // Sale detection from compare_at_price
     const chosen = vars.find((v) => v.price === minP) ?? vars[0]
@@ -744,6 +807,287 @@ export function mapShopifyProducts(
       added: p.published_at || p.created_at || '',
       variants: vars.map(({ id, title, price, available }) => ({ id, title, price, available })),
       blurb,
+      ...(details ? { details } : {}),
+    })
+  }
+  return out
+}
+
+/* ============================================================
+   WOOCOMMERCE, the second door.
+   ------------------------------------------------------------
+   WHY THIS EXISTS. Until now this file knew exactly one way to
+   read a merchant: Shopify's products.json. That made "we cannot
+   read this shop" and "this shop has no catalogue" look identical
+   from inside the codebase, and on 2026-08-31 that cost a wrong
+   call: five approved merchants answered 404 on products.json and
+   were nearly written off as having no feed. Three of them run
+   WooCommerce and hand over their whole catalogue through the
+   Store API, which is a public, unauthenticated, read-only
+   endpoint built for exactly this.
+
+   IT LIVES BESIDE mapShopifyProducts ON PURPOSE. contentSafe(),
+   typeAllowed(), isKidSafeText() and vendorDefaultCat() are
+   private to this module, and the kid-safety story depends on
+   EVERY row passing through them whichever door it came in by. A
+   mapper written in another file could only reach the exported
+   half, and the half it could not reach is the half that matters.
+   Keeping the two mappers adjacent also makes drift visible: if
+   one grows a rule, the other is right there not having it.
+
+   THE MINOR-UNIT TRAP, which is the one thing about this API that
+   will bite. Woo returns prices as INTEGER STRINGS in the
+   currency's smallest unit, with the scale in the same object:
+   { price: "2499", currency_minor_unit: 2 } is $24.99, not
+   $2,499. Read as a float it inflates every price by a hundred
+   times, and nothing downstream would flag it: the cards would
+   render, the sort would work, the filters would work, and a
+   plush toy would cost three thousand dollars.
+   ============================================================ */
+
+export type WooProductRaw = {
+  id?: number
+  name?: string
+  slug?: string
+  permalink?: string
+  description?: string
+  short_description?: string
+  type?: string
+  is_in_stock?: boolean
+  is_purchasable?: boolean
+  date_created?: string
+  prices?: {
+    price?: string
+    regular_price?: string
+    sale_price?: string
+    currency_minor_unit?: number
+    price_range?: { min_amount?: string; max_amount?: string } | null
+  }
+  images?: { src?: string }[]
+  categories?: { name?: string }[]
+  tags?: { name?: string }[]
+}
+
+/** Woo's minor-unit integer string to a real number. See the trap above. */
+function wooAmount(raw: string | undefined, minorUnit: number | undefined): number {
+  if (raw == null || raw === '') return 0
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return 0
+  const scale = Number.isFinite(minorUnit as number) ? (minorUnit as number) : 2
+  return n / Math.pow(10, scale)
+}
+
+export function mapWooProducts(
+  cfg: typeof VENDORS[number],
+  raw: WooProductRaw[]
+): Product[] {
+  const out: Product[] = []
+  for (const p of raw || []) {
+    if (!p || !p.slug || !p.permalink) continue
+
+    /* Woo has no product_type field. Its categories are the nearest
+       equivalent and are what an include list would be written from,
+       so they are what typeAllowed() is asked about: any one of them
+       matching is enough. A shop with no include list is unaffected. */
+    const cats = (p.categories || []).map((c) => c.name || '').filter(Boolean)
+    if (cats.length && !cats.some((c) => typeAllowed(cfg, c))) continue
+    if (!cats.length && !typeAllowed(cfg, '')) continue
+
+    /* Purchasability, not just stock. A Woo catalogue carries
+       non-purchasable rows (external/affiliate stubs, hidden parents)
+       that render as a card with a price and cannot be bought. */
+    if (p.is_in_stock === false || p.is_purchasable === false) continue
+
+    const mu = p.prices?.currency_minor_unit
+    const range = p.prices?.price_range
+    const minP = range?.min_amount
+      ? wooAmount(range.min_amount, mu)
+      : wooAmount(p.prices?.price, mu)
+    if (!(minP > 0)) continue
+    const regular = wooAmount(p.prices?.regular_price, mu)
+
+    /* Same cleaning as the Shopify path, same reason: a description
+       body with a <style> block in it becomes CSS on the card, in the
+       meta description, and in whatever categorize() then decides. */
+    let blurb = String(p.short_description || p.description || '')
+      .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
+    const details = cfg.showcase && blurb.length > 140 ? blurb.slice(0, 1400).trim() : undefined
+    if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
+
+    const tagsStr = (p.tags || []).map((t) => t.name || '').join(' ')
+    /* DECODED BEFORE ANYTHING READS IT. Woo hands names over HTML-encoded, so
+       an undecoded title reaches the card, the classifier haystack and the
+       weapon test all three as literal "&#8211;". */
+    const name = decodeEntities(p.name || '')
+    const hay = `${name} ${cats.join(' ')} ${tagsStr} ${blurb}`
+    if (!contentSafe(hay, name)) continue
+
+    const onSale = regular > 0 && regular > minP
+    let cat = cfg.forceCat ?? categorize(hay)
+    if (cat === 'other') cat = vendorDefaultCat(cfg.vendor)
+
+    out.push({
+      id: `${cfg.prefix}-${p.slug}`,
+      vendor: cfg.vendor,
+      domain: cfg.domain,
+      name,
+      cat,
+      character: detectCharacter(hay),
+      kidSafe: isKidSafeText(hay, cat, name),
+      price: minP,
+      /* "from" when the row really does span a range. The Store API
+         gives variable products a price_range and no per-variant
+         rows, so a variant list cannot be built here and claiming
+         one would be inventing options nobody can pick. */
+      unit: range?.max_amount && wooAmount(range.max_amount, mu) > minP ? 'from' : '',
+      onSale,
+      wasPrice: onSale ? regular : 0,
+      discountPct: onSale ? Math.round((1 - minP / regular) * 100) : 0,
+      commissionPct: cfg.commissionPct,
+      couponCode: cfg.couponCode,
+      couponPct: cfg.couponPct,
+      image: proxied(p.images?.[0]?.src ?? ''),
+      /* The merchant's own permalink, verbatim. Woo installs differ on
+         whether products live at /product/<slug>/ or under a nested
+         category path, so a URL rebuilt from the slug 404s on some of
+         them. The feed already knows the right one. */
+      url: p.permalink,
+      badge: '',
+      added: p.date_created || '',
+      variants: [],
+      blurb,
+      ...(details ? { details } : {}),
+    })
+  }
+  return out
+}
+
+/* ============================================================
+   JSON-LD, the third door and the last one available.
+   ------------------------------------------------------------
+   Two merchants have no machine-readable catalogue at all: no
+   products.json, no wp-json, and no platform fingerprint in their
+   HTML. What they do have is product pages, and a product page
+   almost always carries schema.org Product markup, because that is
+   what puts a price in a Google result. It is published for a
+   crawler, which is what makes it fair game and also what makes it
+   the most stable thing on the page: a redesign moves the markup
+   around, a redesign that DROPS it costs the merchant its rich
+   snippets, so it tends to survive.
+
+   IT IS STILL THE WORST DOOR AND IS RANKED LAST FOR A REASON. A
+   feed is one request for a whole catalogue; this is one request
+   per product. That cost is why the caller caps it hard rather
+   than reading everything a sitemap offers.
+
+   SAME GATES AS EVERY OTHER DOOR. contentSafe, typeAllowed,
+   isKidSafeText, vendorDefaultCat, the replica-weapon rule: all of
+   it, because a row's provenance must not change what it has to
+   pass to reach a child's screen.
+   ============================================================ */
+
+export type JsonLdProduct = {
+  name?: string
+  description?: string
+  image?: unknown
+  sku?: string
+  offers?: unknown
+  category?: string
+}
+
+/** First Product node in any ld+json block on the page, or null. */
+export function findLdProduct(html: string): JsonLdProduct | null {
+  const blocks = html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)
+  for (const b of blocks) {
+    let parsed: unknown
+    try { parsed = JSON.parse(b[1].trim()) } catch { continue }
+    const stack: unknown[] = [parsed]
+    while (stack.length) {
+      const node = stack.pop() as Record<string, unknown>
+      if (!node || typeof node !== 'object') continue
+      if (Array.isArray(node)) { stack.push(...node); continue }
+      if (Array.isArray(node['@graph'])) stack.push(...(node['@graph'] as unknown[]))
+      const t = node['@type']
+      const isProduct = t === 'Product' || (Array.isArray(t) && (t as string[]).includes('Product'))
+      if (isProduct && typeof node.name === 'string') return node as JsonLdProduct
+    }
+  }
+  return null
+}
+
+/** Lowest price across whatever shape `offers` came in as. */
+function ldPrice(offers: unknown): number {
+  const found: number[] = []
+  const walk = (o: unknown) => {
+    if (!o) return
+    if (Array.isArray(o)) return o.forEach(walk)
+    if (typeof o !== 'object') return
+    const r = o as Record<string, unknown>
+    for (const k of ['price', 'lowPrice', 'lowprice']) {
+      const v = r[k]
+      const n = typeof v === 'number' ? v : parseFloat(String(v ?? ''))
+      if (Number.isFinite(n) && n > 0) found.push(n)
+    }
+    if (r.priceSpecification) walk(r.priceSpecification)
+    if (Array.isArray(r.offers)) walk(r.offers)
+  }
+  walk(offers)
+  return found.length ? Math.min(...found) : 0
+}
+
+function ldImage(image: unknown): string {
+  if (typeof image === 'string') return image
+  if (Array.isArray(image)) return ldImage(image[0])
+  if (image && typeof image === 'object') {
+    const u = (image as Record<string, unknown>).url
+    if (typeof u === 'string') return u
+  }
+  return ''
+}
+
+export function mapLdProducts(
+  cfg: typeof VENDORS[number],
+  rows: { url: string; ld: JsonLdProduct }[]
+): Product[] {
+  const out: Product[] = []
+  for (const { url, ld } of rows) {
+    const name = decodeEntities(String(ld.name || ''))
+    if (!name || !url) continue
+    if (ld.category && !typeAllowed(cfg, String(ld.category))) continue
+
+    const price = ldPrice(ld.offers)
+    if (!(price > 0)) continue   // a card with no price is not a card
+
+    let blurb = decodeEntities(
+      String(ld.description || '').replace(/<[^>]*>/g, ' ')
+    ).replace(/\s+/g, ' ').trim()
+    if (/\{[^}]*[a-z-]+\s*:[^}]*\}/.test(blurb)) blurb = ''
+    const details = cfg.showcase && blurb.length > 140 ? blurb.slice(0, 1400).trim() : undefined
+    if (blurb.length > 140) blurb = blurb.slice(0, 137) + '...'
+
+    const hay = `${name} ${ld.category || ''} ${blurb}`
+    if (!contentSafe(hay, name)) continue
+
+    let cat = cfg.forceCat ?? categorize(hay)
+    if (cat === 'other') cat = vendorDefaultCat(cfg.vendor)
+
+    /* The slug off the merchant's own URL, so the id is stable across
+       runs even though nothing here has a numeric product id. */
+    const slug = url.replace(/[?#].*$/, '').replace(/\/$/, '').split('/').pop() || ''
+    out.push({
+      id: `${cfg.prefix}-${slug}`,
+      vendor: cfg.vendor, domain: cfg.domain, name, cat,
+      character: detectCharacter(hay),
+      kidSafe: isKidSafeText(hay, cat, name),
+      price, unit: '', onSale: false, wasPrice: 0, discountPct: 0,
+      commissionPct: cfg.commissionPct, couponCode: cfg.couponCode, couponPct: cfg.couponPct,
+      image: proxied(ldImage(ld.image)),
+      url, badge: '', added: '', variants: [], blurb,
       ...(details ? { details } : {}),
     })
   }
