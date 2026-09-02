@@ -1,0 +1,738 @@
+<!--
+  The Four Week Rotation - household meal plan and chore system.
+
+  A standalone page. It is NOT part of the Next.js app: nothing in app/ imports
+  it, no route renders it, and the build never sees it. Open the file in a
+  browser, or read the published copy. Kept in docs/ beside the other
+  non-app reference documents.
+
+  House style, PROJECT_GUIDE.md section 0: no em dashes in anything a person
+  reads. The source document used a few; they are colons and periods here.
+-->
+<title>The Four Week Rotation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+  :root {
+    --ground: #eceeeb;
+    --panel: #f8f9f7;
+    --panel-2: #e2e7e3;
+    --ink: #14201c;
+    --ink-2: #47554f;
+    --ink-3: #77857e;
+    --rule: #ccd4cf;
+    --rule-2: #dde3df;
+    --accent: #0d6153;
+    --accent-ink: #0b4c41;
+    --accent-soft: #d9e7e2;
+    --flag: #a8412a;
+    --flag-soft: #f0dcd5;
+    --on-accent: #f2f6f4;
+
+    --sans: "Archivo", ui-sans-serif, "Helvetica Neue", Arial, sans-serif;
+    --serif: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+    --maxw: 1080px;
+    --pad: clamp(1rem, 4vw, 2.5rem);
+    --r: 4px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1513;
+      --panel: #171f1c;
+      --panel-2: #202a26;
+      --ink: #e5ebe7;
+      --ink-2: #a2b0a9;
+      --ink-3: #74827b;
+      --rule: #2a3430;
+      --rule-2: #222b28;
+      --accent: #55c1a8;
+      --accent-ink: #7ad3bd;
+      --accent-soft: #17322c;
+      --flag: #e4886a;
+      --flag-soft: #35211a;
+      --on-accent: #08201b;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0f1513;
+    --panel: #171f1c;
+    --panel-2: #202a26;
+    --ink: #e5ebe7;
+    --ink-2: #a2b0a9;
+    --ink-3: #74827b;
+    --rule: #2a3430;
+    --rule-2: #222b28;
+    --accent: #55c1a8;
+    --accent-ink: #7ad3bd;
+    --accent-soft: #17322c;
+    --flag: #e4886a;
+    --flag-soft: #35211a;
+    --on-accent: #08201b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { border-bottom: 1px solid var(--rule); padding: clamp(2rem, 6vw, 3.25rem) 0 1.5rem; }
+  .masthead h1 {
+    font-family: var(--sans);
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    text-wrap: balance;
+    margin: 0.5rem 0 0;
+  }
+  .standfirst {
+    font-family: var(--serif);
+    font-size: 1.0625rem;
+    color: var(--ink-2);
+    max-width: 58ch;
+    margin: 0.75rem 0 0;
+  }
+
+  .roster { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
+  .roster li {
+    display: flex; align-items: baseline; gap: 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem 0.3rem;
+    background: var(--panel);
+  }
+  .roster b { font-weight: 600; font-size: 0.875rem; }
+  .roster span { font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+
+  /* ---------- sections ---------- */
+
+  section { padding: clamp(2.25rem, 5vw, 3.5rem) 0; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+  .sec-head { margin-bottom: 1.75rem; }
+  .sec-head h2 {
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    font-weight: 700;
+    letter-spacing: -0.018em;
+    margin: 0.375rem 0 0;
+    text-wrap: balance;
+  }
+  .sec-head p {
+    font-family: var(--serif);
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin: 0.5rem 0 0;
+  }
+
+  /* ---------- tonight ---------- */
+
+  .tonight {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--r);
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    display: grid;
+    gap: 1.25rem;
+  }
+  .tonight .eyebrow { color: color-mix(in srgb, var(--on-accent) 72%, transparent); }
+  .tonight-meal {
+    font-family: var(--serif);
+    font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+    line-height: 1.28;
+    margin: 0.375rem 0 0;
+    text-wrap: balance;
+  }
+  .tonight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem 1.25rem; }
+  .tonight-grid div { border-top: 1px solid color-mix(in srgb, var(--on-accent) 28%, transparent); padding-top: 0.6rem; }
+  .tonight-grid dt { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--on-accent) 70%, transparent); }
+  .tonight-grid dd { margin: 0.2rem 0 0; font-weight: 500; }
+
+  .weekpick { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 1.25rem; }
+  .weekpick .eyebrow { margin-right: 0.25rem; }
+
+  .tab {
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem 0.35rem;
+    cursor: pointer;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .tab:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- week panels ---------- */
+
+  .weekmeta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem; margin-bottom: 1rem; }
+  .weekmeta h3 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  .flagtag {
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.15rem 0.5rem 0.2rem; border-radius: 3px;
+    background: var(--accent-soft); color: var(--accent-ink);
+  }
+  .flagtag.warm { background: var(--flag-soft); color: var(--flag); }
+
+  .standing { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; margin-bottom: 1.75rem; }
+  .standing > div { background: var(--panel); padding: 0.9rem 1rem 1rem; }
+  .standing p { font-family: var(--serif); margin: 0.3rem 0 0; color: var(--ink-2); }
+
+  .days { list-style: none; margin: 0; padding: 0; }
+  .day {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 0 1rem;
+    padding: 1rem 0 1.1rem 0.75rem;
+    border-top: 1px solid var(--rule-2);
+    border-left: 3px solid transparent;
+  }
+  .day:last-child { border-bottom: 1px solid var(--rule-2); }
+  .day-abbr { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+  .today-tag { display: none; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--flag); margin-top: 0.2rem; }
+  .day.is-today { border-left-color: var(--flag); background: color-mix(in srgb, var(--flag-soft) 55%, transparent); }
+  .day.is-today .today-tag { display: block; }
+  .day.is-today .day-abbr { color: var(--ink); }
+  .day-body { min-width: 0; }
+  .day-rail { min-width: 0; }
+  .day-meal { font-family: var(--serif); font-size: 1.0625rem; line-height: 1.45; margin: 0; }
+  .duties { list-style: none; display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; margin: 0.6rem 0 0; padding: 0; }
+  .duties li { display: flex; align-items: baseline; gap: 0.4rem; font-size: 0.8125rem; }
+  .duty-k { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); }
+  .duty-v { font-weight: 500; color: var(--ink); }
+  .duties li.kid .duty-k { color: var(--accent-ink); }
+  .duties li.kid .duty-v { font-weight: 400; color: var(--ink-2); }
+
+  @media (max-width: 560px) {
+    .day { grid-template-columns: 1fr; gap: 0.35rem; }
+  }
+</style>
+<style>
+  /* ---------- people ---------- */
+
+  .people { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 1rem; list-style: none; margin: 0; padding: 0; }
+  .person { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); padding: 1.1rem 1.15rem 1.25rem; display: flex; flex-direction: column; gap: 0.85rem; }
+  .person-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+  .person-top h3 { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.012em; margin: 0; }
+  .person-top span { font-size: 0.6875rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
+  .person dl { margin: 0; display: grid; gap: 0.7rem; }
+  .person dt { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-ink); }
+  .person dd { margin: 0.15rem 0 0; color: var(--ink-2); font-size: 0.875rem; }
+  .person dd b { color: var(--ink); font-weight: 500; }
+
+  /* ---------- checklists ---------- */
+
+  .routines { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem 2.5rem; }
+  .routine h3 { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); }
+  .checks { list-style: none; margin: 0; padding: 0; }
+  .checks li { border-bottom: 1px solid var(--rule-2); }
+  .checks label { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 0.6rem; padding: 0.6rem 0.2rem; cursor: pointer; }
+  .checks input { margin: 0; width: 1rem; height: 1rem; accent-color: var(--accent); align-self: center; }
+  .who { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; }
+  .what { font-size: 0.875rem; color: var(--ink-2); }
+  .checks input:checked ~ .who, .checks input:checked ~ .what { color: var(--ink-3); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+  .resetbar { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .ghost { font-family: var(--sans); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); background: transparent; border: 1px solid var(--rule); border-radius: 999px; padding: 0.35rem 0.85rem; cursor: pointer; }
+  .ghost:hover { border-color: var(--accent); color: var(--ink); }
+  .note { font-size: 0.8125rem; color: var(--ink-3); margin: 0; }
+
+  /* ---------- inventory ---------- */
+
+  .stock { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 1.5rem 2.25rem; }
+  .stock h3 { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 0.15rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+  .stock ul { list-style: none; margin: 0; padding: 0; }
+  .stock li { display: grid; grid-template-columns: 3.25rem 1fr; gap: 0.75rem; padding: 0.42rem 0; border-bottom: 1px solid var(--rule-2); font-size: 0.875rem; }
+  .qty { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.8125rem; color: var(--accent-ink); text-align: right; }
+  .item { color: var(--ink-2); }
+
+  /* ---------- restock ---------- */
+
+  .restock { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .restock li { display: grid; grid-template-columns: minmax(7.5rem, auto) 1fr; gap: 0.5rem 1.25rem; padding: 0.85rem 0 0.95rem; border-top: 1px solid var(--rule-2); }
+  .restock li:last-child { border-bottom: 1px solid var(--rule-2); }
+  .restock b { font-weight: 600; font-size: 0.875rem; }
+  .restock p { margin: 0; font-family: var(--serif); color: var(--ink-2); max-width: 62ch; }
+  .restock .sum { display: block; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.02em; color: var(--flag); font-variant-numeric: tabular-nums; margin-top: 0.15rem; }
+  @media (max-width: 560px) { .restock li { grid-template-columns: 1fr; } }
+
+  footer { padding: 2.5rem 0 3.5rem; }
+  footer p { font-size: 0.8125rem; color: var(--ink-3); margin: 0 0 0.4rem; max-width: 62ch; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  @media print {
+    :root { --ground: #fff; --panel: #fff; --ink: #000; --ink-2: #222; --ink-3: #555; --rule: #999; --rule-2: #ccc; --accent: #000; --accent-ink: #000; --accent-soft: #eee; --on-accent: #000; --flag: #000; --flag-soft: #eee; }
+    body { font-size: 10pt; }
+    .weekpick, .resetbar, .tonight { display: none; }
+    .week[hidden] { display: block !important; }
+    section { break-inside: auto; padding: 1rem 0; }
+    .day, .person, .restock li { break-inside: avoid; }
+    .tonight { border: 1px solid #000; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Household operations</p>
+    <h1>The Four Week Rotation</h1>
+    <p class="standfirst">Twenty eight dinners, six people and one Aldi order. Who cooks, who helps, who cleans, and what is on the table tonight.</p>
+    <ul class="roster">
+      <li><b>Jake</b> <span>Operations, batch cooking</span></li>
+      <li><b>Brayton</b> <span>Kitchen manager</span></li>
+      <li><b>Ashton</b> <span>Support cook, trash</span></li>
+      <li><b>Justice</b> <span>Support cook, deep clean</span></li>
+      <li><b>Ada</b> <span>10, junior assistant</span></li>
+      <li><b>Elise</b> <span>6, junior helper</span></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section id="tonight">
+  <div class="wrap">
+    <div class="tonight">
+      <div>
+        <p class="eyebrow">Tonight, <span id="today-name">Monday</span></p>
+        <p class="tonight-meal" id="tonight-meal">Loading tonight's dinner.</p>
+      </div>
+      <dl class="tonight-grid" id="tonight-grid"></dl>
+    </div>
+    <div class="weekpick" role="tablist" aria-label="Which week of the rotation">
+      <p class="eyebrow">Week of the cycle</p>
+      <button class="tab" role="tab" data-week="1" aria-selected="true">1. Fresh produce</button>
+      <button class="tab" role="tab" data-week="2" aria-selected="false">2. Core staples</button>
+      <button class="tab" role="tab" data-week="3" aria-selected="false">3. Mid month</button>
+      <button class="tab" role="tab" data-week="4" aria-selected="false">4. Depletion</button>
+    </div>
+  </div>
+</section>
+
+<section id="rotation">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Section one</p>
+      <h2>The rotation</h2>
+      <p>Fresh berries, peaches and avocados are all front loaded into week one. Weeks two to four lean on pantry staples, preserved meats and the freezer. Kid jobs are the standing assignment and run whenever Ada and Elise are here.</p>
+    </div>
+
+    <div class="week" data-week="1">
+      <div class="weekmeta">
+        <h3>Week 1. Fresh produce and welcome week</h3>
+        <span class="flagtag">Girls here</span>
+        <span class="flagtag warm">Eat the fresh produce</span>
+      </div>
+      <div class="standing">
+        <div><p class="eyebrow">Breakfasts</p><p>French toast sticks with fresh sliced strawberries. Scrambled eggs on Bistro toast. Stok cold brew and protein shakes.</p></div>
+        <div><p class="eyebrow">Lunches</p><p>Italian Trio deli sandwiches with provolone and sliced avocado on Bistro bread. Veggie straws. Fresh raspberries.</p></div>
+      </div>
+      <ul class="days">
+        <li class="day" data-day="1"><div class="day-rail"><div class="day-abbr">Mon</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Thick cut pan seared pork chops, butter seasoned rice, sliced peaches.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Set the table and plates</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkins and cups</span></li></ul></div></li>
+        <li class="day" data-day="2"><div class="day-rail"><div class="day-abbr">Tue</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Two Mama Cozzi's thin crust pepperoni pizzas with a side of pickle spears.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Stir and pour drinks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Put out silverware</span></li></ul></div></li>
+        <li class="day" data-day="3"><div class="day-rail"><div class="day-abbr">Wed</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Casa Mamita beef and bean burritos topped with warmed salsa con queso and diced avocado.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Measure ingredients</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Clear paper goods</span></li></ul></div></li>
+        <li class="day" data-day="4"><div class="day-rail"><div class="day-abbr">Thu</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Thin sliced top round steak stir fry over white rice, using the pantry soy sauce and seasonings.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Plate the side snacks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Set the chairs</span></li></ul></div></li>
+        <li class="day" data-day="5"><div class="day-rail"><div class="day-abbr">Fri</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Kirkwood chicken fries, oven warmed corn dogs, veggie straws and sliced fruit.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Ashton</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Jake</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Build the pizza and snack platters</span></li></ul></div></li>
+        <li class="day" data-day="6"><div class="day-rail"><div class="day-abbr">Sat</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Two Mama Cozzi's pepperoni pizzas with movie night snacks, Oreos and Gushers.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Justice</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Movie night setup</span></li></ul></div></li>
+        <li class="day" data-day="0"><div class="day-rail"><div class="day-abbr">Sun</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Crispy corned beef hash skillet with over easy eggs and toasted Bistro bread.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Toast monitor</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkin station</span></li></ul></div></li>
+      </ul>
+    </div>
+
+    <div class="week" data-week="2" hidden>
+      <div class="weekmeta">
+        <h3>Week 2. Core staples and batch cooking</h3>
+        <span class="flagtag">Adult focus</span>
+      </div>
+      <div class="standing">
+        <div><p class="eyebrow">Breakfasts</p><p>Fried egg sandwiches with melted Gouda. Sausage, egg and cheese croissant halves. Coffee bar.</p></div>
+        <div><p class="eyebrow">Lunches</p><p>Casa Mamita burritos with tortilla chips and queso dip. Trail mix packs.</p></div>
+      </div>
+      <ul class="days">
+        <li class="day" data-day="1"><div class="day-rail"><div class="day-abbr">Mon</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Marinated grilled top round steak strips with garlic butter rice.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Set the table and plates</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkins and cups</span></li></ul></div></li>
+        <li class="day" data-day="2"><div class="day-rail"><div class="day-abbr">Tue</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Oven crisped pork chops with seasoned rice and buttered toast.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Stir and pour drinks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Put out silverware</span></li></ul></div></li>
+        <li class="day" data-day="3"><div class="day-rail"><div class="day-abbr">Wed</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Corned beef hash patties topped with melted provolone and sunny eggs.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Measure ingredients</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Clear paper goods</span></li></ul></div></li>
+        <li class="day" data-day="4"><div class="day-rail"><div class="day-abbr">Thu</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">One Mama Cozzi's pepperoni pizza split, plus loaded queso nachos with tortilla chips.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Plate the side snacks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Set the chairs</span></li></ul></div></li>
+        <li class="day" data-day="5"><div class="day-rail"><div class="day-abbr">Fri</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Pub night at home: the remaining corn dogs, chicken fries, cheddar Pringles and pickles.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Ashton</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Jake</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Build the pizza and snack platters</span></li></ul></div></li>
+        <li class="day" data-day="6"><div class="day-rail"><div class="day-abbr">Sat</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Steak fried rice, stretching the end cuts of steak with pantry eggs and rice.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Justice</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Movie night setup</span></li></ul></div></li>
+        <li class="day" data-day="0"><div class="day-rail"><div class="day-abbr">Sun</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Hearty pantry reset: a large batch of rice and egg bowls with butter and soy sauce.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Toast monitor</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkin station</span></li></ul></div></li>
+      </ul>
+    </div>
+
+    <div class="week" data-week="3" hidden>
+      <div class="weekmeta">
+        <h3>Week 3. Mid month stretch</h3>
+        <span class="flagtag">Girls here</span>
+      </div>
+      <div class="standing">
+        <div><p class="eyebrow">Breakfasts</p><p>Scrambled eggs with melted cheese. Speculoos cookies with hot cocoa or coffee. Mini muffins.</p></div>
+        <div><p class="eyebrow">Lunches</p><p>Build your own bento boxes: deli meat and provolone rolls, crackers, seaweed snacks and mini muffins.</p></div>
+      </div>
+      <ul class="days">
+        <li class="day" data-day="1"><div class="day-rail"><div class="day-abbr">Mon</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">One Mama Cozzi's pepperoni pizza paired with toasted cheese crisps.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Set the table and plates</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkins and cups</span></li></ul></div></li>
+        <li class="day" data-day="2"><div class="day-rail"><div class="day-abbr">Tue</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Crispy shredded pork chops fried with rice and butter.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Stir and pour drinks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Put out silverware</span></li></ul></div></li>
+        <li class="day" data-day="3"><div class="day-rail"><div class="day-abbr">Wed</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Burrito bowls: Casa Mamita burritos deconstructed over rice with queso and tortilla chips.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Measure ingredients</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Clear paper goods</span></li></ul></div></li>
+        <li class="day" data-day="4"><div class="day-rail"><div class="day-abbr">Thu</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Skillet corned beef hash and egg scramble with toasted bread.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Plate the side snacks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Set the chairs</span></li></ul></div></li>
+        <li class="day" data-day="5"><div class="day-rail"><div class="day-abbr">Fri</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Family snack board night: Italian Trio slices, Gouda cubes, crackers, veggie straws, pickles and fruit roll ups.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Ashton</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Jake</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Build the pizza and snack platters</span></li></ul></div></li>
+        <li class="day" data-day="6"><div class="day-rail"><div class="day-abbr">Sat</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Pan seared steak medallions sliced thin over buttered seasoned rice.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Justice</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Movie night setup</span></li></ul></div></li>
+        <li class="day" data-day="0"><div class="day-rail"><div class="day-abbr">Sun</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Breakfast for dinner: loaded egg skillets, toast with butter, and a hash brown scramble.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Toast monitor</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkin station</span></li></ul></div></li>
+      </ul>
+    </div>
+
+    <div class="week" data-week="4" hidden>
+      <div class="weekmeta">
+        <h3>Week 4. Freezer and pantry depletion</h3>
+        <span class="flagtag warm">Clear the freezer</span>
+      </div>
+      <div class="standing">
+        <div><p class="eyebrow">Breakfasts</p><p>Toast with butter and sugar. Hard boiled or scrambled eggs. Protein shakes.</p></div>
+        <div><p class="eyebrow">Lunches</p><p>Bean and cheese burritos. Seaweed snack sheets. Cheese sandwich crackers.</p></div>
+      </div>
+      <ul class="days">
+        <li class="day" data-day="1"><div class="day-rail"><div class="day-abbr">Mon</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Burrito enchilada bake. Line the burritos in a baking dish, top with salsa con queso and broil.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Set the table and plates</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkins and cups</span></li></ul></div></li>
+        <li class="day" data-day="2"><div class="day-rail"><div class="day-abbr">Tue</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Savory corned beef hash fried crisp with eggs and rice.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Stir and pour drinks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Put out silverware</span></li></ul></div></li>
+        <li class="day" data-day="3"><div class="day-rail"><div class="day-abbr">Wed</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Seasoned fried rice bowls with butter, eggs, and sunflower kernels for crunch.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Ashton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Measure ingredients</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Clear paper goods</span></li></ul></div></li>
+        <li class="day" data-day="4"><div class="day-rail"><div class="day-abbr">Thu</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Queso cheese nachos with double dipper tortilla chips, and pickled peppers if there are any on hand.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Brayton</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Justice</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Plate the side snacks</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Set the chairs</span></li></ul></div></li>
+        <li class="day" data-day="5"><div class="day-rail"><div class="day-abbr">Fri</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Final frozen buffet. A sweep of whatever chicken fries, pizzas and snacks are left.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Ashton</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Jake</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Build the pizza and snack platters</span></li></ul></div></li>
+        <li class="day" data-day="6"><div class="day-rail"><div class="day-abbr">Sat</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Kitchen sink fried rice, or a hash scramble, using all the remaining dairy and pantry basics.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Justice</span></li><li><span class="duty-k">Oversee</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Both</span><span class="duty-v">Movie night setup</span></li></ul></div></li>
+        <li class="day" data-day="0"><div class="day-rail"><div class="day-abbr">Sun</div><div class="today-tag">Today</div></div><div class="day-body"><p class="day-meal">Pantry clean out feast before the next grocery delivery lands.</p><ul class="duties"><li><span class="duty-k">Cook</span><span class="duty-v">Jake</span></li><li><span class="duty-k">Helper</span><span class="duty-v">Brayton</span></li><li class="kid"><span class="duty-k">Ada</span><span class="duty-v">Toast monitor</span></li><li class="kid"><span class="duty-k">Elise</span><span class="duty-v">Napkin station</span></li></ul></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="people">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Section two</p>
+      <h2>Who does what</h2>
+      <p>The same assignments as the rotation, read down instead of across. One card per person, so nobody has to reconstruct their week from a table.</p>
+    </div>
+    <ul class="people">
+      <li class="person">
+        <div class="person-top"><h3>Jake</h3><span>Operations lead</span></div>
+        <dl>
+          <div><dt>Cooking</dt><dd>Leads <b>Monday, Wednesday and Sunday</b>. Oversees Ashton on <b>Friday</b>.</dd></div>
+          <div><dt>After dinner</dt><dd>Leftovers away and meal prep containers packed, with Brayton.</dd></div>
+          <div><dt>Saturday</dt><dd>Inventory audit, fridge wipe down, and next week's meal plan.</dd></div>
+        </dl>
+      </li>
+      <li class="person">
+        <div class="person-top"><h3>Brayton</h3><span>Kitchen manager</span></div>
+        <dl>
+          <div><dt>Cooking</dt><dd>Leads <b>Tuesday and Thursday</b>. Helps Jake on <b>Sunday</b>, oversees Justice on <b>Saturday</b>.</dd></div>
+          <div><dt>After dinner</dt><dd>Leftovers away and meal prep containers packed, with Jake.</dd></div>
+          <div><dt>Saturday</dt><dd>Stove top, microwave interior, and the pantry reorganised.</dd></div>
+        </dl>
+      </li>
+      <li class="person">
+        <div class="person-top"><h3>Ashton</h3><span>Heavy cleaning and trash</span></div>
+        <dl>
+          <div><dt>Cooking</dt><dd>Helps on <b>Monday and Wednesday</b>. Leads the basics on <b>Friday</b>.</dd></div>
+          <div><dt>Every morning</dt><dd>Kitchen trash out, fresh liner in the can.</dd></div>
+          <div><dt>After dinner</dt><dd>Pots and pans washed, dishwasher loaded, stove wiped down, with Justice.</dd></div>
+          <div><dt>Saturday</dt><dd>Trash bins sanitized, kitchen and dining floors mopped.</dd></div>
+        </dl>
+      </li>
+      <li class="person">
+        <div class="person-top"><h3>Justice</h3><span>Deep clean and shared areas</span></div>
+        <dl>
+          <div><dt>Cooking</dt><dd>Helps on <b>Tuesday and Thursday</b>. Leads the basics on <b>Saturday</b>.</dd></div>
+          <div><dt>Every morning</dt><dd>Counters wiped, dining area floor swept.</dd></div>
+          <div><dt>After dinner</dt><dd>Pots and pans washed, dishwasher loaded, stove wiped down, with Ashton.</dd></div>
+          <div><dt>Saturday</dt><dd>Common living area picked up, bathroom wiped down.</dd></div>
+        </dl>
+      </li>
+      <li class="person">
+        <div class="person-top"><h3>Ada</h3><span>10, junior assistant</span></div>
+        <dl>
+          <div><dt>At dinner</dt><dd>Sets the table, measures ingredients, stirs and pours the drinks, plates the side snacks, and watches the toast on Sunday.</dd></div>
+          <div><dt>After dinner</dt><dd>Sprays and wipes the dining table, sweeps the crumbs from under the chairs.</dd></div>
+          <div><dt>Saturday</dt><dd>Dusts the living room surfaces, pairs the clean kitchen towels, sweeps the entryways.</dd></div>
+        </dl>
+      </li>
+      <li class="person">
+        <div class="person-top"><h3>Elise</h3><span>6, junior helper</span></div>
+        <dl>
+          <div><dt>At dinner</dt><dd>Placemats, napkins and cups, silverware out, chairs set, and paper goods cleared.</dd></div>
+          <div><dt>After dinner</dt><dd>Collects every disposable plate, cup and napkin into the trash bag.</dd></div>
+          <div><dt>Saturday</dt><dd>Toy pickup, snack cabinet tidied, paper plate and cup restock bins checked.</dd></div>
+        </dl>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section id="daily">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Section three</p>
+      <h2>Every day, and every Saturday</h2>
+      <p>Tick things off as they get done. The ticks are saved on this device only, so the kitchen tablet keeps its own list and a phone keeps another.</p>
+    </div>
+    <div class="routines">
+      <div class="routine">
+        <h3>Morning</h3>
+        <ul class="checks">
+          <li><label><input type="checkbox" id="am-ashton"><span class="who">Ashton</span><span class="what">Empty the kitchen trash, fresh liner in the can</span></label></li>
+          <li><label><input type="checkbox" id="am-justice"><span class="who">Justice</span><span class="what">Wipe the counters, sweep the dining area floor</span></label></li>
+        </ul>
+      </div>
+      <div class="routine">
+        <h3>After dinner</h3>
+        <ul class="checks">
+          <li><label><input type="checkbox" id="pm-leads"><span class="who">Jake and Brayton</span><span class="what">Leftovers away, meal prep containers packed</span></label></li>
+          <li><label><input type="checkbox" id="pm-support"><span class="who">Ashton and Justice</span><span class="what">Pots and pans, dishwasher loaded, stove wiped</span></label></li>
+          <li><label><input type="checkbox" id="pm-ada"><span class="who">Ada</span><span class="what">Wipe the table, sweep the crumbs under the chairs</span></label></li>
+          <li><label><input type="checkbox" id="pm-elise"><span class="who">Elise</span><span class="what">Every paper plate, cup and napkin into the trash bag</span></label></li>
+        </ul>
+      </div>
+      <div class="routine">
+        <h3>Saturday deep clean</h3>
+        <ul class="checks">
+          <li><label><input type="checkbox" id="sa-jake"><span class="who">Jake</span><span class="what">Inventory audit, fridge wipe down, next week's plan</span></label></li>
+          <li><label><input type="checkbox" id="sa-brayton"><span class="who">Brayton</span><span class="what">Stove top, microwave interior, pantry reorganised</span></label></li>
+          <li><label><input type="checkbox" id="sa-ashton"><span class="who">Ashton</span><span class="what">Trash bins sanitized, kitchen and dining floors mopped</span></label></li>
+          <li><label><input type="checkbox" id="sa-justice"><span class="who">Justice</span><span class="what">Living area picked up, bathroom wiped down</span></label></li>
+          <li><label><input type="checkbox" id="sa-ada"><span class="who">Ada</span><span class="what">Dust the living room, pair the towels, sweep the entryways</span></label></li>
+          <li><label><input type="checkbox" id="sa-elise"><span class="who">Elise</span><span class="what">Toy pickup, snack cabinet, check the restock bins</span></label></li>
+        </ul>
+      </div>
+    </div>
+    <div class="resetbar">
+      <button class="ghost" id="clear-checks" type="button">Clear all ticks</button>
+      <p class="note">Clear this at the start of a new day.</p>
+    </div>
+  </div>
+</section>
+
+<section id="order">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Section four</p>
+      <h2>The Aldi order</h2>
+      <p>Everything the four weeks are built from. A blank count is something that arrived without one, not a quantity of one.</p>
+    </div>
+    <div class="stock">
+      <div>
+        <h3><span>Fresh meat and mains</span></h3>
+        <ul>
+          <li><span class="qty">2 pk</span><span class="item">Boneless top round steak</span></li>
+          <li><span class="qty">2 pk</span><span class="item">Thick cut boneless pork chops</span></li>
+          <li><span class="qty">4 cans</span><span class="item">Corned beef hash</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span>Freezer mains</span></h3>
+        <ul>
+          <li><span class="qty">6</span><span class="item">Thin crust pepperoni pizzas</span></li>
+          <li><span class="qty">16</span><span class="item">Beef and bean burritos, two 8 counts</span></li>
+          <li><span class="qty">2 box</span><span class="item">Corn dogs</span></li>
+          <li><span class="qty">1 bag</span><span class="item">Chicken fries</span></li>
+          <li><span class="qty">1 box</span><span class="item">Breakfast sandwiches</span></li>
+          <li><span class="qty">1 box</span><span class="item">French toast sticks</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span>Dairy and cold</span></h3>
+        <ul>
+          <li><span class="qty">12</span><span class="item">Eggs</span></li>
+          <li><span class="qty">2</span><span class="item">Whole milk, half gallon each</span></li>
+          <li><span class="qty">2 lb</span><span class="item">Butter</span></li>
+          <li><span class="qty">1 pk</span><span class="item">Provolone</span></li>
+          <li><span class="qty">1 pk</span><span class="item">Gouda</span></li>
+          <li><span class="qty">1 pk</span><span class="item">Italian Trio: salami, pepperoni, provolone</span></li>
+          <li><span class="qty">1 tub</span><span class="item">Salsa con queso</span></li>
+          <li><span class="qty">1 jar</span><span class="item">Kosher dill pickles</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span>Produce</span><span class="flagtag warm">Week 1</span></h3>
+        <ul>
+          <li><span class="qty">4</span><span class="item">Peaches</span></li>
+          <li><span class="qty">4</span><span class="item">Avocados</span></li>
+          <li><span class="qty">1 lb</span><span class="item">Strawberries</span></li>
+          <li><span class="qty">6 oz</span><span class="item">Raspberries</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span>Pantry and snacks</span></h3>
+        <ul>
+          <li><span class="qty"></span><span class="item">Tortilla chips</span></li>
+          <li><span class="qty"></span><span class="item">Specially Selected Bistro bread</span></li>
+          <li><span class="qty">2 tub</span><span class="item">Savoritz cheese crackers</span></li>
+          <li><span class="qty"></span><span class="item">Mini sandwich crackers</span></li>
+          <li><span class="qty">4 cans</span><span class="item">Pringles</span></li>
+          <li><span class="qty">4 bags</span><span class="item">Veggie straws</span></li>
+          <li><span class="qty">10 pk</span><span class="item">Seaweed snacks</span></li>
+          <li><span class="qty"></span><span class="item">Trail mix, pistachios, sunflower kernels</span></li>
+          <li><span class="qty">12</span><span class="item">Ice cream sandwiches</span></li>
+          <li><span class="qty"></span><span class="item">Oreos, mini muffins, Speculoos cookies</span></li>
+          <li><span class="qty"></span><span class="item">Fruit roll ups, Gushers, peach candies</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span>Beverages</span></h3>
+        <ul>
+          <li><span class="qty">3 bags</span><span class="item">Ground coffee</span></li>
+          <li><span class="qty">2 cans</span><span class="item">Espresso</span></li>
+          <li><span class="qty"></span><span class="item">Stok cold brew</span></li>
+          <li><span class="qty"></span><span class="item">Orange juice concentrate</span></li>
+          <li><span class="qty">4 x 12</span><span class="item">Summit Cola</span></li>
+          <li><span class="qty">2 x 12</span><span class="item">Summit Zero</span></li>
+          <li><span class="qty">2 x 12</span><span class="item">Ginger ale</span></li>
+          <li><span class="qty"></span><span class="item">Mini Sprites, 2L Coke, energy drinks, Poppi</span></li>
+          <li><span class="qty">2 x 40</span><span class="item">Water</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3><span>Supplies</span></h3>
+        <ul>
+          <li><span class="qty">100 ct</span><span class="item">Paper plates</span></li>
+          <li><span class="qty">100 ct</span><span class="item">Napkins</span></li>
+          <li><span class="qty">96 ct</span><span class="item">Plastic cutlery</span></li>
+          <li><span class="qty">50 ct</span><span class="item">Plastic cups</span></li>
+          <li><span class="qty"></span><span class="item">Sandwich bags, foil, tissues</span></li>
+          <li><span class="qty"></span><span class="item">Laundry detergent</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="restock">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Section five</p>
+      <h2>Restock before you need it</h2>
+      <p>Five places where the plan asks for more than the order holds. Counted straight off the list above, so Jake's Saturday inventory audit has somewhere to start.</p>
+    </div>
+    <ul class="restock">
+      <li>
+        <b>Pizzas<span class="sum">6 bought, 6 spent by week 3</span></b>
+        <p>Two go on week one Tuesday, two on week one Saturday, one on week two Thursday and the last on week three Monday. Week four Friday's final frozen buffet has no pizza left to sweep, so either hold one back or plan that night around the chicken fries.</p>
+      </li>
+      <li>
+        <b>Corned beef hash<span class="sum">4 cans, 5 hash dinners</span></b>
+        <p>Week one Sunday, week two Wednesday, week three Thursday and week four Tuesday take a can each. Week four Saturday's kitchen sink hash scramble is the fifth. It already offers fried rice as the alternative, so this one costs nothing if you take that branch.</p>
+      </li>
+      <li>
+        <b>Eggs<span class="sum">1 dozen, 4 weeks</span></b>
+        <p>Eggs are on every week's breakfast list and on six of the twenty eight dinners. A dozen is a few days of that, not a month. This is the first thing to add to the next order.</p>
+      </li>
+      <li>
+        <b>Milk<span class="sum">2 half gallons, 4 weeks</span></b>
+        <p>One gallon total, against four weeks of cereal, coffee and cooking for a household this size. Expect to top up mid cycle.</p>
+      </li>
+      <li>
+        <b>Plastic cups<span class="sum">50 cups, 28 dinners</span></b>
+        <p>Plates at 100 and cutlery at 96 stretch across the month if they are not used at every meal. Fifty cups is the count that runs out first, and it is exactly what Elise's Saturday restock bin check is there to catch.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Tonight's panel reads the day from this device and the week from the tabs above it. Your week choice and your ticks are saved in this browser, on this device, and nowhere else.</p>
+    <p>Built for print as well: the print view opens all four weeks and drops the buttons, so it fits on the fridge.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var WEEK_KEY = 'rotation.week';
+  var todayIdx = new Date().getDay();
+
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var weeks = Array.prototype.slice.call(document.querySelectorAll('.week'));
+  var grid = document.getElementById('tonight-grid');
+  var mealEl = document.getElementById('tonight-meal');
+  var nameEl = document.getElementById('today-name');
+
+  function store(fn) { try { return fn(window.localStorage); } catch (e) { return null; } }
+
+  function renderTonight(weekNum) {
+    var row = document.querySelector('.week[data-week="' + weekNum + '"] .day[data-day="' + todayIdx + '"]');
+    nameEl.textContent = DAY_NAMES[todayIdx] + ' of week ' + weekNum;
+    grid.textContent = '';
+    if (!row) { mealEl.textContent = 'Pick a week to see tonight.'; return; }
+    mealEl.textContent = row.querySelector('.day-meal').textContent;
+    Array.prototype.forEach.call(row.querySelectorAll('.duties li'), function (duty) {
+      var cell = document.createElement('div');
+      var dt = document.createElement('dt');
+      dt.textContent = duty.querySelector('.duty-k').textContent;
+      var dd = document.createElement('dd');
+      dd.textContent = duty.querySelector('.duty-v').textContent;
+      cell.appendChild(dt);
+      cell.appendChild(dd);
+      grid.appendChild(cell);
+    });
+  }
+
+  function setWeek(weekNum) {
+    weeks.forEach(function (w) {
+      var on = w.getAttribute('data-week') === weekNum;
+      w.hidden = !on;
+      Array.prototype.forEach.call(w.querySelectorAll('.day'), function (d) {
+        d.classList.toggle('is-today', on && d.getAttribute('data-day') === String(todayIdx));
+      });
+    });
+    tabs.forEach(function (t) {
+      t.setAttribute('aria-selected', t.getAttribute('data-week') === weekNum ? 'true' : 'false');
+    });
+    renderTonight(weekNum);
+    store(function (s) { s.setItem(WEEK_KEY, weekNum); });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { setWeek(t.getAttribute('data-week')); });
+  });
+
+  var saved = store(function (s) { return s.getItem(WEEK_KEY); });
+  setWeek(saved && /^[1-4]$/.test(saved) ? saved : '1');
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.checks input'));
+  boxes.forEach(function (box) {
+    var key = 'rotation.check.' + box.id;
+    if (store(function (s) { return s.getItem(key); }) === '1') box.checked = true;
+    box.addEventListener('change', function () {
+      store(function (s) { box.checked ? s.setItem(key, '1') : s.removeItem(key); });
+    });
+  });
+
+  document.getElementById('clear-checks').addEventListener('click', function () {
+    boxes.forEach(function (box) {
+      box.checked = false;
+      store(function (s) { s.removeItem('rotation.check.' + box.id); });
+    });
+  });
+})();
+</script>
