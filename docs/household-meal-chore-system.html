@@ -1,4 +1,4 @@
-<title>The Four Week Rotation</title>
+<title>Two Weeks, Four Grown Men</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
@@ -9,7 +9,7 @@
     --line:#d4d9d4; --line-2:#bcc5bf;
     --pine:#0d6153; --pine-ink:#0b4c41; --pine-soft:#dfeae5;
     --paprika:#a8412a; --paprika-soft:#f4e2dc;
-    --on-pine:#f4f7f5;
+    --on-ink:#f2f5f3; --on-pine:#f4f7f5;
     --rule:1px solid var(--line);
   }
   @media (prefers-color-scheme: dark){
@@ -19,7 +19,7 @@
       --line:#2c3532; --line-2:#3c4743;
       --pine:#63bda8; --pine-ink:#8fd3c2; --pine-soft:#17332d;
       --paprika:#e0876a; --paprika-soft:#3a231c;
-      --on-pine:#101614;
+      --on-ink:#141917; --on-pine:#101614;
     }
   }
   :root[data-theme="dark"]{
@@ -28,47 +28,43 @@
     --line:#2c3532; --line-2:#3c4743;
     --pine:#63bda8; --pine-ink:#8fd3c2; --pine-soft:#17332d;
     --paprika:#e0876a; --paprika-soft:#3a231c;
-    --on-pine:#101614;
+    --on-ink:#141917; --on-pine:#101614;
   }
 
   *{box-sizing:border-box}
-  body{
-    background:var(--ground); color:var(--ink);
-    font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
-    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
-  }
+  body{background:var(--ground); color:var(--ink);
+    font-family:Archivo,"Helvetica Neue",Arial,sans-serif; font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased}
   .wrap{max-width:1120px; margin:0 auto; padding:0 24px 96px}
   h1,h2,h3,h4{margin:0; text-wrap:balance}
   p{margin:0}
   .eyebrow{font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3)}
 
   .mast{padding:44px 0 26px; border-bottom:2px solid var(--ink)}
-  .mast h1{
-    font-family:Newsreader,Georgia,serif; font-weight:500;
-    font-size:clamp(34px,5.4vw,54px); line-height:1.04; letter-spacing:-.015em; margin:10px 0 12px;
-  }
-  .mast .lede{font-size:16px; color:var(--ink-2); max-width:60ch}
-  .facts{display:flex; flex-wrap:wrap; gap:8px 28px; margin-top:20px;
-    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
+  .mast h1{font-family:Newsreader,Georgia,serif; font-weight:500;
+    font-size:clamp(34px,5.4vw,54px); line-height:1.04; letter-spacing:-.015em; margin:10px 0 12px}
+  .mast .lede{font-size:16px; color:var(--ink-2); max-width:62ch}
+  .facts{display:flex; flex-wrap:wrap; gap:8px 28px; margin-top:20px; font-size:12px;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
   .facts b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+  .facts .warn b{color:var(--paprika)}
 
-  .tonight{
-    margin-top:26px; background:var(--surface); border:var(--rule); border-left:4px solid var(--paprika);
-    padding:22px 24px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,300px); gap:22px 40px;
-  }
+  .tonight{margin-top:26px; background:var(--surface); border:var(--rule);
+    border-left:4px solid var(--paprika); padding:22px 24px;
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,300px); gap:22px 40px}
   .tonight .eyebrow{color:var(--paprika)}
   #tonight-date{font-size:13px; color:var(--ink-2); margin-top:4px}
   #tonight-meal{font-family:Newsreader,Georgia,serif; font-weight:500;
     font-size:clamp(24px,3.2vw,32px); line-height:1.15; margin:12px 0 6px}
   #tonight-sub{color:var(--ink-2); font-size:15px}
-  #tonight-add{margin-top:8px}
+  #tonight-portion,#tonight-add{margin-top:8px}
   #tonight-duties{display:flex; flex-direction:column; gap:8px; align-self:center; align-items:flex-start}
 
-  .tabs{display:flex; flex-wrap:wrap; gap:8px; align-items:center;
-    margin:44px 0 0; padding-bottom:14px; border-bottom:var(--rule)}
+  .tabs{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:44px 0 0;
+    padding-bottom:14px; border-bottom:var(--rule)}
   .tabs .eyebrow{margin-right:6px}
   .tab{font:500 13px/1 Archivo,sans-serif; color:var(--ink-2); background:transparent;
-    border:1px solid var(--line-2); border-radius:999px; padding:7px 15px; cursor:pointer}
+    border:1px solid var(--line-2); border-radius:999px; padding:7px 16px; cursor:pointer}
   .tab:hover{border-color:var(--pine); color:var(--pine-ink)}
   .tab.is-on{background:var(--pine); border-color:var(--pine); color:var(--on-pine); font-weight:600}
   .tabs-note{font-size:12px; color:var(--ink-3); margin-left:auto}
@@ -84,25 +80,33 @@
   .standing > div{background:var(--surface); padding:14px 16px}
   .standing dt{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
     color:var(--ink-3); margin-bottom:5px}
-  .standing dd{margin:0; font-family:Newsreader,Georgia,serif; font-size:16px; line-height:1.45; color:var(--ink)}
+  .standing dd{margin:0; font-family:Newsreader,Georgia,serif; font-size:16px; line-height:1.45}
 
   .days{list-style:none; margin:8px 0 0; padding:0}
-  .day{display:grid; grid-template-columns:96px minmax(0,1fr); gap:0 22px; padding:18px 0; border-top:var(--rule)}
+  .day{display:grid; grid-template-columns:108px minmax(0,1fr); gap:0 22px; padding:18px 0; border-top:var(--rule)}
   .rail{border-left:3px solid var(--line-2); padding-left:15px; display:flex; flex-direction:column; gap:6px}
   .dow{font-size:13px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2)}
   .flag{display:none; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--paprika)}
-  .kidflag{font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--pine-ink); background:var(--pine-soft); padding:2px 6px; border-radius:2px; align-self:flex-start}
+  .kidflag{font-size:9.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    white-space:nowrap; color:var(--pine-ink); background:var(--pine-soft);
+    padding:2px 6px; border-radius:2px; align-self:flex-start}
+  .kidflag--alt{background:transparent; border:1px dashed var(--pine); padding:1px 5px}
   .day.has-kids .rail{border-left-color:var(--pine)}
-  .day.is-today .rail{border-left-color:var(--paprika)}
+  .day.alt-kids .rail{border-left-color:var(--pine); border-left-style:dashed}
+  .day.is-today .rail{border-left-color:var(--paprika); border-left-style:solid}
   .day.is-today .dow{color:var(--paprika)}
   .day.is-today .flag{display:block}
+  .day.sat-here .sat-adults,.day.sat-away .sat-kids{display:none}
   .meal-name{font-family:Newsreader,Georgia,serif; font-weight:500; font-size:21px; line-height:1.25}
   .meal-sub{color:var(--ink-2); font-size:14.5px; margin-top:3px; max-width:64ch}
-  .meal-add{margin-top:7px; font-size:13.5px; color:var(--pine-ink); line-height:1.45;
+  .meal-portion,.meal-add{margin-top:7px; font-size:13.5px; line-height:1.45;
     display:flex; gap:8px; align-items:baseline; max-width:64ch}
-  .add-tag{flex:none; font-size:9.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--pine); border:1px solid var(--pine); padding:1px 5px; border-radius:2px}
+  .meal-portion{color:var(--ink); font-weight:500}
+  .meal-add{color:var(--pine-ink)}
+  .portion-tag,.add-tag{flex:none; font-size:9.5px; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; padding:2px 6px; border-radius:2px}
+  .portion-tag{background:var(--ink); color:var(--on-ink)}
+  .add-tag{color:var(--pine); border:1px solid var(--pine); padding:1px 5px}
   .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:11px}
   .chip{font-size:12px; font-weight:500; line-height:1.35; padding:4px 9px; border-radius:3px;
     background:var(--sunk); color:var(--ink-2)}
@@ -114,6 +118,26 @@
   .band{margin-top:64px; padding-top:26px; border-top:2px solid var(--ink)}
   .band > h2{font-family:Newsreader,Georgia,serif; font-weight:500; font-size:30px; line-height:1.15; margin:8px 0 10px}
   .band > .intro{color:var(--ink-2); max-width:68ch}
+
+  .gn{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1px;
+    background:var(--line); border:var(--rule); margin-top:26px}
+  .gn > div{background:var(--surface); padding:18px 20px}
+  .gn h3{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--pine-ink)}
+  .gn ul,.gn ol{list-style:none; margin:12px 0 0; padding:0}
+  .gn-every li{font-family:Newsreader,Georgia,serif; font-size:18px; padding:5px 0}
+  .gn-sub{margin-top:20px; padding-top:16px; border-top:var(--rule)}
+  .gn-jobs{margin:12px 0 0; display:flex; flex-direction:column; gap:10px}
+  .gn-jobs dt{font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+  .gn-jobs dd{margin:2px 0 0; font-size:14px; color:var(--ink-2); line-height:1.5}
+  .gn-cal li{display:flex; justify-content:space-between; gap:12px; padding:7px 0;
+    border-top:var(--rule); font-variant-numeric:tabular-nums}
+  .gn-cal li:first-child{border-top:0}
+  .gn-date{font-size:14px; font-weight:500}
+  .gn-state{font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+    padding:2px 8px; border-radius:2px}
+  .is-here .gn-state{background:var(--pine-soft); color:var(--pine-ink)}
+  .is-away .gn-state{background:var(--sunk); color:var(--ink-3)}
+  .is-away .gn-date{color:var(--ink-3)}
 
   .crew{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1px;
     background:var(--line); border:var(--rule); margin-top:26px}
@@ -135,7 +159,8 @@
   .checks{list-style:none; margin:14px 0 0; padding:0}
   .checks li{border-top:var(--rule)}
   .checks li:first-child{border-top:0}
-  .checks label{display:grid; grid-template-columns:auto minmax(0,1fr); gap:3px 11px; padding:10px 0; cursor:pointer; align-items:start}
+  .checks label{display:grid; grid-template-columns:auto minmax(0,1fr); gap:3px 11px; padding:10px 0;
+    cursor:pointer; align-items:start}
   .checks input{margin:3px 0 0; width:15px; height:15px; accent-color:var(--pine); grid-row:span 2}
   .who{font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink)}
   .what{font-size:14px; color:var(--ink-2); line-height:1.45}
@@ -147,20 +172,17 @@
 
   .tbl-wrap{overflow-x:auto; margin-top:24px; border:var(--rule); background:var(--surface)}
   table{border-collapse:collapse; width:100%}
-  table.short{min-width:860px}
+  table.port{min-width:820px}
   table.buy{min-width:520px}
   th,td{text-align:left; padding:12px 16px; border-top:var(--rule); vertical-align:top}
   thead th{border-top:0; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
     color:var(--ink-3); background:var(--sunk)}
-  .short td:first-child{font-weight:600; white-space:nowrap}
-  .short td:nth-child(2){font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:14px}
-  .short td:nth-child(3),.short td:nth-child(4){color:var(--ink-2); font-size:14px}
-  .short td:nth-child(4){color:var(--paprika); min-width:230px}
-  .short td:last-child{font-size:13px; min-width:150px}
-  .fix{display:inline-block; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
-    padding:2px 7px; border-radius:2px; margin-bottom:5px}
-  .fix--closed{background:var(--pine-soft); color:var(--pine-ink)}
-  .fix--narrowed{background:var(--paprika-soft); color:var(--paprika)}
+  .port td:first-child{font-weight:600; min-width:210px}
+  .port td:nth-child(2){color:var(--ink-3); font-size:13.5px; white-space:nowrap}
+  .port td:nth-child(3){color:var(--paprika); font-weight:700; white-space:nowrap}
+  .port td:last-child{color:var(--ink-2); font-size:14px}
+  .port tfoot td{border-top:2px solid var(--ink); background:var(--sunk); font-weight:700}
+  .port tfoot td:nth-child(3){color:var(--paprika)}
   .buy .grp th{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
     color:var(--pine-ink); background:var(--pine-soft)}
   .buy td:nth-child(2),.buy td:nth-child(3),.buy td:nth-child(4){
@@ -192,10 +214,9 @@
     .day{grid-template-columns:minmax(0,1fr); gap:10px}
     .rail{flex-direction:row; align-items:center; gap:10px; border-left:0;
       border-bottom:2px solid var(--line-2); padding:0 0 7px}
-    .day.has-kids .rail{border-left:0; border-bottom-color:var(--pine)}
+    .day.has-kids .rail,.day.alt-kids .rail{border-left:0; border-bottom-color:var(--pine)}
     .day.is-today .rail{border-left:0; border-bottom-color:var(--paprika)}
   }
-
   @media print{
     body{background:#fff; color:#000; font-size:11px}
     .wrap{max-width:none; padding:0}
@@ -210,14 +231,14 @@
 
   <header class="mast">
     <p class="eyebrow">Household operations</p>
-    <h1>The Four Week Rotation</h1>
-    <p class="lede">Every dinner, every cook and every chore between this Aldi delivery and the next one. Ada and Elise are here for Friday and Saturday dinners. The other five nights the two adults who are not cooking take the table.</p>
+    <h1>Two Weeks, Four Grown Men</h1>
+    <p class="lede">Fourteen dinners portioned for four adult appetites, not for six place settings. Ada and Elise are here every Tuesday and Friday plus alternate Saturdays. Every dinner names the quantity, because the delivered order feeds half of what it looks like it feeds.</p>
     <div class="facts">
-      <span><b>6</b> in the house</span>
-      <span><b>4</b> cooks on the rota</span>
-      <span><b>28</b> dinners planned</span>
-      <span><b>8</b> nights with the girls</span>
-      <span><b>$146.67</b> top-up of $150</span>
+      <span><b>4</b> grown men</span>
+      <span><b>14</b> dinners</span>
+      <span class="warn"><b>7</b> the order actually covers</span>
+      <span><b>10</b> nights with the girls</span>
+      <span><b>$147.31</b> top-up of $150</span>
     </div>
   </header>
 
@@ -225,9 +246,10 @@
     <div>
       <p class="eyebrow">Tonight</p>
       <p id="tonight-date">Pick the week below to see tonight&rsquo;s meal.</p>
-      <h2 id="tonight-meal">Thick-cut pan-seared pork chops</h2>
-      <p id="tonight-sub">Butter-seasoned rice and sliced peaches.</p>
-      <p class="meal-add" id="tonight-add"><span class="add-tag">Add</span><span>Steamed broccoli and roast potato wedges.</span></p>
+      <h2 id="tonight-meal">Thick-cut pork chops</h2>
+      <p id="tonight-sub">Pan seared, with butter-seasoned rice.</p>
+      <p class="meal-portion" id="tonight-portion"><span class="portion-tag">Portion</span><span>Both packs, about 8 chops. Two each.</span></p>
+      <p class="meal-add" id="tonight-add"><span class="add-tag">Add</span><span>Broccoli and roast potato wedges.</span></p>
     </div>
     <div id="tonight-duties" class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
   </section>
@@ -236,17 +258,15 @@
     <span class="eyebrow">Week</span>
     <button class="tab" type="button" role="tab" aria-selected="false" data-week="1">1</button>
     <button class="tab" type="button" role="tab" aria-selected="false" data-week="2">2</button>
-    <button class="tab" type="button" role="tab" aria-selected="false" data-week="3">3</button>
-    <button class="tab" type="button" role="tab" aria-selected="false" data-week="4">4</button>
     <span class="tabs-note">Pick the week you are on. It is remembered on this device.</span>
   </nav>
 
     <section class="week" data-week="1" aria-label="Week 1">
-      <div class="week-head"><span class="week-num">Week 1</span><h3>Fresh produce and welcome week</h3></div>
-      <p class="week-note">Every peach, berry and avocado in the order is spent this week. Nothing fresh from the delivery is planned after Sunday.</p>
+      <div class="week-head"><span class="week-num">Week 1</span><h3>Everything the delivery covers</h3></div>
+      <p class="week-note">The fresh produce and every delivered main except the last four burritos go this week. Portions below are for four grown men. Tuesday and Friday add Ada and Elise.</p>
       <dl class="standing">
-        <div><dt>Breakfasts</dt><dd>French toast sticks with sliced strawberries. Scrambled eggs on Bistro toast. Cold brew and protein shakes.</dd></div>
-        <div><dt>Lunches</dt><dd>Italian Trio sandwiches with provolone and sliced avocado on Bistro bread. Veggie straws. Fresh raspberries.</dd></div>
+        <div><dt>Breakfasts</dt><dd>Eggs and toast most mornings, three eggs a man. The box of French toast sticks and the box of breakfast sandwiches cover two of the seven.</dd></div>
+        <div><dt>Lunches</dt><dd>Italian Trio sandwiches on Bistro bread. Trail mix, pistachios, veggie straws.</dd></div>
       </dl>
       <ol class="days">
         <li class="day" data-dow="1">
@@ -255,22 +275,25 @@
             <span class="flag">Tonight</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Thick-cut pan-seared pork chops</h4>
-            <p class="meal-sub">Butter-seasoned rice and sliced peaches.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Steamed broccoli and roast potato wedges.</span></p>
+            <h4 class="meal-name">Thick-cut pork chops</h4>
+            <p class="meal-sub">Pan seared, with butter-seasoned rice.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>Both packs, about 8 chops. Two each.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Broccoli and roast potato wedges.</span></p>
             <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
           </div>
         </li>
-        <li class="day" data-dow="2">
+        <li class="day has-kids" data-dow="2">
           <div class="rail">
             <span class="dow">Tue</span>
             <span class="flag">Tonight</span>
+            <span class="kidflag">Girls here</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Two thin crust pepperoni pizzas</h4>
-            <p class="meal-sub">Pickle spears on the side.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Romaine and grape tomato salad, Italian dressing.</span></p>
-            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
+            <h4 class="meal-name">Pizza night</h4>
+            <p class="meal-sub">Thin crust pepperoni, straight from the freezer.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>5 pizzas. One each for the men, the girls split the fifth.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Romaine and tomato salad on the side.</span></p>
+            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--kid">Ada and Elise: Ada pours the drinks, Elise puts out the silverware</span></div>
           </div>
         </li>
         <li class="day" data-dow="3">
@@ -280,8 +303,9 @@
           </div>
           <div class="meal">
             <h4 class="meal-name">Beef and bean burritos</h4>
-            <p class="meal-sub">Warmed salsa con queso and diced avocado.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Black beans, salsa and sour cream.</span></p>
+            <p class="meal-sub">Baked, under warmed salsa con queso.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>12 of the 16. Three each. Four are held back for Week 2 Sunday.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Salsa, sour cream, shredded cheddar.</span></p>
             <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
           </div>
         </li>
@@ -292,8 +316,9 @@
           </div>
           <div class="meal">
             <h4 class="meal-name">Top round steak stir fry</h4>
-            <p class="meal-sub">Sliced thin over white rice, pantry soy sauce and seasonings.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Frozen stir-fry blend and mushrooms, soy and sesame oil.</span></p>
+            <p class="meal-sub">Sliced thin over jasmine rice.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>Both packs, about 2.5 lb raw. This is the thinnest main of the two weeks, so it leans on the rice.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>A full bag of stir-fry blend, mushrooms, soy and sesame.</span></p>
             <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
           </div>
         </li>
@@ -304,23 +329,25 @@
             <span class="kidflag">Girls here</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Chicken fries and corn dogs</h4>
-            <p class="meal-sub">Oven warmed, with veggie straws and sliced fruit.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Baby carrots and ranch, cut for the girls.</span></p>
-            <div class="chips"><span class="chip chip--lead">Ashton leads</span><span class="chip chip--second">Jake oversees</span><span class="chip chip--kid">Ada and Elise: Build the pizza and snack platters</span></div>
+            <h4 class="meal-name">Fryer buffet</h4>
+            <p class="meal-sub">Everything frozen and crisp, all at once.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>Both boxes of corn dogs, the whole bag of chicken fries, and the last 3 pizzas.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Baby carrots and ranch for the girls.</span></p>
+            <div class="chips"><span class="chip chip--lead">Ashton leads</span><span class="chip chip--second">Jake oversees</span><span class="chip chip--kid">Ada and Elise: Build the platters and set the table</span></div>
           </div>
         </li>
-        <li class="day has-kids" data-dow="6">
+        <li class="day alt-kids" data-dow="6">
           <div class="rail">
             <span class="dow">Sat</span>
             <span class="flag">Tonight</span>
-            <span class="kidflag">Girls here</span>
+            <span class="kidflag kidflag--alt">Alternate</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Two pepperoni pizzas</h4>
-            <p class="meal-sub">Movie night. Oreos and Gushers.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Garlic bread and a cucumber and tomato salad.</span></p>
-            <div class="chips"><span class="chip chip--lead">Justice leads</span><span class="chip chip--second">Brayton oversees</span><span class="chip chip--kid">Ada and Elise: Movie night setup</span></div>
+            <h4 class="meal-name">Roast chicken leg quarters</h4>
+            <p class="meal-sub">Roasted hard on a sheet pan.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>Half the 10 lb bag, about 5 lb. Two quarters each.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Potatoes under the pan, sweet corn.</span></p>
+            <div class="chips"><span class="chip chip--lead">Justice leads</span><span class="chip chip--second">Brayton oversees</span><span class="chip chip--kid sat-kids">Ada and Elise: Movie night setup, their Saturdays</span><span class="chip chip--table sat-adults">Jake and Ashton: table, other Saturdays</span></div>
           </div>
         </li>
         <li class="day" data-dow="7">
@@ -329,20 +356,21 @@
             <span class="flag">Tonight</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Corned beef hash skillet</h4>
-            <p class="meal-sub">Crisped, with over-easy eggs and toasted Bistro bread.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Onion and bell pepper sauteed into the hash. Oranges.</span></p>
+            <h4 class="meal-name">Corned beef hash and eggs</h4>
+            <p class="meal-sub">Crisped in the skillet, eggs on top.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>2 cans is not a dinner for four on its own, so it is stretched with 6 eggs and 2 lb of grated potato.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Onions and peppers into the hash.</span></p>
             <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Brayton assists</span><span class="chip chip--table">Ashton and Justice: table and clear-up</span></div>
           </div>
         </li>
       </ol>
     </section>
     <section class="week" data-week="2" aria-label="Week 2">
-      <div class="week-head"><span class="week-num">Week 2</span><h3>Core staples and batch cooking</h3></div>
-      <p class="week-note">Jake batches ahead on the steak so Saturday and Sunday cost almost no work. The last of the fresh salad greens go this week.</p>
+      <div class="week-head"><span class="week-num">Week 2</span><h3>Bought protein and the pantry</h3></div>
+      <p class="week-note">Nothing fresh is left from the delivery, so the vegetables are frozen and the mains are all from the top-up. Same four men, same portions.</p>
       <dl class="standing">
-        <div><dt>Breakfasts</dt><dd>Fried egg sandwiches with melted Gouda. Sausage, egg and cheese croissant halves. Coffee bar.</dd></div>
-        <div><dt>Lunches</dt><dd>Burritos with tortilla chips and queso dip. Trail mix packs.</dd></div>
+        <div><dt>Breakfasts</dt><dd>Eggs and toast. The last of the milk goes on Wednesday, so cocoa and cereal are Week 1 only.</dd></div>
+        <div><dt>Lunches</dt><dd>Bean and cheese burritos, cheese sandwich crackers, seaweed snacks, fruit.</dd></div>
       </dl>
       <ol class="days">
         <li class="day" data-dow="1">
@@ -351,22 +379,25 @@
             <span class="flag">Tonight</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Marinated grilled top round steak</h4>
-            <p class="meal-sub">Cut into strips, with garlic butter rice.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Mushrooms and onions in the pan, sweet corn alongside.</span></p>
+            <h4 class="meal-name">Burgers</h4>
+            <p class="meal-sub">Half-pound patties on the griddle.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>3 lb of ground beef, six half-pound patties. 8 buns, so seconds for whoever wants one.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Cheddar, salad, roast potatoes.</span></p>
             <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
           </div>
         </li>
-        <li class="day" data-dow="2">
+        <li class="day has-kids" data-dow="2">
           <div class="rail">
             <span class="dow">Tue</span>
             <span class="flag">Tonight</span>
+            <span class="kidflag">Girls here</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Oven-crisped pork chops</h4>
-            <p class="meal-sub">Seasoned rice and buttered toast.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Roast potatoes and peas and carrots.</span></p>
-            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
+            <h4 class="meal-name">Taco night</h4>
+            <p class="meal-sub">Seasoned beef, build your own.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>The second 3 lb of beef, 20 tortillas. The girls take two each.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Salsa, cheddar, sour cream, lettuce and tomato.</span></p>
+            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--kid">Ada and Elise: Ada pours the drinks, Elise puts out the silverware</span></div>
           </div>
         </li>
         <li class="day" data-dow="3">
@@ -375,9 +406,10 @@
             <span class="flag">Tonight</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Corned beef hash patties</h4>
-            <p class="meal-sub">Melted provolone and sunny side eggs.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Steamed broccoli.</span></p>
+            <h4 class="meal-name">Smoked sausage and rice</h4>
+            <p class="meal-sub">Sliced and browned, stirred through.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>All 3 packs, about 2.6 lb. Sausage is rich, so this one goes further than it looks.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Onions and peppers, sweet corn.</span></p>
             <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
           </div>
         </li>
@@ -387,9 +419,10 @@
             <span class="flag">Tonight</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">One pizza split, plus loaded nachos</h4>
-            <p class="meal-sub">Queso over tortilla chips.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Black beans and salsa on the nachos. Romaine salad.</span></p>
+            <h4 class="meal-name">Roast chicken, second half</h4>
+            <p class="meal-sub">Rubbed and roasted, same as Week 1.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>The rest of the 10 lb bag, about 5 lb. Two quarters each.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Rice and broccoli.</span></p>
             <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
           </div>
         </li>
@@ -400,23 +433,25 @@
             <span class="kidflag">Girls here</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Pub night</h4>
-            <p class="meal-sub">Remaining corn dogs, chicken fries, cheddar Pringles and pickles.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Baby carrots and ranch. Apple wedges.</span></p>
-            <div class="chips"><span class="chip chip--lead">Ashton leads</span><span class="chip chip--second">Jake oversees</span><span class="chip chip--kid">Ada and Elise: Build the pizza and snack platters</span></div>
+            <h4 class="meal-name">Pulled pork sandwiches</h4>
+            <p class="meal-sub">Slow roasted, shredded, piled on buns.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>3.5 lb shoulder shreds to about 2.5 lb cooked. 8 buns.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>BBQ sauce, baby carrots, the last of the salad.</span></p>
+            <div class="chips"><span class="chip chip--lead">Ashton leads</span><span class="chip chip--second">Jake oversees</span><span class="chip chip--kid">Ada and Elise: Build the platters and set the table</span></div>
           </div>
         </li>
-        <li class="day has-kids" data-dow="6">
+        <li class="day alt-kids" data-dow="6">
           <div class="rail">
             <span class="dow">Sat</span>
             <span class="flag">Tonight</span>
-            <span class="kidflag">Girls here</span>
+            <span class="kidflag kidflag--alt">Alternate</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Steak fried rice</h4>
-            <p class="meal-sub">Stretching the end cuts with pantry eggs and rice.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Frozen mixed vegetables, soy and sesame oil.</span></p>
-            <div class="chips"><span class="chip chip--lead">Justice leads</span><span class="chip chip--second">Brayton oversees</span><span class="chip chip--kid">Ada and Elise: Movie night setup</span></div>
+            <h4 class="meal-name">Corned beef hash, second run</h4>
+            <p class="meal-sub">Same skillet, same stretch.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>The last 2 cans, 6 more eggs, 2 lb of potato.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>Onions, mushrooms, frozen mixed vegetables.</span></p>
+            <div class="chips"><span class="chip chip--lead">Justice leads</span><span class="chip chip--second">Brayton oversees</span><span class="chip chip--kid sat-kids">Ada and Elise: Movie night setup, their Saturdays</span><span class="chip chip--table sat-adults">Jake and Ashton: table, other Saturdays</span></div>
           </div>
         </li>
         <li class="day" data-dow="7">
@@ -425,201 +460,10 @@
             <span class="flag">Tonight</span>
           </div>
           <div class="meal">
-            <h4 class="meal-name">Pantry reset</h4>
-            <p class="meal-sub">A large batch of rice and egg bowls with butter and soy sauce.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Sweet corn stirred through, sriracha on the table.</span></p>
-            <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Brayton assists</span><span class="chip chip--table">Ashton and Justice: table and clear-up</span></div>
-          </div>
-        </li>
-      </ol>
-    </section>
-    <section class="week" data-week="3" aria-label="Week 3">
-      <div class="week-head"><span class="week-num">Week 3</span><h3>Mid-month stretch</h3></div>
-      <p class="week-note">Lunches move to bento boxes the girls can build themselves on the nights they are here. Fresh produce is done, so the sides come from the freezer.</p>
-      <dl class="standing">
-        <div><dt>Breakfasts</dt><dd>Scrambled eggs with melted cheese. Speculoos cookies with hot cocoa or coffee. Mini muffins.</dd></div>
-        <div><dt>Lunches</dt><dd>Bento boxes. Deli meat and provolone rolls, crackers, seaweed snacks, mini muffins.</dd></div>
-      </dl>
-      <ol class="days">
-        <li class="day" data-dow="1">
-          <div class="rail">
-            <span class="dow">Mon</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">One pepperoni pizza</h4>
-            <p class="meal-sub">Toasted cheese crisps alongside.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Frozen broccoli, roasted hot with garlic.</span></p>
-            <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="2">
-          <div class="rail">
-            <span class="dow">Tue</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Crispy shredded pork chops</h4>
-            <p class="meal-sub">Fried down with rice and butter.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Stir-fry blend through the rice.</span></p>
-            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="3">
-          <div class="rail">
-            <span class="dow">Wed</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Burrito bowls</h4>
-            <p class="meal-sub">Burritos deconstructed over rice with queso and tortilla chips.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Black beans, salsa and shredded cheddar.</span></p>
-            <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="4">
-          <div class="rail">
-            <span class="dow">Thu</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Skillet hash and egg scramble</h4>
-            <p class="meal-sub">Corned beef hash with toasted bread.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Onions and mushrooms into the skillet.</span></p>
-            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day has-kids" data-dow="5">
-          <div class="rail">
-            <span class="dow">Fri</span>
-            <span class="flag">Tonight</span>
-            <span class="kidflag">Girls here</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Family snack board</h4>
-            <p class="meal-sub">Italian Trio slices, Gouda cubes, crackers, veggie straws, pickles, fruit roll-ups.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Baby carrots, apple wedges and ranch.</span></p>
-            <div class="chips"><span class="chip chip--lead">Ashton leads</span><span class="chip chip--second">Jake oversees</span><span class="chip chip--kid">Ada and Elise: Build the pizza and snack platters</span></div>
-          </div>
-        </li>
-        <li class="day has-kids" data-dow="6">
-          <div class="rail">
-            <span class="dow">Sat</span>
-            <span class="flag">Tonight</span>
-            <span class="kidflag">Girls here</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Pan-seared steak medallions</h4>
-            <p class="meal-sub">Sliced thin over buttered seasoned rice.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Roast potatoes and broccoli.</span></p>
-            <div class="chips"><span class="chip chip--lead">Justice leads</span><span class="chip chip--second">Brayton oversees</span><span class="chip chip--kid">Ada and Elise: Movie night setup</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="7">
-          <div class="rail">
-            <span class="dow">Sun</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Breakfast for dinner</h4>
-            <p class="meal-sub">Loaded egg skillets, buttered toast, hash scramble.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Potatoes grated for hash browns. Oranges.</span></p>
-            <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Brayton assists</span><span class="chip chip--table">Ashton and Justice: table and clear-up</span></div>
-          </div>
-        </li>
-      </ol>
-    </section>
-    <section class="week" data-week="4" aria-label="Week 4">
-      <div class="week-head"><span class="week-num">Week 4</span><h3>Freezer and pantry depletion</h3></div>
-      <p class="week-note">Nothing new comes in. Every dinner is written to empty a shelf before the next delivery, and the last of the frozen vegetables carry it.</p>
-      <dl class="standing">
-        <div><dt>Breakfasts</dt><dd>Toast with butter and sugar. Hard-boiled or scrambled eggs. Protein shakes.</dd></div>
-        <div><dt>Lunches</dt><dd>Bean and cheese burritos. Seaweed snack sheets. Cheese sandwich crackers.</dd></div>
-      </dl>
-      <ol class="days">
-        <li class="day" data-dow="1">
-          <div class="rail">
-            <span class="dow">Mon</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Burrito enchilada bake</h4>
-            <p class="meal-sub">Burritos lined in a dish, topped with salsa con queso and broiled.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Black beans and shredded cheddar over the top.</span></p>
-            <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="2">
-          <div class="rail">
-            <span class="dow">Tue</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Savory corned beef hash</h4>
-            <p class="meal-sub">Fried crisp with eggs and rice.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Peas and carrots.</span></p>
-            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="3">
-          <div class="rail">
-            <span class="dow">Wed</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Seasoned fried rice bowls</h4>
-            <p class="meal-sub">Butter, eggs and sunflower kernels for crunch.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Frozen mixed vegetables, soy, sesame and sriracha.</span></p>
-            <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Ashton assists</span><span class="chip chip--table">Brayton and Justice: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="4">
-          <div class="rail">
-            <span class="dow">Thu</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Queso nachos</h4>
-            <p class="meal-sub">Double dipper tortilla chips and pickled peppers if any are on hand.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Black beans and salsa.</span></p>
-            <div class="chips"><span class="chip chip--lead">Brayton leads</span><span class="chip chip--second">Justice assists</span><span class="chip chip--table">Jake and Ashton: table and clear-up</span></div>
-          </div>
-        </li>
-        <li class="day has-kids" data-dow="5">
-          <div class="rail">
-            <span class="dow">Fri</span>
-            <span class="flag">Tonight</span>
-            <span class="kidflag">Girls here</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Final frozen buffet</h4>
-            <p class="meal-sub">The two spare pizzas plus whatever chicken fries and snacks are left.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>The last of the frozen vegetables and the garlic bread.</span></p>
-            <div class="chips"><span class="chip chip--lead">Ashton leads</span><span class="chip chip--second">Jake oversees</span><span class="chip chip--kid">Ada and Elise: Build the pizza and snack platters</span></div>
-          </div>
-        </li>
-        <li class="day has-kids" data-dow="6">
-          <div class="rail">
-            <span class="dow">Sat</span>
-            <span class="flag">Tonight</span>
-            <span class="kidflag">Girls here</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Kitchen sink fried rice</h4>
-            <p class="meal-sub">Or a hash scramble. All remaining dairy and pantry basics.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>Whatever frozen vegetables remain.</span></p>
-            <div class="chips"><span class="chip chip--lead">Justice leads</span><span class="chip chip--second">Brayton oversees</span><span class="chip chip--kid">Ada and Elise: Movie night setup</span></div>
-          </div>
-        </li>
-        <li class="day" data-dow="7">
-          <div class="rail">
-            <span class="dow">Sun</span>
-            <span class="flag">Tonight</span>
-          </div>
-          <div class="meal">
-            <h4 class="meal-name">Pantry clean-out feast</h4>
-            <p class="meal-sub">The last meal before the next grocery delivery.</p>
-            <p class="meal-add"><span class="add-tag">Add</span><span>The last of the potatoes and onions.</span></p>
+            <h4 class="meal-name">Pantry clean-out</h4>
+            <p class="meal-sub">Whatever is standing at the end.</p>
+            <p class="meal-portion"><span class="portion-tag">Portion</span><span>The last 4 burritos, both boxes of pasta, and anything left in the freezer.</span></p>
+            <p class="meal-add"><span class="add-tag">Add</span><span>The last frozen vegetables.</span></p>
             <div class="chips"><span class="chip chip--lead">Jake leads</span><span class="chip chip--second">Brayton assists</span><span class="chip chip--table">Ashton and Justice: table and clear-up</span></div>
           </div>
         </li>
@@ -627,23 +471,138 @@
     </section>
 
   <section class="band">
-    <p class="eyebrow">The rule this plan is built on</p>
-    <h2>Fresh first, frozen last</h2>
-    <p class="intro">All the berries, peaches and avocados from the delivery are front-loaded into Week 1, because none of it survives to Week 2. The salad greens and peppers from the top-up carry into Week 2 and then stop. From Week 3 the vegetables are frozen, which is what the top-up is mostly buying: five kinds of frozen vegetable, onions, garlic, potatoes and mushrooms all keep the full 28 days.</p>
+    <p class="eyebrow">Read this before shopping again</p>
+    <h2>What the order actually feeds</h2>
+    <p class="intro">Counted at four grown men a dinner, roughly ten ounces of cooked protein each. Two thin crust pizzas is one man and a half, not one dinner, and the same arithmetic runs through the whole delivery. The order reads like a fortnight and covers a week.</p>
+    <div class="tbl-wrap">
+      <table class="port">
+        <thead><tr><th>Delivered</th><th>Looks like</th><th>Really is</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>6 thin crust pizzas</td><td>Reads like 3 nights</td><td>1 night</td><td>Four men eat four pizzas. The plan buys 2 more so Tuesday is a real pizza night and the 3 left over prop up the Friday buffet.</td></tr>
+          <tr><td>16 beef and bean burritos</td><td>Reads like 2 nights</td><td>1 night</td><td>Three each is 12. The last 4 go to the Week 2 clean-out.</td></tr>
+          <tr><td>4 cans corned beef hash</td><td>Reads like 4 nights</td><td>2 nights</td><td>A 15 oz can is two servings. Two cans a night, and even then it needs 6 eggs and 2 lb of potato to be dinner.</td></tr>
+          <tr><td>2 packs top round steak</td><td>Reads like 2 nights</td><td>1 night</td><td>About 2.5 lb raw, so roughly 7 oz cooked each. Sliced thin over rice is the only honest way to serve it.</td></tr>
+          <tr><td>2 packs thick cut pork chops</td><td>Reads like 2 nights</td><td>1 night</td><td>About 8 chops. Two each and the pack is gone.</td></tr>
+          <tr><td>2 boxes corn dogs, 1 bag chicken fries</td><td>Reads like 3 nights</td><td>1 night</td><td>Four men clear a box of corn dogs between two. This is one buffet, not three dinners.</td></tr>
+        </tbody>
+        <tfoot><tr><td>Six mains, as delivered</td><td>About 16 nights</td><td>7 nights</td><td>The other seven are what the $150 buys.</td></tr></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="band">
+    <p class="eyebrow">The extra $150</p>
+    <h2>Protein first, then everything else</h2>
+    <p class="intro">The first version of this list bought sides. That was the wrong order: no quantity of frozen broccoli turns seven dinners into fourteen. Sixty dollars goes on the seven missing mains, twenty-two on the rice, potatoes, pasta and buns that actually fill four men, and the rest on vegetables, eggs and the paper goods that run out around dinner eight. Every side is written onto its day on the green <span class="add-tag">Add</span> line. Aldi estimates, not a receipt.</p>
+    <div class="tbl-wrap">
+      <table class="buy">
+        <thead><tr><th>Item</th><th>Qty</th><th>Each</th><th>Line</th></tr></thead>
+        <tbody>
+          <tr class="grp"><th colspan="4">Protein for the seven dinners the order does not cover</th></tr>
+          <tr><td>Chicken leg quarters, 10lb bag</td><td>1</td><td>$8.90</td><td>$8.90</td></tr>
+          <tr><td>Ground beef 80/20, 3lb roll</td><td>2</td><td>$12.99</td><td>$25.98</td></tr>
+          <tr><td>Boneless pork shoulder, about 3.5lb</td><td>1</td><td>$7.67</td><td>$7.67</td></tr>
+          <tr><td>Smoked sausage, 14oz</td><td>3</td><td>$2.65</td><td>$7.95</td></tr>
+          <tr><td>Thin crust pepperoni pizza</td><td>2</td><td>$4.85</td><td>$9.70</td></tr>
+          <tr class="sub"><td colspan="3">Subtotal</td><td>$60.20</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="grp"><th colspan="4">Bulk carbs, because four grown men</th></tr>
+          <tr><td>Jasmine rice, 5lb</td><td>1</td><td>$5.49</td><td>$5.49</td></tr>
+          <tr><td>Russet potatoes, 10lb bag</td><td>1</td><td>$6.99</td><td>$6.99</td></tr>
+          <tr><td>Pasta, 16oz</td><td>2</td><td>$1.09</td><td>$2.18</td></tr>
+          <tr><td>Flour tortillas, 10ct</td><td>2</td><td>$1.99</td><td>$3.98</td></tr>
+          <tr><td>Hamburger buns, 8ct</td><td>2</td><td>$1.75</td><td>$3.50</td></tr>
+          <tr class="sub"><td colspan="3">Subtotal</td><td>$22.14</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="grp"><th colspan="4">Eggs and milk, which run out first</th></tr>
+          <tr><td>Eggs, dozen</td><td>3</td><td>$3.15</td><td>$9.45</td></tr>
+          <tr><td>Whole milk, half gallon</td><td>2</td><td>$2.35</td><td>$4.70</td></tr>
+          <tr class="sub"><td colspan="3">Subtotal</td><td>$14.15</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="grp"><th colspan="4">Vegetables</th></tr>
+          <tr><td>Frozen stir-fry blend, 12oz</td><td>2</td><td>$1.85</td><td>$3.70</td></tr>
+          <tr><td>Frozen broccoli florets, 12oz</td><td>2</td><td>$1.25</td><td>$2.50</td></tr>
+          <tr><td>Frozen sweet corn, 16oz</td><td>2</td><td>$1.25</td><td>$2.50</td></tr>
+          <tr><td>Frozen mixed vegetables, 16oz</td><td>2</td><td>$1.35</td><td>$2.70</td></tr>
+          <tr><td>Yellow onions, 5lb bag</td><td>1</td><td>$4.15</td><td>$4.15</td></tr>
+          <tr><td>Garlic, 3 bulbs</td><td>1</td><td>$1.75</td><td>$1.75</td></tr>
+          <tr><td>Baby carrots, 2lb</td><td>1</td><td>$2.49</td><td>$2.49</td></tr>
+          <tr><td>Romaine hearts, 3pk</td><td>1</td><td>$3.19</td><td>$3.19</td></tr>
+          <tr><td>Grape tomatoes, pint</td><td>1</td><td>$2.49</td><td>$2.49</td></tr>
+          <tr class="sub"><td colspan="3">Subtotal</td><td>$25.47</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="grp"><th colspan="4">Sauce and cheese</th></tr>
+          <tr><td>Soy sauce, 15oz</td><td>2</td><td>$1.85</td><td>$3.70</td></tr>
+          <tr><td>Toasted sesame oil</td><td>1</td><td>$3.45</td><td>$3.45</td></tr>
+          <tr><td>Salsa, 16oz</td><td>2</td><td>$2.19</td><td>$4.38</td></tr>
+          <tr><td>Shredded cheddar, 8oz</td><td>2</td><td>$2.15</td><td>$4.30</td></tr>
+          <tr><td>BBQ sauce</td><td>1</td><td>$1.49</td><td>$1.49</td></tr>
+          <tr class="sub"><td colspan="3">Subtotal</td><td>$17.32</td></tr>
+        </tbody>
+        <tbody>
+          <tr class="grp"><th colspan="4">Paper goods, which cover 8 dinners as delivered</th></tr>
+          <tr><td>Paper plates, 100ct</td><td>1</td><td>$3.45</td><td>$3.45</td></tr>
+          <tr><td>Plastic cups, 50ct</td><td>2</td><td>$2.29</td><td>$4.58</td></tr>
+          <tr class="sub"><td colspan="3">Subtotal</td><td>$8.03</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="3">Total, against a $150 budget</td><td>$147.31</td></tr>
+        <tr class="sub"><td colspan="3">Left over</td><td>$2.69</td></tr></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="band">
+    <p class="eyebrow">Ada and Elise</p>
+    <h2>When the girls are here</h2>
+    <p class="intro">Tuesday and Friday every week, and every other Saturday. The Saturdays run on a real fortnightly cycle rather than on the plan week, so the dates below are worked out live from the device clock. Both of their Tuesdays and both of their Fridays land on food built for them: pizza, the fryer buffet, tacos and pulled pork.</p>
+    <div class="gn">
+      <div class="gn-every">
+        <h3>Every week, no exceptions</h3>
+        <ul>
+          <li>Tuesday dinner</li>
+          <li>Friday dinner</li>
+        </ul>
+        <p class="week-note">Ten of the fourteen dinners in a cycle have them at the table: four Tuesdays and Fridays across the fortnight, plus one of the two Saturdays.</p>
+        <div class="gn-sub"><h3>What they do on their nights</h3>
+        <dl class="gn-jobs">
+          <div><dt>Tuesday</dt><dd>Ada pours the drinks, Elise puts out the silverware.</dd></div>
+          <div><dt>Friday</dt><dd>Both build the platters and set the table.</dd></div>
+          <div><dt>Their Saturday</dt><dd>Movie night setup.</dd></div>
+          <div><dt>Every night they are here</dt><dd>Ada wipes the table and sweeps the crumbs. Elise clears the disposables into the bag. The two adults who are not cooking do it the rest of the time.</dd></div>
+        </dl></div>
+      </div>
+      <div>
+        <h3>The next eight Saturdays</h3>
+        <ol class="gn-cal" id="sat-list">
+          <li class="is-away"><span class="gn-date">Sep 5</span><span class="gn-state">Away</span></li>
+          <li class="is-here"><span class="gn-date">Sep 12</span><span class="gn-state">Here</span></li>
+          <li class="is-away"><span class="gn-date">Sep 19</span><span class="gn-state">Away</span></li>
+          <li class="is-here"><span class="gn-date">Sep 26</span><span class="gn-state">Here</span></li>
+          <li class="is-away"><span class="gn-date">Oct 3</span><span class="gn-state">Away</span></li>
+          <li class="is-here"><span class="gn-date">Oct 10</span><span class="gn-state">Here</span></li>
+          <li class="is-away"><span class="gn-date">Oct 17</span><span class="gn-state">Away</span></li>
+          <li class="is-here"><span class="gn-date">Oct 24</span><span class="gn-state">Here</span></li>
+        </ol>
+      </div>
+    </div>
   </section>
 
   <section class="band">
     <p class="eyebrow">Who does what</p>
     <h2>The crew</h2>
-    <p class="intro">Cooking pairs a lead with a second every night. On the five nights the girls are away, the two adults who are not cooking set the table and clear it, which spreads to two or three nights each across the four of them.</p>
+    <p class="intro">Cooking pairs a lead with a second every night. On the nights the girls are away, the two adults who are not cooking set the table and clear it.</p>
     <div class="crew">
       <article class="person">
         <header><h3>Jake</h3><p class="person-role">Operations lead</p></header>
         <dl class="person-dl">
           <div><dt>In the kitchen</dt><dd>Batch cooking, steak and proteins</dd></div>
-          <div><dt>On the rota</dt><dd>Leads Mon, Wed and Sun. Oversees Fri. On the table Tue and Thu.</dd></div>
+          <div><dt>On the rota</dt><dd>Leads Mon, Wed and Sun. Oversees Fri. On the table Thu, and the Saturdays the girls are away.</dd></div>
           <div><dt>Every day</dt><dd>Leftovers and meal-prep containers, with Brayton.</dd></div>
-          <div><dt>Saturday</dt><dd>Inventory audit, fridge wipe-down, next week&rsquo;s plan.</dd></div>
+          <div><dt>Saturday</dt><dd>Inventory audit, fridge wipe-down, next fortnight&rsquo;s plan.</dd></div>
         </dl>
       </article>
       <article class="person">
@@ -659,7 +618,7 @@
         <header><h3>Ashton</h3><p class="person-role">Heavy cleaning and trash</p></header>
         <dl class="person-dl">
           <div><dt>In the kitchen</dt><dd>Prep, grilling and stovetop basics</dd></div>
-          <div><dt>On the rota</dt><dd>Leads Fri. Assists Mon and Wed. On the table Tue, Thu and Sun.</dd></div>
+          <div><dt>On the rota</dt><dd>Leads Fri. Assists Mon and Wed. On the table Thu and Sun, and the Saturdays the girls are away.</dd></div>
           <div><dt>Every day</dt><dd>Morning: kitchen trash and a fresh liner. Evening: pots, dishwasher, stove.</dd></div>
           <div><dt>Saturday</dt><dd>Sanitize the bins, mop the kitchen and dining floors.</dd></div>
         </dl>
@@ -677,18 +636,18 @@
         <header><h3>Ada<span class="age">10</span></h3><p class="person-role">Junior assistant</p></header>
         <dl class="person-dl">
           <div><dt>In the kitchen</dt><dd>Setting and clearing, measuring, sweeping, folding towels</dd></div>
-          <div><dt>On the rota</dt><dd>Here for Friday and Saturday dinners. Sets and clears on both.</dd></div>
-          <div><dt>Every day</dt><dd>Fri and Sat: wipe the dining table, sweep the crumbs under the chairs.</dd></div>
-          <div><dt>Saturday</dt><dd>Dust the living room, pair the clean kitchen towels, sweep the entryways.</dd></div>
+          <div><dt>On the rota</dt><dd>Here every Tuesday and Friday, plus alternate Saturdays.</dd></div>
+          <div><dt>Every day</dt><dd>On her nights: wipe the dining table, sweep the crumbs under the chairs.</dd></div>
+          <div><dt>Saturday</dt><dd>Dust the living room, pair the kitchen towels, sweep the entryways. Justice covers it when she is away.</dd></div>
         </dl>
       </article>
       <article class="person">
         <header><h3>Elise<span class="age">6</span></h3><p class="person-role">Junior helper</p></header>
         <dl class="person-dl">
           <div><dt>In the kitchen</dt><dd>Placemats, cutlery and napkins, trash bag staging, toys</dd></div>
-          <div><dt>On the rota</dt><dd>Here for Friday and Saturday dinners. Sets and clears on both.</dd></div>
-          <div><dt>Every day</dt><dd>Fri and Sat: collect every paper plate, cup and napkin into the trash bag.</dd></div>
-          <div><dt>Saturday</dt><dd>Toy pickup, tidy the snack cabinet, check the plate and cup restock bins.</dd></div>
+          <div><dt>On the rota</dt><dd>Here every Tuesday and Friday, plus alternate Saturdays.</dd></div>
+          <div><dt>Every day</dt><dd>On her nights: collect every paper plate, cup and napkin into the trash bag.</dd></div>
+          <div><dt>Saturday</dt><dd>Toy pickup, tidy the snack cabinet, check the plate and cup bins. Brayton covers it when she is away.</dd></div>
         </dl>
       </article>
     </div>
@@ -709,122 +668,28 @@
       </div>
       <div class="routine">
         <h3>After dinner</h3>
-        <p class="when">Every night, all four weeks</p>
+        <p class="when">Every night, both weeks</p>
         <ul class="checks">
           <li><label><input type="checkbox" data-k="pm-jb"><span class="who">Jake and Brayton</span><span class="what">Put away leftovers, package the meal-prep containers</span></label></li>
           <li><label><input type="checkbox" data-k="pm-aj"><span class="who">Ashton and Justice</span><span class="what">Wash pots and pans, load the dishwasher, wipe the stove</span></label></li>
-          <li><label><input type="checkbox" data-k="pm-table"><span class="who">The table pair</span><span class="what">Wipe the dining table and sweep the crumbs. Ada does this on Fri and Sat</span></label></li>
-          <li><label><input type="checkbox" data-k="pm-bin"><span class="who">The table pair</span><span class="what">Collect the disposable plates, cups and napkins into the bag. Elise does this on Fri and Sat</span></label></li>
+          <li><label><input type="checkbox" data-k="pm-table"><span class="who">The table pair</span><span class="what">Wipe the dining table and sweep the crumbs. Ada does this on Tue, Fri and her Saturdays</span></label></li>
+          <li><label><input type="checkbox" data-k="pm-bin"><span class="who">The table pair</span><span class="what">Collect the disposable plates, cups and napkins into the bag. Elise does this on Tue, Fri and her Saturdays</span></label></li>
         </ul>
       </div>
       <div class="routine">
         <h3>Saturday deep clean</h3>
-        <p class="when">Rotated weekly. The girls are here for this one</p>
+        <p class="when">Weekly</p>
         <ul class="checks">
-          <li><label><input type="checkbox" data-k="sat-jake"><span class="who">Jake</span><span class="what">Inventory audit, fridge wipe-down, meal plan for the coming week</span></label></li>
+          <li><label><input type="checkbox" data-k="sat-jake"><span class="who">Jake</span><span class="what">Inventory audit, fridge wipe-down, meal plan for the coming fortnight</span></label></li>
           <li><label><input type="checkbox" data-k="sat-brayton"><span class="who">Brayton</span><span class="what">Stove top, microwave interior, pantry reorganization</span></label></li>
           <li><label><input type="checkbox" data-k="sat-ashton"><span class="who">Ashton</span><span class="what">Sanitize the trash bins, mop the kitchen and dining floors</span></label></li>
           <li><label><input type="checkbox" data-k="sat-justice"><span class="who">Justice</span><span class="what">Common living area pickup, bathroom wipe-down</span></label></li>
-          <li><label><input type="checkbox" data-k="sat-ada"><span class="who">Ada</span><span class="what">Dust the living room surfaces, pair the kitchen towels, sweep the entryways</span></label></li>
-          <li><label><input type="checkbox" data-k="sat-elise"><span class="who">Elise</span><span class="what">Toy pickup, tidy the snack cabinet, check the paper plate and cup bins</span></label></li>
+          <li><label><input type="checkbox" data-k="sat-ada"><span class="who">Ada</span><span class="what">Dust the living room, pair the kitchen towels, sweep the entryways. Justice covers it when she is away</span></label></li>
+          <li><label><input type="checkbox" data-k="sat-elise"><span class="who">Elise</span><span class="what">Toy pickup, tidy the snack cabinet, check the plate and cup bins. Brayton covers it when she is away</span></label></li>
         </ul>
       </div>
     </div>
     <button class="clear" type="button" id="clear-ticks">Clear all ticks</button>
-  </section>
-
-  <section class="band">
-    <p class="eyebrow">Check before Week 1</p>
-    <h2>Five places the plan outran the order</h2>
-    <p class="intro">Counted off the delivered quantities against the 28 dinners above. The top-up below closes two outright and narrows the rest. Everything not listed here balances.</p>
-    <div class="tbl-wrap">
-      <table class="short">
-        <thead><tr><th>Item</th><th>Delivered</th><th>What the plan asks for</th><th>The gap</th><th>The top-up</th></tr></thead>
-        <tbody>
-          <tr><td>Thin crust pizzas</td><td>6 in the freezer</td><td>2 on Wk1 Tue, 2 on Wk1 Sat, 1 on Wk2 Thu, 1 on Wk3 Mon</td><td>All six are gone by Week 3 Monday, and Week 4 Friday still listed pizza.</td><td><span class="fix fix--closed">closed</span><br>2 more pizzas, $9.70</td></tr>
-          <tr><td>Corned beef hash</td><td>4 cans</td><td>Wk1 Sun, Wk2 Wed, Wk3 Thu, Wk4 Tue, and Wk4 Sat as an option</td><td>Four cans cover the four fixed hash dinners exactly, with nothing for Saturday.</td><td><span class="fix fix--closed">closed</span><br>1 more can, $3.45</td></tr>
-          <tr><td>Eggs</td><td>1 dozen</td><td>Egg breakfasts in all four weeks, plus 8 dinners that name eggs</td><td>A dozen is about one week of breakfasts for six people.</td><td><span class="fix fix--narrowed">narrowed</span><br>3 more dozen, $9.45</td></tr>
-          <tr><td>Whole milk</td><td>2 half gallons</td><td>Four weeks of breakfasts, cocoa and coffee</td><td>One gallon across 28 days.</td><td><span class="fix fix--narrowed">narrowed</span><br>2 more half gallons, $4.70</td></tr>
-          <tr><td>Paper goods</td><td>50 cups, 96 cutlery, 100 plates</td><td>28 dinners at six people</td><td>Cups cover 8 dinners, cutlery 16, plates 16. All three run out mid-cycle.</td><td><span class="fix fix--narrowed">narrowed</span><br>100 cups and 100 plates, $8.03</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="band">
-    <p class="eyebrow">The extra $150</p>
-    <h2>What to add to the next Aldi run</h2>
-    <p class="intro">The plan as delivered has almost no vegetables after Week 1 and leans hard on rice for eleven dinners. This list buys the gaps shut, puts a vegetable next to all 28 dinners, and adds the sauce and acid that keep four weeks of rice from tasting the same. Every side is already written into the days above on the green <span class="add-tag">Add</span> line. Prices are Aldi estimates rather than a receipt, so expect a few dollars of drift.</p>
-    <div class="tbl-wrap">
-      <table class="buy">
-        <thead><tr><th>Item</th><th>Qty</th><th>Each</th><th>Line</th></tr></thead>
-        <tbody>
-          <tr class="grp"><th colspan="4">Close the five gaps</th></tr>
-          <tr><td>Eggs, dozen</td><td>3</td><td>$3.15</td><td>$9.45</td></tr>
-          <tr><td>Whole milk, half gallon</td><td>2</td><td>$2.35</td><td>$4.70</td></tr>
-          <tr><td>Corned beef hash, can</td><td>1</td><td>$3.45</td><td>$3.45</td></tr>
-          <tr><td>Thin crust pepperoni pizza</td><td>2</td><td>$4.85</td><td>$9.70</td></tr>
-          <tr><td>Plastic cups, 50ct</td><td>2</td><td>$2.29</td><td>$4.58</td></tr>
-          <tr><td>Paper plates, 100ct</td><td>1</td><td>$3.45</td><td>$3.45</td></tr>
-          <tr class="sub"><td colspan="3">Subtotal</td><td>$35.33</td></tr>
-        </tbody>
-        <tbody>
-          <tr class="grp"><th colspan="4">Vegetables that keep all month</th></tr>
-          <tr><td>Frozen stir-fry blend, 12oz</td><td>4</td><td>$1.85</td><td>$7.40</td></tr>
-          <tr><td>Frozen broccoli florets, 12oz</td><td>4</td><td>$1.25</td><td>$5.00</td></tr>
-          <tr><td>Frozen sweet corn, 12oz</td><td>3</td><td>$1.15</td><td>$3.45</td></tr>
-          <tr><td>Frozen peas and carrots, 16oz</td><td>2</td><td>$1.25</td><td>$2.50</td></tr>
-          <tr><td>Frozen mixed vegetables, 16oz</td><td>2</td><td>$1.35</td><td>$2.70</td></tr>
-          <tr><td>Yellow onions, 5lb bag</td><td>1</td><td>$4.15</td><td>$4.15</td></tr>
-          <tr><td>Garlic, 3 bulbs</td><td>1</td><td>$1.75</td><td>$1.75</td></tr>
-          <tr><td>Russet potatoes, 5lb bag</td><td>1</td><td>$4.50</td><td>$4.50</td></tr>
-          <tr><td>Baby carrots, 2lb</td><td>1</td><td>$2.49</td><td>$2.49</td></tr>
-          <tr><td>White mushrooms, 8oz</td><td>2</td><td>$1.99</td><td>$3.98</td></tr>
-          <tr class="sub"><td colspan="3">Subtotal</td><td>$37.92</td></tr>
-        </tbody>
-        <tbody>
-          <tr class="grp"><th colspan="4">Sauce and acid, to lift the rice weeks</th></tr>
-          <tr><td>Soy sauce, 15oz</td><td>2</td><td>$1.85</td><td>$3.70</td></tr>
-          <tr><td>Toasted sesame oil</td><td>1</td><td>$3.45</td><td>$3.45</td></tr>
-          <tr><td>Stir-fry sauce</td><td>1</td><td>$2.15</td><td>$2.15</td></tr>
-          <tr><td>Sriracha</td><td>1</td><td>$2.35</td><td>$2.35</td></tr>
-          <tr><td>Salsa, 16oz</td><td>2</td><td>$2.19</td><td>$4.38</td></tr>
-          <tr><td>Sour cream, 16oz</td><td>1</td><td>$1.79</td><td>$1.79</td></tr>
-          <tr class="sub"><td colspan="3">Subtotal</td><td>$17.82</td></tr>
-        </tbody>
-        <tbody>
-          <tr class="grp"><th colspan="4">Fresh, for weeks 1 and 2 only</th></tr>
-          <tr><td>Romaine hearts, 3pk</td><td>2</td><td>$3.19</td><td>$6.38</td></tr>
-          <tr><td>Grape tomatoes, pint</td><td>2</td><td>$2.49</td><td>$4.98</td></tr>
-          <tr><td>Cucumbers, 3ct</td><td>1</td><td>$2.25</td><td>$2.25</td></tr>
-          <tr><td>Bell peppers, 3pk</td><td>1</td><td>$3.49</td><td>$3.49</td></tr>
-          <tr><td>Red onions, 2ct</td><td>1</td><td>$1.79</td><td>$1.79</td></tr>
-          <tr><td>Limes, 4ct</td><td>1</td><td>$1.79</td><td>$1.79</td></tr>
-          <tr><td>Cilantro</td><td>1</td><td>$0.99</td><td>$0.99</td></tr>
-          <tr><td>Ranch dressing</td><td>1</td><td>$2.19</td><td>$2.19</td></tr>
-          <tr><td>Italian dressing</td><td>1</td><td>$1.99</td><td>$1.99</td></tr>
-          <tr class="sub"><td colspan="3">Subtotal</td><td>$25.85</td></tr>
-        </tbody>
-        <tbody>
-          <tr class="grp"><th colspan="4">Stretchers</th></tr>
-          <tr><td>Jasmine rice, 5lb</td><td>1</td><td>$5.49</td><td>$5.49</td></tr>
-          <tr><td>Pasta, 16oz</td><td>2</td><td>$1.09</td><td>$2.18</td></tr>
-          <tr><td>Shredded cheddar, 8oz</td><td>2</td><td>$2.15</td><td>$4.30</td></tr>
-          <tr><td>Black beans, can</td><td>4</td><td>$0.89</td><td>$3.56</td></tr>
-          <tr><td>Flour tortillas, 10ct</td><td>1</td><td>$1.99</td><td>$1.99</td></tr>
-          <tr class="sub"><td colspan="3">Subtotal</td><td>$17.52</td></tr>
-        </tbody>
-        <tbody>
-          <tr class="grp"><th colspan="4">Week 4 and fruit that keeps</th></tr>
-          <tr><td>Frozen garlic bread</td><td>1</td><td>$2.75</td><td>$2.75</td></tr>
-          <tr><td>Apples, 3lb bag</td><td>1</td><td>$4.49</td><td>$4.49</td></tr>
-          <tr><td>Oranges, 4lb bag</td><td>1</td><td>$4.99</td><td>$4.99</td></tr>
-          <tr class="sub"><td colspan="3">Subtotal</td><td>$12.23</td></tr>
-        </tbody>
-        <tfoot><tr><td colspan="3">Total, against a $150 budget</td><td>$146.67</td></tr>
-        <tr class="sub"><td colspan="3">Left over</td><td>$3.33</td></tr></tfoot>
-      </table>
-    </div>
   </section>
 
   <section class="band">
@@ -929,41 +794,74 @@
     </div>
   </section>
 
-  <footer class="foot">Print this page to get all four weeks at once, with the week tabs and tick boxes stripped out.</footer>
+  <footer class="foot">Print this page to get both weeks at once, with the week tabs and tick boxes stripped out.</footer>
 </div>
 
 <script>
 (function(){
-  var WKEY = "hh.week";
+  var WKEY = "hh.week", DAY = 86400000, ANCHOR = Date.UTC(2026, 8, 12);
   function save(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   function read(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function girlsSat(utc){ return ((Math.round((utc-ANCHOR)/DAY) % 14) + 14) % 14 === 0; }
 
-  var weeks = Array.prototype.slice.call(document.querySelectorAll(".week"));
-  var tabs  = Array.prototype.slice.call(document.querySelectorAll(".tab"));
-  var jsDay = new Date().getDay();
-  var dow = jsDay === 0 ? 7 : jsDay;
+  var now = new Date();
+  var todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  var jsDay = now.getDay(), dow = jsDay === 0 ? 7 : jsDay;
 
   var dateEl = document.getElementById("tonight-date");
   if (dateEl) {
-    try { dateEl.textContent = new Date().toLocaleDateString(undefined,
+    try { dateEl.textContent = now.toLocaleDateString(undefined,
       { weekday:"long", month:"long", day:"numeric" }); } catch(e){}
   }
 
+  var list = document.getElementById("sat-list");
+  if (list) {
+    var t = todayUTC + ((6 - new Date(todayUTC).getUTCDay() + 7) % 7) * DAY, out = "";
+    for (var i = 0; i < 8; i++) {
+      var d = t + i * 7 * DAY, here = girlsSat(d), label;
+      try { label = new Date(d).toLocaleDateString(undefined,
+        { month:"short", day:"numeric", timeZone:"UTC" }); } catch(e){ label = ""; }
+      if (label) out += '<li class="' + (here ? "is-here" : "is-away") + '">' +
+        '<span class="gn-date">' + label + '</span>' +
+        '<span class="gn-state">' + (here ? "Here" : "Away") + '</span></li>';
+    }
+    if (out) list.innerHTML = out;
+  }
+
+  var weeks = Array.prototype.slice.call(document.querySelectorAll(".week"));
+  var tabs  = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+
   function paint(n){
     var old = document.querySelector(".day.is-today");
-    if (old) old.classList.remove("is-today");
+    if (old) old.classList.remove("is-today", "sat-here", "sat-away");
     var row = document.querySelector('.week[data-week="' + n + '"] .day[data-dow="' + dow + '"]');
     if (!row) return;
     row.classList.add("is-today");
+
+    var satHere = null;
+    if (row.classList.contains("alt-kids")) {
+      satHere = girlsSat(todayUTC);
+      row.classList.add(satHere ? "sat-here" : "sat-away");
+    }
+
     var name = document.getElementById("tonight-meal");
     var sub  = document.getElementById("tonight-sub");
+    var por  = document.getElementById("tonight-portion");
     var add  = document.getElementById("tonight-add");
     var duty = document.getElementById("tonight-duties");
-    if (!name || !sub || !add || !duty) return;
+    if (!name || !sub || !por || !add || !duty) return;
     name.textContent = row.querySelector(".meal-name").textContent;
     sub.textContent  = row.querySelector(".meal-sub").textContent;
+    por.innerHTML    = row.querySelector(".meal-portion").innerHTML;
     add.innerHTML    = row.querySelector(".meal-add").innerHTML;
     duty.innerHTML   = row.querySelector(".chips").innerHTML;
+
+    if (satHere !== null) {
+      var drop = duty.querySelector(satHere ? ".sat-adults" : ".sat-kids");
+      if (drop) drop.parentNode.removeChild(drop);
+      var keep = duty.querySelector(satHere ? ".sat-kids" : ".sat-adults");
+      if (keep) keep.textContent = keep.textContent.replace(/, (their|other) Saturdays$/, "");
+    }
   }
 
   function setWeek(n){
@@ -980,9 +878,8 @@
   tabs.forEach(function(t){
     t.addEventListener("click", function(){ setWeek(t.getAttribute("data-week")); });
   });
-
   var stored = read(WKEY);
-  setWeek(stored && /^[1-4]$/.test(stored) ? stored : "1");
+  setWeek(stored && /^[12]$/.test(stored) ? stored : "1");
 
   var boxes = Array.prototype.slice.call(document.querySelectorAll("input[type=checkbox][data-k]"));
   boxes.forEach(function(cb){
@@ -990,13 +887,9 @@
     if (read(key) === "1") cb.checked = true;
     cb.addEventListener("change", function(){ save(key, cb.checked ? "1" : "0"); });
   });
-
   var clear = document.getElementById("clear-ticks");
   if (clear) clear.addEventListener("click", function(){
-    boxes.forEach(function(cb){
-      cb.checked = false;
-      save("hh.chk." + cb.getAttribute("data-k"), "0");
-    });
+    boxes.forEach(function(cb){ cb.checked = false; save("hh.chk." + cb.getAttribute("data-k"), "0"); });
   });
 })();
 </script>
