@@ -88,6 +88,10 @@ export async function GET(req: NextRequest) {
       'Content-Type': contentType,
       // Cache aggressively at the edge; product images are effectively immutable.
       'Cache-Control': 'public, max-age=86400, s-maxage=604800, immutable',
+      // Netlify's CDN can ignore the query string when building the cache key,
+      // which would serve one cached image for every ?u= value. Vary on the
+      // params that actually change the response.
+      'Netlify-Vary': 'query=u|w',
     },
   })
 }
