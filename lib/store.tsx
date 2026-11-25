@@ -1,7 +1,7 @@
 'use client'
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
 import type { Product } from './data'
-import { affiliateUrl, couponWrapUrl } from './data'
+import { affiliateUrl, couponWrapUrl, shopUrl } from './data'
 import { track } from './pinterest-track'
 
 export type CartItem = {
@@ -213,29 +213,57 @@ export function groupCartByVendor(cart: CartItem[], products: Product[]) {
  *   base    = domain/cart/<variantId>:<qty>,<variantId>:<qty>
  *   +ref    = affiliateUrl(base, vendor)   -> …/cart/…?ref=kawaiikatz
  *   +coupon = couponWrapUrl(…)             -> domain/discount/CODE?redirect=…
- * When variant IDs are unavailable it falls back to the product URL (still
- * carrying the affiliate ref) so the link is never broken.
+ * Returns '' when any line has no variant ID, which is every WooCommerce and
+ * JSON-LD product (their mappers build `variants: []`). See vendorHandoff().
  */
-export function checkoutUrlForVendor(items: { product: Product; item: CartItem }[]): string {
+function cartPermalinkForVendor(items: { product: Product; item: CartItem }[]): string {
   let domain = ''
-  let fallback = ''
   let vendor = ''
-  let missing = false
   const parts: string[] = []
   for (const { product, item } of items) {
     domain = product.domain
-    fallback = product.url || product.domain
     vendor = product.vendor
     const variant =
       (item.variantIndex >= 0 && product.variants[item.variantIndex]) ||
       product.variants.find((v) => v.available) ||
       product.variants[0]
     const vid = variant?.id ? String(variant.id) : ''
-    if (vid && domain) parts.push(`${vid}:${item.qty}`)
-    else missing = true
+    if (!vid || !domain) return ''
+    parts.push(`${vid}:${item.qty}`)
   }
-  const base = domain && parts.length && !missing ? `${domain}/cart/${parts.join(',')}` : fallback
-  return couponWrapUrl(affiliateUrl(base, vendor), vendor)
+  if (!parts.length) return ''
+  return couponWrapUrl(affiliateUrl(`${domain}/cart/${parts.join(',')}`, vendor), vendor)
+}
+
+/**
+ * How one vendor's cart lines leave this site.
+ *
+ * `cart`: one link that opens the vendor's own cart already filled. Shopify
+ * only, because it is the only engine here with a cart permalink.
+ *
+ * `pages`: one tracked link per line, to that product's page. Used whenever a
+ * permalink cannot be built. This used to fall back to ONE product URL for the
+ * whole group, which was whichever line happened to be last: two puzzles from
+ * Anime Puzzles opened one puzzle page, the other was silently dropped, and the
+ * cart note still promised "your items ready". A WooCommerce or JSON-LD shop
+ * also gives us no variant rows, so a "from" price means the shopper still has
+ * to pick a size there, and the drawer says so instead of pretending.
+ */
+export type VendorHandoff =
+  | { kind: 'cart'; url: string }
+  | { kind: 'pages'; links: Record<string, string> }
+
+/** Key for one cart line, shared by the drawer and vendorHandoff(). */
+export function lineKey(item: CartItem): string {
+  return `${item.productId}::${item.variantIndex}`
+}
+
+export function vendorHandoff(items: { product: Product; item: CartItem }[]): VendorHandoff {
+  const url = cartPermalinkForVendor(items)
+  if (url) return { kind: 'cart', url }
+  const links: Record<string, string> = {}
+  for (const { product, item } of items) links[lineKey(item)] = shopUrl(product)
+  return { kind: 'pages', links }
 }
 
 
