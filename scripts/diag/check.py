@@ -10,3 +10,4 @@ for url in open('scripts/diag/urls.txt').read().split():
                 print('OK', r.status, r.headers.get('content-type'), len(b), f'{time.time()-t:.1f}s', r.geturl()[:110] if r.geturl() != variant else '', variant[:120])
         except Exception as e:
             print('ERR', type(e).__name__, str(e)[:80], f'{time.time()-t:.1f}s', variant[:120])
+# run 2
