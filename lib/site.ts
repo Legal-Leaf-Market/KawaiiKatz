@@ -14,6 +14,9 @@
  */
 export const SITE_URL = 'https://kawaiikatz.heartofcolumbus.shop'
 
+/** The bare host, for places a person reads the address (carousel slide footers). */
+export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '').replace(/^www\./, '')
+
 /** Bare brand name. Used where a machine reads it as an identifier — the PWA
  *  short_name under a home-screen icon, and the schema.org Organization. */
 export const SITE_NAME = 'Kawaii Katz'

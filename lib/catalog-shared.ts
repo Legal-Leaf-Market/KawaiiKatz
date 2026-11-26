@@ -21,7 +21,7 @@ export function proxied(src: string): string {
  * note there says a bare path is rejected by every social scraper.
  *
  * Unwrapping to the CDN URL rather than absolutising to
- * https://www.kawaiikatz.com/api/img?u=… on purpose. Two reasons, either
+ * `${SITE_URL}/api/img?u=…` on purpose. Two reasons, either
  * sufficient: the CDN URL is the actual image rather than a redirect through us,
  * and robots.txt disallows `/api/` — so pointing a crawler that respects it at
  * our proxy would be asking for a fetch we have told it not to make.
