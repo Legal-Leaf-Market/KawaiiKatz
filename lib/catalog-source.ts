@@ -444,8 +444,34 @@ async function buildCatalog(
   }
 }
 
+/**
+ * One build per process, shared by every route it renders, for a few minutes.
+ *
+ * `cache()` only dedupes inside one render pass, so every route that needs the
+ * catalogue used to run buildCatalog again, and each run spends up to 35
+ * seconds on the coco-ssd scan. About thirty routes prerender the whole
+ * catalogue, which is most of a ten-minute build. Worse, each run's budget
+ * reached a different set of photos, so a product the scan dropped on one page
+ * could still appear on another. Sharing the result makes the filter agree
+ * across pages and pays for the scan once per worker.
+ *
+ * The TTL is short on purpose: at runtime a route revalidates every 6 hours,
+ * and a stale shared result must never outlive that. A failed build is not
+ * kept, so the next caller tries again.
+ */
+const SHARED_TTL_MS = 10 * 60 * 1000
+const shared = new Map<string, { at: number; p: Promise<CatalogResult> }>()
+function sharedBuild(key: string, run: () => Promise<CatalogResult>): Promise<CatalogResult> {
+  const hit = shared.get(key)
+  if (hit && Date.now() - hit.at < SHARED_TTL_MS) return hit.p
+  const p = run()
+  shared.set(key, { at: Date.now(), p })
+  p.catch(() => shared.delete(key))
+  return p
+}
+
 /** The whole catalogue. What every page and /api/catalog call. */
-export const getCatalog = cache((): Promise<CatalogResult> => buildCatalog())
+export const getCatalog = cache((): Promise<CatalogResult> => sharedBuild('*', () => buildCatalog()))
 
 /**
  * Everything one product page renders, screened.
@@ -531,7 +557,7 @@ export const getProductPageData = cache(async (
  * would miss on every call anyway.
  */
 export function getVendorCatalog(vendors: string[]): Promise<CatalogResult> {
-  return buildCatalog(vendors)
+  return sharedBuild('v:' + [...vendors].sort().join('|'), () => buildCatalog(vendors))
 }
 
 /**

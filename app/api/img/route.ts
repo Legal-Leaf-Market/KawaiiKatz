@@ -15,21 +15,31 @@ import { VENDORS } from '@/lib/data'
 // The vendor list is our own config, so allowing each registered vendor's own
 // domain (and its subdomains) is not an open proxy. i0-i3.wp.com is Jetpack's
 // Photon CDN, which WordPress shops commonly serve uploads through.
-const ALLOWED_HOSTS = [
-  'cdn.shopify.com',
-  'cdn.shopifycdn.com',
-  'wp.com',
-  ...VENDORS.flatMap((v) => {
-    try {
-      return [new URL(v.domain).hostname.replace(/^www\./, '')]
-    } catch {
-      return []
-    }
-  }),
-]
+const VENDOR_HOSTS = VENDORS.flatMap((v) => {
+  try {
+    return [new URL(v.domain).hostname.replace(/^www\./, '')]
+  } catch {
+    return []
+  }
+})
+
+const ALLOWED_HOSTS = ['cdn.shopify.com', 'cdn.shopifycdn.com', 'wp.com', ...VENDOR_HOSTS]
+
+// Anime Backpacks and Anime Kimono (the `ld` door) serve every product photo
+// from a shared image CDN, skymage.tdalunar.com, with the shop's own domain in
+// the path: /v1/al/lu/animebackpack.com/... Allowing the whole host would let
+// this route fetch any shop on that CDN, so it is allowed only when the path
+// names one of our registered vendors. Missing this broke 274 product photos
+// on those two shops (measured 2026-11-26).
+const PATH_SCOPED_HOSTS = ['skymage.tdalunar.com']
 
 function hostAllowed(u: URL): boolean {
-  return ALLOWED_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith('.' + h))
+  if (ALLOWED_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith('.' + h))) return true
+  if (PATH_SCOPED_HOSTS.includes(u.hostname)) {
+    const segs = u.pathname.split('/').filter(Boolean)
+    return segs.some((seg) => VENDOR_HOSTS.includes(seg.replace(/^www\./, '')))
+  }
+  return false
 }
 
 // Shopify's CDN resizes on `width`; nothing else is known to, and appending an

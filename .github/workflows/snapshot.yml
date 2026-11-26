@@ -1,0 +1,42 @@
+# Builds the site, runs it, and saves a static copy of its pages (no scripts)
+# to the checks/kk-snapshot branch, never main. Used to make a demo copy while
+# hosting is offline. Trigger: edit scripts/snapshot/request.txt on a claude
+# branch, or run it by hand.
+name: Static snapshot
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/snapshot/request.txt']
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable && pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Start and mirror
+        run: |
+          PORT=3200 nohup pnpm start > "$RUNNER_TEMP/start.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3200/ >/dev/null && break; sleep 2; done
+          curl -s http://localhost:3200/sitemap.xml | grep -o '<loc>[^<]*' | sed 's#<loc>https\?://[^/]*##' | sort -u > "$RUNNER_TEMP/paths.txt"
+          echo /cart >> "$RUNNER_TEMP/paths.txt"
+          python3 scripts/snapshot/mirror.py http://localhost:3200 "$RUNNER_TEMP/snap" "$RUNNER_TEMP/paths.txt" --crawl --max-p "$(head -1 scripts/snapshot/request.txt | cut -d" " -f1)"
+          cd "$RUNNER_TEMP/snap" && if [ -d _next ]; then mv _next nx && grep -rl "/_next/" . | xargs -r sed -i 's#/_next/#/nx/#g'; fi
+      - name: Keep the snapshot on checks/kk-snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan checks/kk-snapshot
+          git rm -rq --cached .
+          git clean -fdxq
+          cp -r "$RUNNER_TEMP"/snap/. .
+          git add .
+          git commit -qm "Static snapshot $(date -u +%F)"
+          git push -f origin checks/kk-snapshot
