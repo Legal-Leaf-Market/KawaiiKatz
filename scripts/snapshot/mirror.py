@@ -10,18 +10,22 @@ MAXP = int(sys.argv[sys.argv.index('--max-p') + 1]) if '--max-p' in sys.argv els
 np = 0
 paths = [l.strip() for l in open(pf) if l.strip()]
 SKIP = ('/admin', '/api', '/hub', '/app', '/expense', '/sign', '/live', '/schedule', '/w/', '/login', '/_next/data')
-import time
+import time, socket, concurrent.futures as cf
+socket.setdefaulttimeout(20)
+POOL = cf.ThreadPoolExecutor(8)
+START = time.time()
+BUDGET = float(os.environ.get('MIRROR_BUDGET', '1800'))
 def get(u, tries=3):
     for i in range(tries):
         try:
-            with urllib.request.urlopen(origin + u, timeout=60) as r:
+            with urllib.request.urlopen(origin + u, timeout=30) as r:
                 return r.read(), r.headers.get('content-type', '')
         except Exception:
             if i == tries - 1: raise
             time.sleep(1 + 2 * i)
 def get_direct(url):
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req, timeout=60) as r:
+    with urllib.request.urlopen(req, timeout=15) as r:
         return r.read(), r.headers.get('content-type', '')
 def img(m):
     q = parse_qs(urlparse(m.replace('&amp;', '&')).query).get('url', [''])[0]
@@ -76,7 +80,8 @@ def resolve_stream(s):
     return s
 seen = set(); queue = list(paths)
 while queue:
-    if len(seen) % 50 == 0: print('...', len(seen), 'pages', flush=True)
+    if len(seen) % 25 == 0: print('...', len(seen), 'pages', len([v for v in saved.values() if v]), 'assets', f'{time.time()-START:.0f}s', flush=True)
+    if time.time() - START > BUDGET: print('budget reached, stopping crawl', flush=True); break
     p = queue.pop(0)
     if p in seen: continue
     seen.add(p)
@@ -92,7 +97,12 @@ while queue:
     def apiimg(m):
         r = save(m[2])
         return f' {m[1]}="{r}"' if r else m[0]
-    s = re.sub(r'\s(src|poster)="(/api/img\?[^"]*)"', apiimg, s)
+    want = list(dict.fromkeys(x.replace('&amp;', '&') for x in re.findall(r'\s(?:src|poster)="(/api/img\?[^"]*)"', s)))
+    futs = [POOL.submit(save, w) for w in want if w not in saved]
+    for f in futs:
+        try: f.result(timeout=40)
+        except Exception: pass
+    s = re.sub(r'\s(src|poster)="(/api/img\?[^"]*)"', lambda m: (f' {m[1]}="{saved[m[2].replace("&amp;", "&")]}"' if saved.get(m[2].replace("&amp;", "&")) else m[0]), s)
     for u in re.findall(r'\s(?:src|href|poster)="(/[^"]*)"', s):
         base = u.split('#')[0].split('?')[0]
         if os.path.splitext(base)[1]: save(base)
@@ -105,4 +115,6 @@ while queue:
     out = os.path.join(dist, p.strip('/'), 'index.html') if p != '/' else os.path.join(dist, 'index.html')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     open(out, 'w', encoding='utf-8').write(s)
-print('pages', len(seen), 'assets', len(saved))
+print('pages', len(seen), 'assets', len([v for v in saved.values() if v]), 'failed', len([v for v in saved.values() if not v]), flush=True)
+POOL.shutdown(wait=False, cancel_futures=True)
+os._exit(0)
