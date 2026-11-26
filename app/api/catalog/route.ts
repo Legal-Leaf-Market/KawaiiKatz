@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { CATALOG_REVALIDATE_SECONDS, getCatalog } from '@/lib/catalog-source'
+import { showcaseVendors } from '@/lib/data'
 
 export const revalidate = 21600 // 6 hours — must stay statically analysable
 export const maxDuration = 60 // allow time for the image scan on cold builds
@@ -44,6 +45,9 @@ export async function GET() {
         untracked: body.vendors.filter((v) => v.untracked).map((v) => v.vendor),
         pending: body.vendors.filter((v) => v.pending).map((v) => v.vendor),
         capped: body.vendors.filter((v) => v.capped).map((v) => v.vendor),
+        // Vendors with a page of their own, held out of the main grid. Heart of
+        // Columbus reads this so its sample of the shop does not show them either.
+        showcase: showcaseVendors().map((v) => v.vendor),
       },
     },
     {

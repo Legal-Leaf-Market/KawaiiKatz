@@ -62,6 +62,8 @@ export type EventName =
   // Cart workflow
   | 'cart_open'
   | 'checkout_click'
+  /** A cart built on another site (Heart of Columbus) landed on /cart. meta: added:missing[:hoc] */
+  | 'cart_handoff'
   // Search workflow
   | 'search'
   | 'search_zero'
