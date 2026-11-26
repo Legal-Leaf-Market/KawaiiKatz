@@ -1,0 +1,45 @@
+# Netlify Image CDN: product photos are resized and converted to AVIF/WebP
+# at the edge (see components/ProductImage.tsx). It only fetches hosts listed
+# here, mirroring the /api/img allowlist: Shopify's CDN, WordPress's image CDN,
+# and each vendor's own domain from VENDORS in lib/data.ts.
+#
+# A vendor missing from this list is not broken, only slower: the Image CDN
+# refuses it and ProductImage falls straight back to /api/img. Add a new
+# vendor's domain here when it goes live.
+[images]
+remote_images = [
+  "https://([a-z0-9-]+\\.)*cdn\\.shopify\\.com/.*",
+  "https://([a-z0-9-]+\\.)*cdn\\.shopifycdn\\.com/.*",
+  "https://([a-z0-9-]+\\.)*wp\\.com/.*",
+  "https://([a-z0-9-]+\\.)*animebackpack\\.com/.*",
+  "https://([a-z0-9-]+\\.)*animebed\\.com/.*",
+  "https://([a-z0-9-]+\\.)*animejacket\\.com/.*",
+  "https://([a-z0-9-]+\\.)*animekimono\\.com/.*",
+  "https://([a-z0-9-]+\\.)*animepuzzle\\.com/.*",
+  "https://([a-z0-9-]+\\.)*blippo\\.com/.*",
+  "https://([a-z0-9-]+\\.)*brkox\\.com/.*",
+  "https://([a-z0-9-]+\\.)*claires\\.com/.*",
+  "https://([a-z0-9-]+\\.)*cozykawaii\\.shop/.*",
+  "https://([a-z0-9-]+\\.)*egirldoll\\.com/.*",
+  "https://([a-z0-9-]+\\.)*everblog\\.com/.*",
+  "https://([a-z0-9-]+\\.)*giftlab\\.com/.*",
+  "https://([a-z0-9-]+\\.)*grumpybunny\\.com/.*",
+  "https://([a-z0-9-]+\\.)*hellokittycamp\\.com/.*",
+  "https://([a-z0-9-]+\\.)*jigsawdepot\\.com/.*",
+  "https://([a-z0-9-]+\\.)*kawaii-unicorn\\.com/.*",
+  "https://([a-z0-9-]+\\.)*kawaiibabe\\.com/.*",
+  "https://([a-z0-9-]+\\.)*kawaiimood\\.com/.*",
+  "https://([a-z0-9-]+\\.)*kawaiislimecompany\\.com/.*",
+  "https://([a-z0-9-]+\\.)*korekawaii\\.com/.*",
+  "https://([a-z0-9-]+\\.)*mamaraya\\.com/.*",
+  "https://([a-z0-9-]+\\.)*mintielunchboxes\\.co\\.uk/.*",
+  "https://([a-z0-9-]+\\.)*montessoriandme\\.us/.*",
+  "https://([a-z0-9-]+\\.)*shop\\.kawaiimoristore\\.com/.*",
+  "https://([a-z0-9-]+\\.)*smiggle\\.co\\.uk/.*",
+  "https://([a-z0-9-]+\\.)*stopshop9\\.myshopify\\.com/.*",
+  "https://([a-z0-9-]+\\.)*sugarhai\\.com/.*",
+  "https://([a-z0-9-]+\\.)*sydneysockproject\\.com/.*",
+  "https://([a-z0-9-]+\\.)*thekawaiishoppu\\.com/.*",
+  "https://([a-z0-9-]+\\.)*tokyo-tiger\\.com/.*",
+  "https://([a-z0-9-]+\\.)*vixsocks\\.com/.*",
+]

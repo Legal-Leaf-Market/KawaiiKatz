@@ -28,6 +28,46 @@ type Props = {
 const MAX_RETRIES = 4
 
 /**
+ * NETLIFY IMAGE CDN, IN FRONT OF THE PROXY.
+ *
+ * /api/img re-serves the vendor's bytes as they are: one function invocation
+ * per uncached image, the original format, and the original SIZE for every
+ * host that is not Shopify, because only Shopify's CDN understands `width`.
+ * The WordPress anime shops send full-size uploads into 240px tiles.
+ *
+ * Netlify's Image CDN does the work at the edge instead: resizes any allowed
+ * host, serves AVIF or WebP to whatever the browser accepts, and caches the
+ * result. Allowed hosts are in netlify.toml.
+ *
+ * The proxy stays as the fallback, not as dead code. A host missing from
+ * netlify.toml, a vendor that refuses Netlify's fetcher, or a build that is
+ * not on Netlify (local dev) all land on /api/img on the first error, with no
+ * backoff, so the worst case is one wasted request rather than a broken tile.
+ *
+ * `NEXT_PUBLIC_IMAGE_CDN` is set in next.config.mjs from Netlify's own NETLIFY
+ * build variable, so `next dev` never tries a path that does not exist there.
+ */
+const IMAGE_CDN = process.env.NEXT_PUBLIC_IMAGE_CDN === '1'
+
+/** Same ladder as /api/img, so a handful of variants serve the whole site. */
+const WIDTH_LADDER = [200, 400, 600, 900]
+
+function imageCdnUrl(src: string, width?: number): string | null {
+  if (!IMAGE_CDN || !src.startsWith('/api/img?')) return null
+  let remote: string | null = null
+  try {
+    remote = new URLSearchParams(src.slice(src.indexOf('?') + 1)).get('u')
+  } catch {
+    return null
+  }
+  if (!remote || !/^https:\/\//i.test(remote)) return null
+  const w = width
+    ? WIDTH_LADDER.find((step) => step >= width) ?? WIDTH_LADDER[WIDTH_LADDER.length - 1]
+    : 0
+  return `/.netlify/images?url=${encodeURIComponent(remote)}${w ? `&w=${w}` : ''}`
+}
+
+/**
  * Product image with automatic retry and a skeleton placeholder.
  *
  * Vendor images are proxied through /api/img, which can return a transient 502
@@ -65,6 +105,7 @@ export default function ProductImage({
   priority = false,
 }: Props) {
   const [attempt, setAttempt] = useState(0)
+  const [viaProxy, setViaProxy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const imgRef = useRef<HTMLImageElement | null>(null)
@@ -77,20 +118,29 @@ export default function ProductImage({
   // Cache-bust each retry so the browser actually re-requests. Note this also
   // misses the edge cache by design: a retry exists precisely because the
   // cached answer was a failure.
-  const url = attempt === 0 ? sized : `${sized}${sized.includes('?') ? '&' : '?'}_r=${attempt}`
+  const proxyUrl = attempt === 0 ? sized : `${sized}${sized.includes('?') ? '&' : '?'}_r=${attempt}`
+  const cdn = viaProxy ? null : imageCdnUrl(src, width)
+  const url = cdn ?? proxyUrl
 
   const handleError = useCallback(() => {
     if (timer.current) clearTimeout(timer.current)
+    // The Image CDN failing is not a retry: go straight to the proxy, which
+    // has its own retries below.
+    if (cdn) {
+      setViaProxy(true)
+      return
+    }
     if (attempt >= MAX_RETRIES) {
       setFailed(true)
       return
     }
     timer.current = setTimeout(() => setAttempt((a) => a + 1), 500 * (attempt + 1))
-  }, [attempt])
+  }, [attempt, cdn])
 
   // Reset when the source changes (e.g. seed -> live catalog hydration).
   useEffect(() => {
     setAttempt(0)
+    setViaProxy(false)
     setFailed(false)
     setLoaded(false)
   }, [src])
@@ -129,7 +179,7 @@ export default function ProductImage({
         />
       )}
       <img
-        key={attempt}
+        key={`${attempt}-${viaProxy ? 'p' : 'c'}`}
         ref={imgRef}
         src={url || '/placeholder.svg'}
         /* Empty alt so the browser never paints the product name while the
