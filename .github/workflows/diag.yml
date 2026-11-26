@@ -1,0 +1,13 @@
+# One-off check: do the product image URLs that failed through /api/img load directly?
+name: Image diag
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/diag/**']
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/diag/check.py
