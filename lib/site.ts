@@ -6,16 +6,15 @@
  */
 
 /**
- * Where the site lives. www.kawaiikatz.com lapsed in November 2026; until
- * kawaiikatz.shop is bought, the shop runs on a Heart of Columbus subdomain.
- * Moving it later is one Netlify variable, NEXT_PUBLIC_SITE_URL (no trailing
- * slash), plus the domain in Netlify's domain settings: canonicals, the
- * sitemap, robots, og:url, feeds and the carousel footer all read this.
- * NEXT_PUBLIC_ because client code (the carousel renderer) reads it too.
+ * The live address. kawaiikatz.com went dead with the move off Vercel (Nov 2026),
+ * and every Pin, RSS item, sitemap entry and link preview built from this was
+ * pointing at it. The site runs on Netlify now, on a Heart of Columbus subdomain
+ * until Kawaii Katz gets a .shop domain of its own. Change it here when that
+ * happens; nothing else in the code hardcodes the host.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://kawaiikatz.heartofcolumbus.shop').replace(/\/+$/, '')
+export const SITE_URL = 'https://kawaiikatz.heartofcolumbus.shop'
 
-/** The bare host, for places a person reads the address (slide footers). */
+/** The bare host, for places a person reads the address (carousel slide footers). */
 export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '').replace(/^www\./, '')
 
 /** Bare brand name. Used where a machine reads it as an identifier — the PWA

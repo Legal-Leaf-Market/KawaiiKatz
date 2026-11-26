@@ -2,15 +2,39 @@ import { NextRequest } from 'next/server'
 
 export const runtime = 'edge'
 
-// Only proxy images from known Shopify/vendor CDNs to prevent SSRF/open-proxy abuse.
+import { VENDORS } from '@/lib/data'
+
+// Only proxy images from known vendor hosts to prevent SSRF/open-proxy abuse.
+//
+// THIS WAS SHOPIFY-ONLY, AND THAT EMPTIED THE ANIME ROOM. All five anime shops
+// are WordPress: the `woo` and `ld` doors hand back photos from the shop's own
+// /wp-content/uploads, so every one of them was answered 403 here and every
+// card on /anime fell back to its category emoji. The allowlist was written
+// when Shopify was the only door; a new door needs its image host too.
+//
+// The vendor list is our own config, so allowing each registered vendor's own
+// domain (and its subdomains) is not an open proxy. i0-i3.wp.com is Jetpack's
+// Photon CDN, which WordPress shops commonly serve uploads through.
 const ALLOWED_HOSTS = [
   'cdn.shopify.com',
   'cdn.shopifycdn.com',
+  'wp.com',
+  ...VENDORS.flatMap((v) => {
+    try {
+      return [new URL(v.domain).hostname.replace(/^www\./, '')]
+    } catch {
+      return []
+    }
+  }),
 ]
 
 function hostAllowed(u: URL): boolean {
   return ALLOWED_HOSTS.some((h) => u.hostname === h || u.hostname.endsWith('.' + h))
 }
+
+// Shopify's CDN resizes on `width`; nothing else is known to, and appending an
+// unknown param to a WordPress upload URL just shatters the edge cache.
+const isShopifyCdn = (u: URL) => /(^|\.)cdn\.shopify(cdn)?\.com$/.test(u.hostname)
 
 export async function GET(req: NextRequest) {
   const src = req.nextUrl.searchParams.get('u')
@@ -24,6 +48,9 @@ export async function GET(req: NextRequest) {
   }
 
   if (url.protocol !== 'https:' || !hostAllowed(url)) {
+    // Logged so the next door that brings a new image host shows up in the
+    // runtime logs instead of as a page of emoji.
+    console.warn(`[img] host not allowed: ${url.hostname}`)
     return new Response('host not allowed', { status: 403 })
   }
 
@@ -38,7 +65,7 @@ export async function GET(req: NextRequest) {
   // resizing at all.
   const WIDTH_LADDER = [200, 400, 600, 900]
   const requested = Number(req.nextUrl.searchParams.get('w'))
-  if (Number.isFinite(requested) && requested > 0) {
+  if (isShopifyCdn(url) && Number.isFinite(requested) && requested > 0) {
     const w = WIDTH_LADDER.find((step) => step >= requested) ?? WIDTH_LADDER[WIDTH_LADDER.length - 1]
     url.searchParams.set('width', String(w))
   }
