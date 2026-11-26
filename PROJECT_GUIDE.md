@@ -459,6 +459,18 @@ mistake. The probe warns about this in so many words; heed it. When a feed has
 empty types and nothing worth excluding, the honest answer is no `include` list
 at all.
 
+### Product photos go through Netlify's Image CDN first
+
+`ProductImage` asks `/.netlify/images` for every proxied photo: resized to the width ladder,
+served as AVIF or WebP, cached at the edge, no function invocation. `/api/img` only re-serves
+the vendor's bytes, and only Shopify's CDN understands its `width`, so the WordPress anime shops
+were sending full-size uploads into 240px tiles.
+
+The Image CDN fetches only the hosts in `netlify.toml`. **A new vendor goes in there too**, but
+missing it is slow rather than broken: any Image CDN error drops that tile to `/api/img` on the
+first try. The switch is `NEXT_PUBLIC_IMAGE_CDN`, set in `next.config.mjs` from Netlify's own
+`NETLIFY` build variable, so `next dev` never asks for a path that does not exist there.
+
 ## 4c. Affiliate partnerships
 
 Four networks: **Impact** (largest), **AWIN**, **Refersion**, **GoAffPro**. `VendorConfig.network`

@@ -8,6 +8,11 @@ const nextConfig = {
   // case. Still validated by Next's config schema, though it has fallen out
   // of the published docs.
   staticPageGenerationTimeout: 240,
+  // Lets ProductImage use Netlify's Image CDN only on a Netlify build, where
+  // /.netlify/images exists. Netlify sets NETLIFY=true in its build env.
+  env: {
+    NEXT_PUBLIC_IMAGE_CDN: process.env.NETLIFY === 'true' ? '1' : '',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
