@@ -5,7 +5,14 @@
  * drift ("if you add a department route to vercel.json, add it here too").
  */
 
-export const SITE_URL = 'https://www.kawaiikatz.com'
+/**
+ * The live address. kawaiikatz.com went dead with the move off Vercel (Nov 2026),
+ * and every Pin, RSS item, sitemap entry and link preview built from this was
+ * pointing at it. The site runs on Netlify now, on a Heart of Columbus subdomain
+ * until Kawaii Katz gets a .shop domain of its own. Change it here when that
+ * happens; nothing else in the code hardcodes the host.
+ */
+export const SITE_URL = 'https://kawaiikatz.heartofcolumbus.shop'
 
 /** Bare brand name. Used where a machine reads it as an identifier — the PWA
  *  short_name under a home-screen icon, and the schema.org Organization. */

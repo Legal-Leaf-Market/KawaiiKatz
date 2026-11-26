@@ -83,8 +83,17 @@ Unlike the three sister sites this is **not** a hand-written static page — it 
 
 ## 2. Deploy model
 
-`main` → Vercel project `legal-leaf/kawaii-katz` → `www.kawaiikatz.com` (the apex
-308-redirects to www). Pushing to `main` deploys. There is no manual step.
+**As of Nov 2026:** `main` → Netlify project `kawaii-katz` →
+`https://kawaiikatz.heartofcolumbus.shop` (primary domain; `kawaii-katz.netlify.app` still
+works). `www.kawaiikatz.com` is dead. The subdomain is served from the Netlify DNS zone for
+heartofcolumbus.shop, and the wildcard `*.heartofcolumbus.shop` certificate covers it.
+`SITE_URL` in `lib/site.ts` is the one place the code names the host. Pushing to `main`
+deploys. There is no manual step.
+
+The rest of this section describes the old Vercel setup and is kept for history.
+
+Previously: `main` → Vercel project `legal-leaf/kawaii-katz` → `www.kawaiikatz.com` (the
+apex 308-redirected to www).
 
 Do not infer deployment state from GitHub's API — this project deploys without writing
 GitHub Deployment records, so `gh api repos/.../deployments` returns 0 and proves nothing.
