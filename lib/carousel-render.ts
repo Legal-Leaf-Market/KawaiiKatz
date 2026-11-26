@@ -1,5 +1,6 @@
 import { cover, fitText, loadImage, roundRect, wrapText } from './canvas-kit'
 import { SIZES, type Deck, type SizeKey, type Slide } from './carousel'
+import { SITE_HOST } from './site'
 
 /**
  * Draws one carousel slide.
@@ -68,7 +69,7 @@ function footer(ctx: CanvasRenderingContext2D, g: Geo) {
   ctx.font = sans(26)
   ctx.fillStyle = MUTED
   ctx.textBaseline = 'alphabetic'
-  ctx.fillText('kawaiikatz.com', g.pad, g.bottom - 6)
+  ctx.fillText(SITE_HOST, g.pad, g.bottom - 6)
 }
 
 /** The swipe nudge, bottom right. Only on slides that have a next one. */

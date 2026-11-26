@@ -5,7 +5,18 @@
  * drift ("if you add a department route to vercel.json, add it here too").
  */
 
-export const SITE_URL = 'https://www.kawaiikatz.com'
+/**
+ * Where the site lives. www.kawaiikatz.com lapsed in November 2026; until
+ * kawaiikatz.shop is bought, the shop runs on a Heart of Columbus subdomain.
+ * Moving it later is one Netlify variable, NEXT_PUBLIC_SITE_URL (no trailing
+ * slash), plus the domain in Netlify's domain settings: canonicals, the
+ * sitemap, robots, og:url, feeds and the carousel footer all read this.
+ * NEXT_PUBLIC_ because client code (the carousel renderer) reads it too.
+ */
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://kawaiikatz.heartofcolumbus.shop').replace(/\/+$/, '')
+
+/** The bare host, for places a person reads the address (slide footers). */
+export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '').replace(/^www\./, '')
 
 /** Bare brand name. Used where a machine reads it as an identifier — the PWA
  *  short_name under a home-screen icon, and the schema.org Organization. */

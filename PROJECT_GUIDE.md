@@ -83,8 +83,17 @@ Unlike the three sister sites this is **not** a hand-written static page — it 
 
 ## 2. Deploy model
 
-`main` → Vercel project `legal-leaf/kawaii-katz` → `www.kawaiikatz.com` (the apex
-308-redirects to www). Pushing to `main` deploys. There is no manual step.
+**Current (2026-11-25):** `main` → the Kawaii Katz site on **Netlify** →
+`https://kawaiikatz.heartofcolumbus.shop`, a subdomain of Heart of Columbus. `www.kawaiikatz.com`
+lapsed in November 2026; the shop stays on the subdomain until `kawaiikatz.shop` is bought. The
+address lives in one place, `SITE_URL` in `lib/site.ts`, read from `NEXT_PUBLIC_SITE_URL` with
+the subdomain as the default. To move: add the new domain in Netlify's domain settings, make it
+primary, set `NEXT_PUBLIC_SITE_URL`, redeploy, and re-claim the domain in Pinterest (§4d: the
+verification and every RSS feed are tied to the claimed domain).
+
+Earlier: `main` → Vercel project `legal-leaf/kawaii-katz` → `www.kawaiikatz.com` (the apex
+308-redirected to www). The Vercel notes below are history from that setup. Pushing to `main`
+deploys. There is no manual step.
 
 Do not infer deployment state from GitHub's API — this project deploys without writing
 GitHub Deployment records, so `gh api repos/.../deployments` returns 0 and proves nothing.

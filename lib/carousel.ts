@@ -1,5 +1,6 @@
 import type { Article, Block } from './articles'
 import { money, type Product } from './data'
+import { SITE_HOST } from './site'
 
 /**
  * Carousel decks: articles and product rails, cut into slides.
@@ -121,7 +122,7 @@ export function deckFromArticle(a: Article): Deck {
   }
   flush()
 
-  slides.push({ kind: 'outro', line: 'Full guide and 4,000+ cute things at kawaiikatz.com' })
+  slides.push({ kind: 'outro', line: `Full guide and 4,000+ cute things at ${SITE_HOST}` })
 
   return {
     slug: a.slug,
@@ -158,7 +159,7 @@ export function deckFromProducts(
           badge: p.onSale && p.discountPct > 0 ? `-${p.discountPct}%` : undefined,
         })
       ),
-      { kind: 'outro', line: 'All of these, and 4,000+ more, at kawaiikatz.com' },
+      { kind: 'outro', line: `All of these, and 4,000+ more, at ${SITE_HOST}` },
     ],
   }
 }

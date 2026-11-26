@@ -419,9 +419,8 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
           </div>
           <div className="text-sm font-semibold opacity-80 text-center">
             <p>Curated kawaii finds. Affiliate links support this site.</p>
-            <p className="mt-0.5">
-              <a href="mailto:hello@kawaiikatz.com" className="font-extrabold hover:underline">hello@kawaiikatz.com</a>
-            </p>
+            {/* hello@kawaiikatz.com went with the domain (Nov 2026); a contact
+                address comes back here once kawaiikatz.shop has mail. */}
             <TasteNote variant="footer" />
           </div>
         </div>
