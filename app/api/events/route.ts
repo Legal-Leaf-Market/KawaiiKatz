@@ -50,7 +50,7 @@ const RETAIN_DAYS = 120
 const ALLOWED = new Set([
   'page_view', 'product_view', 'collection_view', 'showcase_view',
   'card_flip', 'wish_add', 'add_to_cart', 'pin_click', 'outbound_click',
-  'cart_open', 'checkout_click',
+  'cart_open', 'checkout_click', 'cart_handoff',
   'search', 'search_zero', 'search_click',
   'finder_open', 'finder_filter', 'finder_zero', 'finder_click',
   'shuffle', 'load_more', 'surprise_me', 'taste_up', 'taste_down', 'kid_safe_on',

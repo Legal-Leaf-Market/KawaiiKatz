@@ -9,9 +9,15 @@ type Props = {
   open: boolean
   onClose: () => void
   products: Product[]
+  /**
+   * Draw the cart as a panel in the page instead of a slide-out drawer. The
+   * /cart page uses it, so the page and the drawer are one component: the
+   * per-store checkout, its tracking and the coupon notes cannot drift apart.
+   */
+  inline?: boolean
 }
 
-export default function CartDrawer({ open, onClose, products }: Props) {
+export default function CartDrawer({ open, onClose, products, inline = false }: Props) {
   const { state, dispatch } = useStore()
   const { cart } = state
 
@@ -85,17 +91,21 @@ export default function CartDrawer({ open, onClose, products }: Props) {
   return (
     <>
       {/* Overlay */}
-      <div
-        className={`fixed inset-0 bg-[rgba(79,69,80,.4)] z-50 transition-opacity ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      {!inline && (
+        <div
+          className={`fixed inset-0 bg-[rgba(79,69,80,.4)] z-50 transition-opacity ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Drawer */}
+      {/* Drawer, or the panel on /cart */}
       <div
-        className={`fixed top-0 right-0 w-[min(430px,92vw)] h-full bg-[#fffaf0] border-l-4 border-[#ffb199] z-60 flex flex-col transition-transform duration-[220ms] ${open ? 'translate-x-0' : 'translate-x-full'}`}
-        role="dialog"
-        aria-modal="true"
+        className={inline
+          ? 'relative w-full bg-[#fffaf0] border-4 border-[#ffb199] rounded-[22px] overflow-hidden flex flex-col'
+          : `fixed top-0 right-0 w-[min(430px,92vw)] h-full bg-[#fffaf0] border-l-4 border-[#ffb199] z-60 flex flex-col transition-transform duration-[220ms] ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        role={inline ? 'region' : 'dialog'}
+        aria-modal={inline ? undefined : true}
         aria-label="Shopping cart"
       >
         {/* Header */}
@@ -108,22 +118,26 @@ export default function CartDrawer({ open, onClose, products }: Props) {
               </span>
             )}
           </h2>
-          <button
-            onClick={onClose}
-            className="border-none bg-none text-[26px] cursor-pointer text-[#9a8fa3] leading-none"
-            aria-label="Close cart"
-          >
-            ×
-          </button>
+          {!inline && (
+            <button
+              onClick={onClose}
+              className="border-none bg-none text-[26px] cursor-pointer text-[#9a8fa3] leading-none"
+              aria-label="Close cart"
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-3 px-4 cart-body">
+        <div className={`${inline ? '' : 'flex-1 overflow-y-auto '}p-3 px-4 cart-body`}>
           {cart.length === 0 && (
             <div className="text-center text-[#9a8fa3] py-10 font-semibold">
               <div className="text-5xl mb-3">🛒</div>
               <p>Your cart is empty!</p>
-              <p className="text-sm mt-1">Add some kawaii finds above.</p>
+              {inline
+                ? <p className="text-sm mt-1"><a href="/" className="underline font-bold text-[#4f4550]">Browse the shop</a> and add some kawaii finds.</p>
+                : <p className="text-sm mt-1">Add some kawaii finds above.</p>}
             </div>
           )}
 
