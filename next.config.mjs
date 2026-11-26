@@ -8,8 +8,10 @@ const nextConfig = {
   // case. Still validated by Next's config schema, though it has fallen out
   // of the published docs.
   staticPageGenerationTimeout: 240,
+  // Type errors fail the build. This was `ignoreBuildErrors: true`, which let a
+  // build succeed with errors in it; `pnpm check` is clean, so the guard is on.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,

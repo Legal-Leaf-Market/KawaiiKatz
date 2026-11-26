@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit",
     "probe": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/vendor_probe.mjs",

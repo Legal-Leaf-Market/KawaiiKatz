@@ -304,9 +304,18 @@ is `pending` it was assembling 7,920 products in order to render its empty state
 `getVendorCatalog(['GiftLAB'])` now, which is §4f-b's rule applied to the one route nobody had
 applied it to.
 
-**The gift guides are the next thing to fix and the fix is already written down**, twice: one
-route rendering every guide, or `/gifts` dropping back to a static list that never calls
-`getCatalog()`. Do not add another whole-catalogue prerender before that happens.
+**Most of that time was the photo scan running once per route, and that is fixed (2026-11-26).**
+`cache()` only dedupes inside one render pass, so each of the ~30 whole-catalogue routes ran
+`buildCatalog` again and spent up to 35 seconds on the coco-ssd scan. Each run's budget also
+reached a different set of photos, so a product the scan dropped on one page could still show
+on another. `getCatalog()` and `getVendorCatalog()` now go through `sharedBuild()`: one build
+per process, shared by every route that worker renders, kept 10 minutes (well inside the
+6-hour revalidate) and dropped if it fails. Callers only filter and sort copies of the shared
+list; if you write one that mutates `products` in place, copy it first, or the change leaks
+into every other page built by that worker.
+
+The older advice still stands for later: one route rendering every guide, or `/gifts` as a
+static list, would cut the route count itself.
 
 **Pages are a server shell + client component** (`page.tsx` → `HomeClient.tsx` /
 `BrkoxClient.tsx`). The shell inlines a real slice of the catalogue as first-paint data;
@@ -403,6 +412,17 @@ That is the door working, not a truncation to fix. Raising the cap costs one HTT
 product on every cold build, against a per-page budget that is already being hit by eight
 routes (§4b). If more of that shop is wanted, the answer is a real feed from the merchant, not
 a bigger number here.
+
+### Their photos come from a third host, and the image proxy refused it until 2026-11-26
+
+Both `ld` shops serve every product photo from a shared CDN, `skymage.tdalunar.com`, with the
+shop's own domain in the path (`/v1/al/lu/animebackpack.com/...`). `/api/img` allowed only
+Shopify, WordPress and each vendor's own domain, so every one of those photos was answered
+403 and the cards fell back to an emoji: 274 photos across the two shops, live, with nothing
+erroring. The host is now allowed **only when the path names a registered vendor**
+(`PATH_SCOPED_HOSTS` in `app/api/img/route.ts`), because allowing the whole CDN would turn the
+route into a proxy for every shop on it. A new door that brings a new image host needs the
+same treatment; the route logs `[img] host not allowed` for exactly this.
 
 | Egirldoll | 1250 | 951 | GoAffPro 10%, **probed 2026-08-31 and readable**. Lolita / e-girl, **hits the 5-page cap**. 148 of 799 dropped, the highest share here. Stays `pending` on a brand call, not a technical one |
 | Everblog US | 7 | 6 | AWIN 128579, 10%. Live 2026-08-31 as a **showcase** (`/everblog`). Two calendars ($249 / $349) plus accessories. The 7th row is a checkout add-on, not a product |
@@ -1462,13 +1482,10 @@ so `"5824"` is stored as `﻿5824` and every correct value is rejected. Use bash
 
 There is no test suite, so verify by hand:
 
-1. `pnpm run check` — typecheck. **Do not rely on `pnpm build`**: `next.config.mjs` sets
-   `typescript.ignoreBuildErrors: true`, so a build succeeds with type errors intact.
-
-   `pnpm run lint` is **broken as shipped by v0** — the script calls `eslint .` but eslint
-   was never added as a dependency, so it fails with "not recognized". Either install and
-   configure eslint or delete the script; right now it is a trap that reports a tooling
-   failure as if it were a lint failure.
+1. `pnpm run check`: typecheck. Since 2026-11-26 `pnpm build` typechecks too:
+   `typescript.ignoreBuildErrors` is `false`, so a type error fails the build instead of
+   shipping. There is no lint script; v0's `eslint .` called a tool that was never installed
+   and was removed rather than left as a trap.
 2. `pnpm dev`, then load `/` — confirm real products render, not an empty grid.
 3. `GET /api/catalog?debug` — every vendor `ok: true` with a sane count.
 4. Anything touching auth: check no-cookie, valid-cookie, forged-cookie and post-logout.
@@ -1479,7 +1496,7 @@ There is no test suite, so verify by hand:
 ## 7. Hard "do not" list
 
 - Do NOT put `ADA_PIN`, or any secret, in a `'use client'` file (§3).
-- Do NOT trust `pnpm build` as a typecheck (§6).
+- Do NOT turn `typescript.ignoreBuildErrors` back on to get a build through. Fix the type error (§6).
 - Do NOT edit in v0 any more — it pushes to its own sync branch and will fight `main`.
 - Do NOT commit `.env*`, `.vercel`, `node_modules`, `.next`.
 - Do NOT restyle to match the sister sites. Kawaii Katz is deliberately its own aesthetic;
