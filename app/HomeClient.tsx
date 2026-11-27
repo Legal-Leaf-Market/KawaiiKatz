@@ -20,6 +20,7 @@ import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
 import AdaLoginModal, { ADA_SECRET_CODE } from '@/components/AdaLoginModal'
 import { CatMark, PandaMark } from '@/components/BrandMark'
+import FamilyLinks from '@/components/FamilyLinks'
 import TasteNote from '@/components/TasteNote'
 
 const PAGE_SIZE = 18
@@ -423,6 +424,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
                 address comes back here once kawaiikatz.shop has mail. */}
             <TasteNote variant="footer" />
           </div>
+          <FamilyLinks />
         </div>
       </footer>
 
