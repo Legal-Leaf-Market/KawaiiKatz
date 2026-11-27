@@ -53,7 +53,8 @@ export const SITE_DESCRIPTION =
  * operator. Listing them here puts it in the family.
  */
 export const SISTER_SITES = [
-  'https://legal-leafmarket.com',
+  // legal-leafmarket.com died on 31 Oct 2026; Legal Leaf is legalleafmarket.shop.
+  'https://legalleafmarket.shop',
   'https://nicotiamarket.com',
   'https://herballeafmarket.com',
 ]

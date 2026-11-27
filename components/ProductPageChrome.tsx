@@ -8,6 +8,7 @@ import Header from '@/components/Header'
 import CartDrawer from '@/components/CartDrawer'
 import WishlistDrawer from '@/components/WishlistDrawer'
 import GiftFinder from '@/components/GiftFinder'
+import FamilyLinks from '@/components/FamilyLinks'
 import TasteNote from '@/components/TasteNote'
 import { CatMark, PandaMark } from '@/components/BrandMark'
 
@@ -62,6 +63,7 @@ export default function ProductPageChrome({ children }: { children: React.ReactN
             <p>Curated kawaii finds. Affiliate links support this site.</p>
             <TasteNote variant="footer" />
           </div>
+          <FamilyLinks />
         </div>
       </footer>
 
